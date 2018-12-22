@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+    <title>11.icon_more</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="11.icon_more" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g>
+            <circle id="Oval-3" stroke="#525768" stroke-width="1.5" cx="12" cy="12" r="11.25"></circle>
+            <circle id="Oval-5" fill="#525768" cx="6.25" cy="12.25" r="1.25"></circle>
+            <circle id="Oval-5-Copy" fill="#525768" cx="12.25" cy="12.25" r="1.25"></circle>
+            <circle id="Oval-5-Copy-2" fill="#525768" cx="18.25" cy="12.25" r="1.25"></circle>
+        </g>
+    </g>
+</svg>

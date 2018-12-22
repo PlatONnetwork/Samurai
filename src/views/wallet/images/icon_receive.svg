@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+    <title>11.icon_receive</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="11.icon_receive" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g>
+            <circle id="Oval-3" stroke="#525768" stroke-width="1.5" cx="12" cy="12" r="11.25"></circle>
+            <path d="M8.64143235,10.9296236 L11.3238158,8.32592939 L11.3238158,17.3266308 C11.3238158,17.6969839 11.625584,18 11.9944117,18 C12.3632394,18 12.6650076,17.6969839 12.6650076,17.3266308 L12.6650076,8.26981529 L15.3473911,10.9520692 C15.6044528,11.2214169 16.0291635,11.2214169 16.2974019,10.963292 C16.5656402,10.7051672 16.5656402,10.2787 16.3085785,10.0093523 L16.2974019,9.99812953 L12.4973586,6.19359364 C12.2402969,5.93546879 11.8155861,5.93546879 11.5585244,6.19359364 L7.70259813,9.96446107 C7.43435978,10.2225859 7.43435978,10.6490531 7.69142153,10.9184007 C7.94848328,11.1877484 8.373194,11.1877484 8.64143235,10.9296236 Z" id="Shape" fill="#525768" fill-rule="nonzero" transform="translate(12.000000, 12.000000) scale(-1, 1) rotate(-180.000000) translate(-12.000000, -12.000000) "></path>
+        </g>
+    </g>
+</svg>

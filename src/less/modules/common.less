@@ -1,0 +1,114 @@
+
+.tr {
+    text-align: right;
+}
+
+.tm {
+    text-align: center;
+}
+
+.tj {
+    text-align: justify;
+    text-align-last: justify;
+}
+.tabs{
+    span{
+        width: 130px;
+        height: 28px;
+        line-height: 28px;
+        text-align: center;
+        margin-left: 30px;
+        display: inline-block;
+        cursor: pointer;
+        &.selected{
+            &:after{
+                display: block;
+                content: '';
+                width: 130px;
+                height: 3px;
+                border-radius: 4px;
+                background: #18C2E9;
+            }
+        }
+    }
+}
+.format-style{
+    margin: -60px 8px 0;
+    width: calc(~"100% - 16px");
+    height:calc(~"100% - 77px");
+    box-sizing: border-box;
+    -webkit-app-region: no-drag!important;
+    .card{
+        width: 100%;
+        background: #FFFFFF;
+        box-shadow: 0 3px 6px 0 rgba(148,148,197,0.10);
+        border-radius: 4px;
+    }
+    .icon-danger{
+        width: 100%;
+        height: 30px;
+        margin-bottom: 18px;
+        background: url("../../../static/images/icon_warning.svg") no-repeat center;
+        background-size: 30px 30px;
+    }
+}
+
+//文本超出部分出现省略号
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-all;
+}
+
+/**
+ * 定义滚动条
+ */
+/*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
+::-webkit-scrollbar
+{
+    width: 5px;
+    height: 16px;
+    background-color: #fff;
+}
+
+/*定义滚动条轨道 内阴影+圆角*/
+::-webkit-scrollbar-track
+{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #fff;
+}
+
+/*定义滑块 内阴影+圆角*/
+::-webkit-scrollbar-thumb
+{
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #cecece;
+}
+//list底部按钮
+.add-bottom{
+    position: fixed;
+    bottom: 20px;
+    left: 168px;
+    margin: 0 20px;
+    width: calc(~"100% - 200px");
+    height:60px;
+    line-height:60px;
+    text-align: center;
+    background-color:#fff;
+    box-shadow: 0 3px 6px 0 rgba(148,148,197,0.10);
+    &:before{
+         content:'';
+         position:absolute;
+         top:0;
+         left:15px;
+         width:calc(~"100% - 40px");
+         height:1px;
+         border-top:solid 1px #D3D8E1;
+     }
+    .ml-40{
+        margin-left:142px;
+    }
+}
