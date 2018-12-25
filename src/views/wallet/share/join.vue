@@ -7,7 +7,7 @@
               </el-form-item>
               <el-form-item :label="$t('wallet.walletOwner')">
                   <el-select v-model="newWallet.ordWallet" @change="ordChange()" :placeholder="$t('wallet.selectHint')">
-                      <el-option v-for="wallet in ordWalletList" :value="wallet.address" :label="(wallet.account.length>16?(wallet.account.slice(0,16)+'...'):wallet.account)+'-'+wallet.balance+'ATP'" :placeholder="$t('wallet.selectHint')"></el-option>
+                      <el-option v-for="wallet in ordWalletList" :value="wallet.address" :label="(wallet.account.length>16?(wallet.account.slice(0,16)+'...'):wallet.account)+'-'+wallet.balance+'Energon'" :placeholder="$t('wallet.selectHint')"></el-option>
                   </el-select>
               </el-form-item>
               <el-form-item prop="address">

@@ -11,7 +11,7 @@
                         </el-form-item>
                         <el-form-item prop="admin" :label="$t('wallet.walletOwner')">
                             <el-select v-model="newWallet.admin" @change="changeAdmin">
-                                <el-option v-for="ord in ordWalletList" :value="ord.address" :label="(ord.account.length>16?(ord.account.slice(0,16)+'...'):ord.account)+'-'+ord.balance+'ATP'"></el-option>
+                                <el-option v-for="ord in ordWalletList" :value="ord.address" :label="(ord.account.length>16?(ord.account.slice(0,16)+'...'):ord.account)+'-'+ord.balance+'Energon'"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item >
@@ -72,10 +72,10 @@
                 </div>
                 <div class="modal-content">
                     <div class="content">
-                        <p>{{$t('wallet.amount')}}<span class="txt">0ATP</span></p>
+                        <p>{{$t('wallet.amount')}}<span class="txt">0Energon</span></p>
                         <p>From <span class="txt">{{newWallet.owners[0]?newWallet.owners[0].address:''}}</span></p>
                         <p>To <span class="txt">{{$t('trade.contractCreation2')}}</span></p>
-                        <p>{{$t('wallet.fee')}} <span class="txt">{{price}}ATP</span></p>
+                        <p>{{$t('wallet.fee')}} <span class="txt">{{price}}Energon</span></p>
                     </div>
                     <p class="psw-box">
                         <el-input v-model.trim="psw" :placeholder="$t('wallet.input')+newWallet.owners[0].account+$t('wallet.walletPsw')" type="password"></el-input>

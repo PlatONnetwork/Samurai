@@ -7,7 +7,7 @@
                         <el-option
                                 v-for="item in wallets"
                                 :key="item.address"
-                                :label="item.account+'--'+item.balance+'ATP'"
+                                :label="item.account+'--'+item.balance+'Energon'"
                                 :value="item.address">
                         </el-option>
                     </el-select>
@@ -16,7 +16,7 @@
                     <el-input v-model.trim="newContract.value" type="number" :placeholder="$t('contracts.amountHint')">
                         <el-button slot="append" @click="sendAll">All</el-button>
                     </el-input>
-                    <span>{{$t("contracts.wantSend")}} {{newContract.value || 0}} ATP</span>
+                    <span>{{$t("contracts.wantSend")}} {{newContract.value || 0}} Energon</span>
                 </el-form-item>
                 <el-form-item :label="$t('contracts.watchContract.contName')" prop="name">
                     <el-input v-model.trim="newContract.name" :placeholder="$t('contracts.watchContract.nameHint')">
@@ -60,7 +60,7 @@
                 </el-form-item>
             </el-form>
             <p class="total">
-                <span>{{$t("contracts.total")}} ：{{add(newContract.value-0,sendTranscation.gas-0)}}ATP</span>
+                <span>{{$t("contracts.total")}} ：{{add(newContract.value-0,sendTranscation.gas-0)}}Energon</span>
                 <el-button type="primary" @click="confirm" :disabled="!newContract.value">{{$t("contracts.deploy")}}</el-button>
             </p>
         </div>
@@ -69,10 +69,10 @@
                 <div class="modal-title">{{$t("contracts.createCont.creatCont")}}</div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{newContract.value}}ATP</span></p>
+                        <p>{{$t("wallet.amount")}}<span class="txt">{{newContract.value}}Energon</span></p>
                         <p>From<span class="txt">{{fromW.address}}</span></p>
                         <p>To<span class="txt">{{newContract.name}}</span></p>
-                        <p>{{$t("wallet.fee")}}<span class="txt">{{sendTranscation.gas}}ATP</span></p>
+                        <p>{{$t("wallet.fee")}}<span class="txt">{{sendTranscation.gas}}Energon</span></p>
                     </div>
                     <!-- 更多功能 -->
                     <!-- <p @click="confirmShowMore=!confirmShowMore" class="more">{{$t("wallet.advance")}} <i class="el-icon-arrow-down"></i></p>

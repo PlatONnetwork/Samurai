@@ -3,8 +3,8 @@
         <div class="wallet-header">
             <div class="wallet-info">
                 <span>{{$t('wallet.totalBalance')}}</span>
-                <span class="ml-30" v-show="showBalance==1">{{totalBalance}}ATP</span>
-                <span class="ml-30" v-show="showBalance==0">***ATP</span>
+                <span class="ml-30" v-show="showBalance==1">{{totalBalance}}Energon</span>
+                <span class="ml-30" v-show="showBalance==0">***Energon</span>
                 <span :class="showBalance==1?'icon-eye':'icon-hide'" @click="toggleIcon"></span>
             </div>
             <div class="tabs">
@@ -24,7 +24,7 @@
                 <div class="wallet-icon" :class="item.icon"></div>
                 <div class="info">
                     <p>{{item.account | sliceName}}</p>
-                    <p class="i-wallet"> <span class="font14">{{item.balance}}</span> <span class="font10">ATP</span></p>
+                    <p class="i-wallet"> <span class="font14">{{item.balance}}</span> <span class="font10">Energon</span></p>
                     <div class="addr-box">
                         <p class="addr i-address f12 ">
                             {{item.address}}

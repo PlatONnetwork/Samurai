@@ -11,7 +11,7 @@
                             <el-option
                                     v-for="item in wallets"
                                     :key="item.address"
-                                    :label="(item.account.length>16?item.account.slice(0,16)+'...':item.account)+'--'+item.balance+'ATP'"
+                                    :label="(item.account.length>16?item.account.slice(0,16)+'...':item.account)+'--'+item.balance+'Energon'"
                                     :value="item.address">
                             </el-option>
                         </el-select>
@@ -25,7 +25,7 @@
                     <el-input v-model.trim="sendTranscation.value" @blur="changeVal" :placeholder="$t('wallet.amountHint')" type="number">
                         <el-button slot="append" @click="sendAll">All</el-button>
                     </el-input>
-                    <span>{{$t("wallet.wantTo")}}{{sendTranscation.value || 0}}ATP</span>
+                    <span>{{$t("wallet.wantTo")}}{{sendTranscation.value || 0}}Energon</span>
                 </el-form-item>
                 <el-form-item :label="$t('wallet.selectFee')">
                     <span class="send-slider">
@@ -38,7 +38,7 @@
                 </el-form-item>
             </el-form>
             <p class="total">
-                <span>{{$t("wallet.total")}}：{{add(sendTranscation.value-0,sendTranscation.gas-0)}}ATP</span>
+                <span>{{$t("wallet.total")}}：{{add(sendTranscation.value-0,sendTranscation.gas-0)}}Energon</span>
                 <el-button type="primary" @click="confirm()" :disabled="gasLoading || !sendTranscation.to || !sendTranscation.value">{{$t("wallet.send")}}</el-button>
             </p>
         </div>
@@ -48,10 +48,10 @@
                 <div class="modal-title">{{$t("wallet.sendTransaction")}}</div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{sendTranscation.value}}ATP</span></p>
+                        <p>{{$t("wallet.amount")}}<span class="txt">{{sendTranscation.value}}Energon</span></p>
                         <p>From<span class="txt">{{fromW.address}}</span></p>
                         <p>To<span class="txt">{{sendTranscation.to}}</span></p>
-                        <p>{{$t("wallet.fee")}}<span class="txt">{{sendTranscation.gas}}ATP</span></p>
+                        <p>{{$t("wallet.fee")}}<span class="txt">{{sendTranscation.gas}}Energon</span></p>
                     </div>
                     <p @click="confirmShowMore=!confirmShowMore" class="more">{{$t("wallet.advance")}} <i class="el-icon-arrow-down"></i></p>
                     <p v-if="confirmShowMore" class="more-txt">{{sendTranscation.input}}</p>

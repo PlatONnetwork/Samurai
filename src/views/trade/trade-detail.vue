@@ -26,8 +26,8 @@
         </p>
         <p>
             <span class="label">{{$t("trade.sum")}}</span>
-            <span v-if="trade.hash">{{trade.value-0}}ATP</span>
-            <span v-else>{{trade.value-0 | fromWei}}ATP</span>
+            <span v-if="trade.hash">{{trade.value-0}}Energon</span>
+            <span v-else>{{trade.value-0 | fromWei}}Energon</span>
         </p>
         <p>
             <span class="label">{{$t("trade.from")}}</span>
@@ -39,7 +39,7 @@
         </p>
         <p>
             <span class="label">{{$t("trade.fee")}}</span>
-            <span>{{trade.price}}{{(trade.price!=='(Pending)' && trade.price!=='-')?'ATP':''}}</span>
+            <span>{{trade.price}}{{(trade.price!=='(Pending)' && trade.price!=='-')?'Energon':''}}</span>
         </p>
         <p v-if="trade.hash">
             <span class="label">{{$t("trade.gas")}}</span>
@@ -47,7 +47,7 @@
         </p>
         <p v-if="trade.hash">
             <span class="label">{{$t("trade.energon")}}</span>
-            <span>{{trade.gasPrice}}<span v-if="trade.gasPrice!=='(Pending)'">ATP</span></span>
+            <span>{{trade.gasPrice}}<span v-if="trade.gasPrice!=='(Pending)'">Energon</span></span>
         </p>
         <p v-if="trade.hash">
             <span class="label">{{$t("trade.block")}}</span>

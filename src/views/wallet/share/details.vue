@@ -6,7 +6,7 @@
                 <div class="wallet-detail-info">
                     <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">{{wallet.account | sliceName}}</p>
                     <p class="balance">
-                        <span class="wallet-name">{{balance}}</span>ATP
+                        <span class="wallet-name">{{balance}}</span>Energon
                         <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
                         <!-- <i class="refresh" @click="refresh"></i> -->
                     </p>

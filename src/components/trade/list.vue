@@ -30,8 +30,8 @@
                 </div>
                 <div class="rt">
                     <p class="value">
-                        <span v-if="item.hash">-{{item.value}}ATP</span>
-                        <span v-else>-{{trans(item.value-0)}}ATP</span>
+                        <span v-if="item.hash">-{{item.value}}Energon</span>
+                        <span v-else>-{{trans(item.value-0)}}Energon</span>
                     </p>
                     <p class="state">
                         <span v-if="item.hash">
@@ -86,8 +86,8 @@
                 </div>
                 <div class="rt">
                     <p class="value">
-                        <span v-if="item.hash">-{{item.value}}ATP</span>
-                        <span v-else>-{{trans(item.value-0)}}ATP</span>
+                        <span v-if="item.hash">-{{item.value}}Energon</span>
+                        <span v-else>-{{trans(item.value-0)}}Energon</span>
                     </p>
                     <p class="state">
                         <span v-if="item.hash">
@@ -118,10 +118,10 @@
                 <div class="modal-title">{{$t("contracts.executeContCap")}}-{{handle==1?'Confirm':'Reject'}}</div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{trade.value | div}}ATP</span></p>
+                        <p>{{$t("wallet.amount")}}<span class="txt">{{trade.value | div}}Energon</span></p>
                         <p>From<span class="txt">{{trade.from}}</span></p>
                         <p>To<span class="txt">0x{{trade.to.replace(/^0x/g,'')}}</span></p>
-                        <p>{{$t("wallet.fee")}}<span class="txt">{{price}}ATP</span></p>
+                        <p>{{$t("wallet.fee")}}<span class="txt">{{price}}Energon</span></p>
                     </div>
                     <p @click="confirmShowMore=!confirmShowMore" class="more">{{$t("wallet.advance")}} <i class="el-icon-arrow-down"></i></p>
                     <p v-if="confirmShowMore" class="extra-data">{{trade.input}}</p>
@@ -288,12 +288,16 @@
                                         _this.pendingTradeList.splice(index,1);
                                         data.pending = '0';
                                         data.executed = '1';
-                                        _this.tradeList.unshift(data);
+                                        if(_this.tradeList.length==0 || _this.tradeList[_this.tradeList.length-1].id!==item.id){
+                                            _this.tradeList.unshift(data);
+                                        }
                                     }else if(data.ownersList.length - data.rejectList.length < data.required){
                                         _this.pendingTradeList.splice(index,1);
                                         data.pending = '0';
                                         data.executed = '0';
-                                        _this.tradeList.unshift(data);
+                                        if(_this.tradeList.length==0 || _this.tradeList[_this.tradeList.length-1].id!==item.id){
+                                            _this.tradeList.unshift(data);
+                                        }
                                     }else{
                                         _this.$set(_this.pendingTradeList,index,data);
                                     }
