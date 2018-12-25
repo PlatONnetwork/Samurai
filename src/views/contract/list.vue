@@ -8,7 +8,7 @@
                 <div class="contract-icon" :class="item.icon"></div>
                 <div class="info">
                     <p>{{item.name | sliceName}}</p>
-                    <p class="i-wallet"> <span class="font14">{{item.balance}}</span> <span class="font10">ATP</span></p>
+                    <p class="i-wallet"> <span class="font14">{{item.balance}}</span> <span class="font10">Energon</span></p>
                     <div class="addr-box">
                         <p class="addr i-address f12 ">
                             {{item.address}}

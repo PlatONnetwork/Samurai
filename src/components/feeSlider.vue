@@ -14,7 +14,7 @@
                         show-stops>
                 </el-slider>
             </div>
-            <el-input class="gas-input" v-model.trim="selfGas" @blur="changeGas" type="number"></el-input><span class="gray">ATP</span>
+            <el-input class="gas-input" v-model.trim="selfGas" @blur="changeGas" type="number"></el-input><span class="gray">Energon</span>
         </span>
         <p>{{$t('wallet.estimatedTime')}}：{{$t('contracts.within')}} {{expectTime}}{{optionsTime==30?$t('contracts.second'):$t('contracts.withinmins')}}</p>
     </div>

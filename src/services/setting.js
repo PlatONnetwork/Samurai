@@ -73,7 +73,12 @@ class Settings {
                     this.mkf(this.userDataPath+'net_main/keystore')
                 });
                 this.mkf(this.userDataPath+'net_test',()=>{
-                    this.mkf(this.userDataPath+'net_test/keystore')
+                    this.mkf(this.userDataPath+'net_test/keystore');
+                    this.mkf(this.userDataPath+'net_test/data',()=>{
+                        let configJSON = require("../../static/json/platon");
+                        fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON))
+                    });
+                    fs.writeFileSync(`${this.userDataPath}net_test/init`,0)
                 });
                 this.mkf(this.userDataPath+'net_custom',()=>{
                     this.mkf(this.userDataPath+'net_custom/chain');

@@ -151,6 +151,7 @@ export default {
         nonSharedAddr:'共享钱包地址不能为空',
         inVaildSharedAddr:'钱包地址不正确',
         addShareFail:'添加失败！地址不存在',
+        addShareOwnerFail:'添加失败！Owner数量为0',
         shareAlreadyExits:'共享钱包已存在',
         addShareSuccess:'共享钱包添加成功',
         requiredNum:'所需签名数',

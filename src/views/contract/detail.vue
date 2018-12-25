@@ -6,7 +6,7 @@
                 <div class="contract-detail-info">
                     <p class="contract-name" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}}</p>
                     <p class="balance">
-                        <span class="contract-name">{{balance}}</span> <span class="gray">ATP</span>
+                        <span class="contract-name">{{balance}}</span> <span class="gray">Energon</span>
                         <refresh @refreshBalance="refreshValue" :parentAddress="contract.address"></refresh>
                     </p>
                     <p class="address">{{contract.address}}</p>
@@ -48,7 +48,7 @@
                     <div class="right-contract-name">
                         <span class="contract-name" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}} - </span>
                         <span>
-                            <span class="contract-name">{{balance}}</span> <span class="contract-name">ATP</span>
+                            <span class="contract-name">{{balance}}</span> <span class="contract-name">Energon</span>
                         </span>
                     </div>
 
@@ -103,10 +103,10 @@
                 </div>
                 <div class="modal-content f12">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">0.00ATP</span></p>
+                        <p>{{$t("wallet.amount")}}<span class="txt">0.00Energon</span></p>
                         <p>From<span class="txt">{{keyObject.address}}</span></p>
                         <p>To<span class="txt">{{contract.address}}</span></p>
-                        <p>{{$t("wallet.fee")}}<span class="txt">{{gas}}ATP</span></p>
+                        <p>{{$t("wallet.fee")}}<span class="txt">{{gas}}Energon</span></p>
                     </div>
                     <p class="inputb">
                         <el-input :placeholder="$t('wallet.input')+(keyObject.account)+' '+$t('wallet.walletPsw')" type="password" v-model.trim="psw"></el-input>
