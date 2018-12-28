@@ -154,13 +154,13 @@ class nodeManager {
                         if(isConn){   //节点已启动
                             nodeProc.stdin.write('miner.start() \n');
                             contractService.setProvider('','ipc').then(()=>{
+                                store.dispatch('updateChainName',chainName);
                                 _this.changeNetState(2,false,'custom','',port);
                                 store.dispatch('updateLoading',false);
-                                store.dispatch('updateChainName',chainName);
                             }).catch((err)=>{
+                                store.dispatch('updateChainName',chainName)
                                 _this.changeNetState(0,true,'custom','',port);
                                 store.dispatch('updateLoading',false);
-                                store.dispatch('updateChainName',chainName)
                                 alert(err);
                             })
                             resolve();
@@ -281,7 +281,6 @@ class nodeManager {
                                 }).catch((err)=>{
                                     _this.changeNetState(0,true,type,'','26793');
                                     store.dispatch('updateLoading',false);
-                                    alert(err);
                                 })
                                 resolve();
                             }else{    //节点未启动

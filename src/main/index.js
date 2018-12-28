@@ -143,7 +143,7 @@ app.on('activate', () => {
 });
 
 //注册协议
-app.setAsDefaultProtocolClient('juzix');
+app.setAsDefaultProtocolClient('PlatONnetwork');
 
 //最小化
 ipcMain.on('hide-window', () => {

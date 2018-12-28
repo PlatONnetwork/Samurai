@@ -115,7 +115,10 @@
 
         <div class="modal confirm" v-if="showConfirmModal">
             <div class="modal-main">
-                <div class="modal-title">{{$t("contracts.executeContCap")}}-{{handle==1?'Confirm':'Reject'}}</div>
+                <div class="modal-title">
+                    {{$t("contracts.executeContCap")}}-{{handle==1?$t('trade.confirm'):$t('trade.reject')}}
+                    <span class="modal-close" @click="showConfirmModal=false"></span>
+                </div>
                 <div class="modal-content">
                     <div class="confirm-content">
                         <p>{{$t("wallet.amount")}}<span class="txt">{{trade.value | div}}Energon</span></p>
@@ -411,30 +414,38 @@
                 });
             },
             async getGas(trade,num,cb){
-                this.gasLoading = true;
-                const MyContract = contractService.web3.eth.contract(contractService.getABI(1));
-                const myContractInstance = MyContract.at(trade.from);
-                let params=[trade.id-0],funN = num==1?'confirmTransaction':'revokeConfirmation';
-                const platOnData = myContractInstance[funN].getPlatONData(...params);
-                await contractService.web3.eth.estimateGas({
-                    "from":this.curOwner.address,
-                    "to":trade.from,
-                    "data":platOnData
-                },(err,data)=>{
-                    this.gasLoading = false;
-                    console.log('估算gas-->',err,data);
-                    if(err){
-                        this.$message.error(this.$t('wallet.estimateFailed'));
-                        throw err;
-                    }
-                    this.gas = data;
-                    contractService.web3.eth.getGasPrice((error,result)=>{
-                        if(error) throw err;
-                        this.gasPrice = result;
-                        this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
-                        cb();
-                    });
-                })
+                this.gas = 2000000;
+                contractService.web3.eth.getGasPrice((error,result)=>{
+                    if(error) throw error;
+                    this.gasPrice = result;
+                    this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
+                    cb();
+                });
+
+                // this.gasLoading = true;
+                // const MyContract = contractService.web3.eth.contract(contractService.getABI(1));
+                // const myContractInstance = MyContract.at(trade.from);
+                // let params=[trade.id-0],funN = num==1?'confirmTransaction':'revokeConfirmation';
+                // const platOnData = myContractInstance[funN].getPlatONData(...params);
+                // await contractService.web3.eth.estimateGas({
+                //     "from":this.curOwner.address,
+                //     "to":trade.from,
+                //     "data":platOnData
+                // },(err,data)=>{
+                //     this.gasLoading = false;
+                //     console.log('估算gas-->',err,data);
+                //     if(err){
+                //         this.$message.error(this.$t('wallet.estimateFailed'));
+                //         throw err;
+                //     }
+                //     this.gas = data;
+                //     contractService.web3.eth.getGasPrice((error,result)=>{
+                //         if(error) throw err;
+                //         this.gasPrice = result;
+                //         this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
+                //         cb();
+                //     });
+                // })
             },
             //获取当前要去签名的owner
             async getCurrentOwner(trade,cb){
@@ -663,12 +674,13 @@
             position:fixed;
             bottom:0;
             width:calc(~"100% - 180px");
-            height:60px;
-            line-height:60px;
+            height:34px;
+            line-height:30px;
             text-align: center;
             font-size: 12px;
             color: #9EABBE;
             cursor:pointer;
+            letter-spacing: 0.36px;
             background-color: #f5f5f5;
         }
         .marginT0{
@@ -707,6 +719,7 @@
                 }
                 .extra-data{
                     padding-left:10px;
+                    word-break: break-all;
                 }
                 .inputb{
                     margin:10px 10px 0;

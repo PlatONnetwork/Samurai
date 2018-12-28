@@ -21,15 +21,17 @@ const fsObj = {
         })
     },
     saveKey(name,content){
+        console.log('Settings.keyPath-----',Settings.keyPath);
         let keyPath = Settings.keyPath,
             netType=store.state.setting.network.type,
             chainName=store.state.setting.chainName,
             path;
-        if(netType=='custom'){
-            path=`${keyPath}${chainName}/keystore/${name}.json`;
-        }else{
-            path=`${keyPath}${name}.json`;
-        }
+        path=`${keyPath}/${name}.json`;
+        // if(netType=='custom'){
+        //     path=`${keyPath}${chainName}/keystore/${name}.json`;
+        // }else{
+        //     path=`${keyPath}${name}.json`;
+        // }
         fs.writeFile(path, content, (err) => {
             console.log('saveKey-->',err);
         })

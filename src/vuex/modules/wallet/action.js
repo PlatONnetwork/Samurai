@@ -3,6 +3,7 @@ const fileName = 'walletInfo.json';
 const fileNameS = 'sharedWalletInfo.json';
 import Settings from '@/services/setting';
 import contractService from '@/services/contract-servies';
+import MathService from '@/services/math';
 import fs from 'fs';
 import Options from '../../../../static/json/config'
 export const WalletAction = {

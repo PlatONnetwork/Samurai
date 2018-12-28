@@ -70,6 +70,7 @@
             clear: both;
         }
         .header-title{
+            font-weight: 600;
             position: relative;
             top: -6px;
             padding-left: 14px;

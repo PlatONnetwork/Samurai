@@ -64,11 +64,11 @@
         <div class="modal abi-modal" v-if="showABIModal">
             <div class="modal-main">
                 <div class="modal-title">
-                    {{$t("wallet.interfaceCode")}}
+                    {{$t("contracts.interface")}}
                     <span class="modal-close" @click="handleCancel"></span>
                 </div>
                 <div class="modal-content f12">
-                    <p>{{contract.abi}}</p>
+                    <p class="abiView">{{contract.abi}}</p>
                 </div>
                 <div class="modal-btn">
                     <el-button type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
@@ -152,7 +152,7 @@
                 hash:'',
                 params:[],
                 abiInfo:[],
-                showAbiInfo:true,
+                showAbiInfo:false,
             }
         },
         computed: {
@@ -263,26 +263,31 @@
             },
             getGas(){
                 if(this.keyObject && this.fun){
-                    const MyContract = contractService.web3.eth.contract(JSON.parse(this.contract.abi));
-                    const myContractInstance = MyContract.at(this.contract.address);
-                    let params=[];
-                    this.inputs.forEach((item)=>{
-                        params.push(item.value)
+                    contractService.web3.eth.getGasPrice((error,result)=>{
+                        if(error) throw error;
+                        this.gas = contractService.web3.fromWei(2000000*result,"ether")
                     });
-                    const platOnData = myContractInstance[this.fun].getPlatONData(...params);
-                    contractService.web3.eth.estimateGas({
-                        "to":this.contract.address,
-                        // "from":this.keyObject.address,
-                        "data":platOnData
-                    },(err,data)=>{
-                        if(err){
-                            throw err;
-                        }
-                        contractService.web3.eth.getGasPrice((error,result)=>{
-                            if(error) throw err;
-                            this.gas = contractService.web3.fromWei(data*result,"ether")
-                        });
-                    })
+
+                    // const MyContract = contractService.web3.eth.contract(JSON.parse(this.contract.abi));
+                    // const myContractInstance = MyContract.at(this.contract.address);
+                    // let params=[];
+                    // this.inputs.forEach((item)=>{
+                    //     params.push(item.value)
+                    // });
+                    // const platOnData = myContractInstance[this.fun].getPlatONData(...params);
+                    // contractService.web3.eth.estimateGas({
+                    //     "to":this.contract.address,
+                    //     // "from":this.keyObject.address,
+                    //     "data":platOnData
+                    // },(err,data)=>{
+                    //     if(err){
+                    //         throw err;
+                    //     }
+                    //     contractService.web3.eth.getGasPrice((error,result)=>{
+                    //         if(error) throw err;
+                    //         this.gas = contractService.web3.fromWei(data*result,"ether")
+                    //     });
+                    // })
                 }
 
             },
@@ -331,14 +336,16 @@
                             contractService.platONCall(JSON.parse(this.contract.abi),this.contract.address,this.fun,keyObject.address,this.params).then((data)=>{
                                 this.abiInfo.push(data)
                                 this.showFunModal = false;
+                                this.showAbiInfo = true;
                             })
                         }
-
                     });
                 }
+                
             },
             closeSide(){
                 this.showAbiInfo = false;
+                this.abiInfo = [];
             },
             refresh(){
                 contractService.web3.eth.getBalance(this.contract.address,(err,data)=>{
@@ -412,23 +419,6 @@
             margin-bottom:12px;
         }
     }
-    // .refresh{
-    //     display:inline-block;
-    //     width:14px;
-    //     height:14px;
-    //     vertical-align: middle;
-    //     cursor:pointer;
-    //     background: url("./images/controls.svg") no-repeat center center;
-    //     background-size: contain;
-    // }
-    // @keyframes rotation{
-    //   from {-webkit-transform: rotate(0deg);}
-    //   to {-webkit-transform: rotate(-180deg);}
-    // }
-    // .Rotation{
-    //   animation: rotation 1s linear infinite;
-    //   animation-iteration-count:30;
-    // }
     .wallet-operate{
        padding-top:22px;
        width:123px;
@@ -486,7 +476,9 @@
     .abi-modal{
         .modal-content{
             padding:20px;
-            height:300px;
+            // width: 483px;
+            height:150px;
+            
             overflow-y: auto;
         }
     }
@@ -498,6 +490,7 @@
                 padding:12px;
                 .confirm-content{
                     padding:14px 10px;
+                    // width: 490px;
                     height:126px;
                     background: #ECEFF6;
                     p{
@@ -561,12 +554,6 @@
         word-break: break-all;
         background:rgba(24,194,233,0.1);
     }
-    // .rSide::-webkit-scrollbar{
-    //     width: 5px;
-    //     height: 5px;
-    //     margin-left: 5px;
-    // }
-
     .icon-close{
         position: absolute;
         top: -7px;
@@ -579,7 +566,16 @@
     .right-contract-name{
         position: absolute;
         height: 33px;
-        padding: 14px 0 0 14px
+        padding: 10px 0 0 14px
+    }
+    .rinfo{
+        padding-left: 14px;
+    }
+    .abiView{
+        background: #ECEFF6;
+        font-size: 12px;
+        color: #24272B;
+        letter-spacing: 0.43px;
     }
 </style>
 

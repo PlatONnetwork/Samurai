@@ -6,7 +6,7 @@
                 <div class="wallet-detail-info">
                     <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">{{wallet.account | sliceName}}</p>
                     <p class="balance">
-                        <span class="wallet-name">{{balance}}</span>Energon
+                        <span class="wallet-name">{{balance}} </span>Energon
                         <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
                         <!-- <i class="refresh" @click="refresh"></i> -->
                     </p>
@@ -38,7 +38,7 @@
                     <ul>
                         <li v-for="(owner,index) in ownersTrans" :key="owner.address">
                             <span class="index">{{index+1}}</span>
-                            <span>{{owner.account}}</span>
+                            <span class="userName">{{owner.account}}</span>
                             <span>{{owner.address}}</span>
                         </li>
                     </ul>
@@ -69,11 +69,11 @@
         <div class="modal abi-modal" v-if="showABIModal">
             <div class="modal-main">
                 <div class="modal-title">
-                    {{$t('wallet.interfaceCode')}}
+                    {{$t('contracts.interface')}}
                     <span class="modal-close" @click="handleCancel"></span>
                 </div>
                 <div class="modal-content f12">
-                    <p>{{ABIFile}}</p>
+                    <p class="abiView">{{ABIFile}}</p>
                 </div>
                 <div class="modal-btn">
                     <el-button type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
@@ -320,7 +320,7 @@
             background-position: center;
         }
         .wallet-trade-wrapper{
-            height:calc(~"100% - 283px");
+            height:calc(~"100% - 243px");
         }
         .trade-con{
             height:100%;
@@ -484,13 +484,21 @@
             width:483px;
             .modal-content{
                 padding:20px;
-                height:300px;
+                height:150px;
                 overflow-y: auto;
             }
         }
     }
-
-
+    .abiView{
+        background: #ECEFF6;
+        font-size: 12px;
+        color: #24272B;
+        letter-spacing: 0.43px;
+    }
+    .userName{
+        margin-right: 5px;
+        font-weight: 900
+    }
 </style>
 <style lang="less">
     .wallet-detail{

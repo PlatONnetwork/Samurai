@@ -3,7 +3,7 @@
         <div class="wallet-header">
             <div class="wallet-info">
                 <span>{{$t('wallet.totalBalance')}}</span>
-                <span class="ml-30" v-show="showBalance==1">{{totalBalance}}Energon</span>
+                <span class="ml-30" v-show="showBalance==1">{{totalBalance}} Energon</span>
                 <span class="ml-30" v-show="showBalance==0">***Energon</span>
                 <span :class="showBalance==1?'icon-eye':'icon-hide'" @click="toggleIcon"></span>
             </div>
@@ -23,7 +23,7 @@
                  @click="goToDetail(item)">
                 <div class="wallet-icon" :class="item.icon"></div>
                 <div class="info">
-                    <p>{{item.account | sliceName}}</p>
+                    <p class="name">{{item.account | sliceName}}</p>
                     <p class="i-wallet"> <span class="font14">{{item.balance}}</span> <span class="font10">Energon</span></p>
                     <div class="addr-box">
                         <p class="addr i-address f12 ">
@@ -126,7 +126,10 @@
                     this.walletList.forEach((item,index)=>{
                         contractService.web3.eth.getBalance(item.address,(err,data)=>{
                             let balance=contractService.web3.fromWei(data.toString(10), 'ether');
-                            item.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
+                            if(balance.indexOf('.')!==-1){
+                                balance = balance.slice(0,balance.indexOf('.')+3)
+                            }
+                            item.balance = balance;
                             _this.$set(_this.walletList,index,item);
                         });
                     });
@@ -254,8 +257,16 @@
                         width: 100%;
                         margin-top: 15px;
                     }
+                    .name{
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
                 }
                 .i-wallet{
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                     padding-left: 20px;
                     background:url("./images/icon_wallet.svg") no-repeat left center;
                 }

@@ -4,8 +4,8 @@
 
 ; 安装程序初始定义常量
 !define PRODUCT_NAME "Samurai"
-!define PRODUCT_VERSION "0.2.0.4"
-!define PRODUCT_PUBLISHER "矩阵元技术（深圳）有限公司<support@juzix.io>"
+!define PRODUCT_VERSION ""; 加版本号，开头多加一个空格！
+!define PRODUCT_PUBLISHER "www.platon.network<support@platon.network>"
 !define PRODUCT_WEB_SITE "https://www.platon.network"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Samurai.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
@@ -48,7 +48,7 @@ Page custom SetCustom LeaveCustom  ;自定义窗口，选择数据目录
 ; ------ MUI 现代界面定义结束 ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "..\dist\${PRODUCT_NAME} Setup ${PRODUCT_VERSION}.exe"
+OutFile "..\dist\${PRODUCT_NAME}-windows-amd64${PRODUCT_VERSION}.exe"
 InstallDir "$PROGRAMFILES\Samurai"
 InstallDirRegKey HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"
 ShowInstDetails show
@@ -138,13 +138,13 @@ Function SetCustom
 FunctionEnd
 
 Function LeaveCustom
-; 判断用户输入的路径是否合法。
 
   ReadINIStr $0 "$PLUGINSDIR\setup.ini" "Field 2" "State"
   StrCmp $0 "" +2
-  IfFileExists "$0\*" +3
-      MessageBox MB_OK|MB_ICONSTOP "存储区块数据及Keystore文件的路径无效！"
-      Abort
+  ; 判断用户输入的路径是否合法。
+;   IfFileExists "$0\*" +3
+;       MessageBox MB_OK|MB_ICONSTOP "存储区块数据及Keystore文件的路径无效！"
+;       Abort
 
 FunctionEnd
 

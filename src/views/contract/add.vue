@@ -3,18 +3,18 @@
         <div class="card content">
             <el-form :model="newContract" ref="newContract" :rules="rules" label-position="top">
                 <el-form-item :label="$t('contracts.watchContract.contName')" prop="name">
-                    <el-input v-model.trim="newContract.name"></el-input>
+                    <el-input v-model.trim="newContract.name" :placeholder="$t('contracts.watchContract.nameHint')"></el-input>
                 </el-form-item>
                 <el-form-item :label="$t('contracts.watchContract.contAddress')" prop="address">
-                    <el-input v-model.trim="newContract.address"></el-input>
+                    <el-input v-model.trim="newContract.address" :placeholder="$t('contracts.watchContract.addressHint')"></el-input>
                 </el-form-item>
                 <el-form-item :label="$t('contracts.watchContract.contABI')" prop="abi">
-                    <el-input v-model.trim="newContract.abi" type="textarea" :rows="7"></el-input>
+                    <el-input v-model.trim="newContract.abi" type="textarea" :rows="7" :placeholder="$t('contracts.watchContract.contABIHint')"></el-input>
                 </el-form-item>
             </el-form>
             <p class="btn-box">
                 <el-button class="cancel" @click="goBack">{{$t("form.cancel")}}</el-button>
-                <el-button type="primary" @click="add()">{{$t("contracts.watchContract.add")}}</el-button>
+                <el-button class="addBtn" type="primary" @click="add()">{{$t("contracts.watchContract.add")}}</el-button>
             </p>
         </div>
     </div>
@@ -34,7 +34,8 @@
                     address:'',
                     abi:''
                 },
-                addressList:[]
+                addressList:[],
+                abiList:[]
                 // 将rules放在computed中，错误提示则可以随着语言进行切换
                 // rules:{
                 //     name:{required: true, message: this.$t('contracts.contNameEmpty'), trigger: 'blur,change'},
@@ -63,7 +64,7 @@
 
         },
         methods: {
-            ...mapActions(['updateContractInfo']),
+            ...mapActions(['updateContractInfo','contractListAction']),
             checkAddress(rule, value, callback){
                 if (value === '') {
                     callback(new Error(this.$t('contracts.watchContract.contAddressEmp')));
@@ -77,43 +78,73 @@
                 this.$router.push('/contract')
             },
             add(){
-                this.contractListGetter.forEach((item,index) => {
-                    this.addressList.push(item.address)
-                });
-                if(this.addressList.indexOf(this.newContract.address) == -1){
-                    this.$refs['newContract'].validate((valid)=>{
-                        if(valid){
-                            let MyContract,contract;
-                            try{
-                                MyContract = contractService.web3.eth.contract(JSON.parse(this.newContract.abi));
-                            }catch(e){
-                                this.$message.error(this.$t('contracts.watchContract.contABIInvalid'));
-                                return;
-                            }
-                            contractService.web3.eth.getCode(this.newContract.address,(err,data)=>{
-                                if(err || data=='0x'){
-                                    this.$message.error(this.$t('contracts.watchContract.contAddressInvalid'));
-                                }else{
-                                    contract = MyContract.at(this.newContract.address);
-                                    console.warn('contract--->',contract);
-                                    let contractObj = {
-                                        name:this.newContract.name,
-                                        address:contract.address,
-                                        abi:this.newContract.abi
-                                    };
-                                    this.updateContractInfo(contractObj).then(()=>{
-                                        this.$router.push('/contract')
-                                    }).catch((e)=>{
-                                        console.log(e,'出错了')
-                                    });
+                this.contractListAction().then(()=>{
+                    if(this.contractListGetter && this.contractListGetter.length>0){
+                        this.addressList =  this.contractListGetter.map((item)=>{
+                            return item.address
+                        });
+                    }else{
+                        this.addressList=[]
+                    }
+                    if(this.addressList.indexOf(this.newContract.address) == -1){
+                        this.$refs['newContract'].validate((valid)=>{
+                            if(valid){
+                                let MyContract,contract;
+                                if(!isNaN(this.checkAbi(this.newContract.abi))){
+                                    this.$message.error(this.$t('contracts.contABIinvalid'));
+                                    return
                                 }
-                            });
-                        }
-                    });
-                }else{
-                    this.$message.error(this.$t('contracts.watchContract.contAddressExist'));
+                                // else if(!(this.abiList instanceof Array)){
+                                //     this.$message.error(this.$t('contracts.contABIinvalid'));
+                                //     return
+                                // }
+                                else if(this.abiList.length>0 && !this.abiList[0].hasOwnProperty('inputs')){
+                                    this.$message.error(this.$t('contracts.contABIinvalid'));
+                                    return;
+                                }else{
+                                    try{
+                                        MyContract = contractService.web3.eth.contract(JSON.parse(this.newContract.abi));
+                                        contractService.web3.eth.getCode(this.newContract.address,(err,data)=>{
+                                            if(err || data=='0x'){
+                                                this.$message.error(this.$t('contracts.watchContract.contAddressInvalid'));
+                                            }else{
+                                                contract = MyContract.at(this.newContract.address);
+                                                console.warn('contract--->',contract);
+                                                let contractObj = {
+                                                    name:this.newContract.name,
+                                                    address:contract.address,
+                                                    abi:this.newContract.abi
+                                                };
+                                                this.updateContractInfo(contractObj).then(()=>{
+                                                    this.$router.push('/contract')
+                                                }).catch((e)=>{
+                                                    console.log(e,'出错了')
+                                                });
+                                            }
+                                        });
+                                    }catch(e){
+                                        this.$message.error(this.$t('contracts.watchContract.contABIInvalid'));
+                                        return;
+                                    }
+                                }
+                            }
+                        });
+
+                    }else{
+                        this.$message.error(this.$t('contracts.watchContract.contAddressExist'));
+                    }
+
+                })
+
+            },
+            checkAbi(abi){
+                try{
+                    let arr = JSON.parse(abi);
+                    this.abiList = arr
+                    return arr
+                }catch(e){
+                    return false
                 }
-                this.addressList = []
             }
 
         },
@@ -124,7 +155,12 @@
 </script>
 
 <style lang="less" scoped>
-
+    .el-button+.el-button {
+        margin-left: 40px;
+    }
+    // .cancel,.addBtn{
+    //     font-weight: 900;
+    // }
 </style>
 <style lang="less">
     .content{

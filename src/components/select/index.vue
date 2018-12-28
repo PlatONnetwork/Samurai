@@ -40,6 +40,11 @@
             },
             'defaultSel':function(){
                 this.init();
+            },
+            '$i18n.locale':function(){
+                if(!this.defaultSel || /^\s*$/.test(this.defaultSel)){
+                    this.sel = this.$t('wallet.allWallet')
+                }
             }
         },
         mounted(){
@@ -157,22 +162,22 @@
             box-shadow: 0 2px 4px 0 rgba(0,0,0,0.10);
             li{
                 padding:0 10px;
-                height:24px;
-                line-height:24px;
+                height:36px;
+                line-height:36px;
                 font-size: 12px;
                 color: #525768;
                 cursor:pointer;
                 white-space: nowrap;
                 &:hover{
-                     background: #F0F0F0;
+                     background: #e4e8f1;
                  }
             }
             .active{
                 color:#fff;
-                background-color: #0077FF;
+                background-color: #20a0ff;
                 &:hover{
                      color:#fff;
-                     background-color: #0077FF;
+                     background-color: #1c8de0;
                  }
             }
             /*&:before{*/

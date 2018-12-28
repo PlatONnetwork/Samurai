@@ -15,7 +15,7 @@ export default {
           port:null,  //string  端口
       },
       nodeState:0,   //节点状态（0未连接  1私有链创建成功  2节点启动成功，已连接）
-      lang:window.localStorage.getItem('user_lang')?window.localStorage.getItem('user_lang'):'zh-cn',
+      lang:window.localStorage.getItem('user_lang')?window.localStorage.getItem('user_lang'):'en',
       netLoading:false,   //网络切换过程过渡效果展示
       chainName:'',
       isMax:true

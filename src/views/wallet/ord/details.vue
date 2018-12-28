@@ -5,7 +5,7 @@
             <div class="wallet-detail-info">
                 <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">{{wallet.account | sliceName}}</p>
                 <p class="balance">
-                    <span class="wallet-name">{{balance}}</span>Energon
+                    <span class="wallet-name">{{balance}} </span>Energon
                     <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
                     <!-- <i class="refresh" @click="refresh"></i> -->
                 </p>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="modal-btn">
                     <el-button class="cancel" @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button @click="handleUpdate"  type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button class="sureBtn" @click="handleUpdate"  type="primary">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -259,7 +259,7 @@
                     console.warn('priKey',err,priKey,this.confirm);
                     if(priKey){
                         if(this.confirm == 'export'){
-                            keyManager.backUpKey(this.wallet.address);
+                            keyManager.backUpKey(this.wallet.address,this.wallet);
                             this.active = '';
                             this.confirm = '';
                         }else if(this.confirm == 'show'){
@@ -429,7 +429,7 @@
     // }
     .wallet-detail-wrapper{
         padding:14px 30px 2px 14px;
-        height: 109px;
+        min-height: 109px;
         display: flex;
         box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
         font-size: 12px;
@@ -527,8 +527,9 @@
             }
         }
     }
-
-
+    // .cancel,.sureBtn{
+    //     font-weight: 900;
+    // }
 </style>
 <style lang="less">
     .wallet-detail{

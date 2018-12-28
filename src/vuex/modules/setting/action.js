@@ -11,12 +11,15 @@ export const settingAction = {
         state.rpcMode = obj.rpcMode;
     },
     updateNetSetting({state,commit},obj){
-        console.warn('updateNetSetting---->',obj);
         commit('UPDATE_NET_SETTING',obj);
         let network = obj.network;
         if(network && network.type){
             Settings.saveUserData('type',network.type);
-            Settings.setKeyPath(network.type);
+            let keyType = network.type;
+            if(keyType=='custom'){
+                keyType = 'custom_'+state.chainName;
+            }
+            Settings.setKeyPath(keyType);
         }else{
             Settings.deleteUseData('type')
         }
@@ -48,6 +51,7 @@ export const settingAction = {
         Settings.deleteUseData('net_custom/txn.json');
     },
     updateChainName({state,commit},name){
+        console.log('update chainName',name);
         Settings.saveUserData('chainName',name);
         state.chainName = name;
     },

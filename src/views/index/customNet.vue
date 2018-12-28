@@ -50,7 +50,7 @@
                 </ul>
                 <div v-show="step==3">
                     <p class="addr">{{$t("settings.customNet.address")}}:{{keystore?keystore.address:''}}</p>
-                    <p class="mark">{{$t("settings.customNet.tip")}} <el-button @click="backup">{{$t("settings.customNet.download")}}</el-button></p>
+                    <p class="mark">{{$t("settings.customNet.tip")}}{{wallet.name}}{{$t("settings.customNet.tip2")}} <el-button @click="backup">{{$t("settings.customNet.download")}}</el-button></p>
                     <ul class="ul node-list">
                         <span class="sub-title">{{$t("settings.customNet.nodeaddress")}}</span>
                         <el-form ref="node" :model="nodeList[0]" :rules="nodeRules"  label-width="124px" label-position="left">
@@ -73,7 +73,7 @@
                     <el-button class="back" @click="back">{{$t("settings.customNet.cancel")}}</el-button>
                     <el-button class="init" @click="initBtn" v-if="step==1">{{$t("settings.customNet.create")}}</el-button>
                     <el-button class="init" @click="initAccount" v-if="step==2">{{$t("settings.customNet.createAndWrite")}}</el-button>
-                    <el-button class="init" @click="create" v-if="step==3">{{$t("settings.customNet.startNode")}}</el-button>
+                    <el-button class="init" @click="create" v-if="step==3" :disabled="createLoading">{{$t("settings.customNet.startNode")}}</el-button>
                 </p>
             </div>
             <div v-if="tab==2">
@@ -127,6 +127,8 @@
     const path = require('path');
     import RegConfig from '@/config/reg-config';
     import { ipcRenderer } from 'electron';
+    import fsObj from '@/services/fs-service'
+
     export default {
         name: 'customNet',
         //实例的数据对象
@@ -157,7 +159,8 @@
                     nonce: "0x0",
                     timestamp: "",   //秒级时间戳的十六进制"0x5bd299df",
                     extraData: "0x000000000000000000000000000000000000000000000000000000000000000012582d7da0a495e92a99e99530c001dc5a108f713a3b080ced64ffc9fbd60bb60cfba164da81368eee4e9e8c665771b4709f9493b527d4af1378a0bb42bf7e1d3991adacbf68d782f6467663e37207180000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-                    gasLimit: "0x989680",
+                    // gasLimit: "0x989680",
+                    gasLimit: "0x99947b760",
                     difficulty: "0x1",
                     mixHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
                     coinbase: "0x0000000000000000000000000000000000000000",
@@ -175,6 +178,7 @@
                     port:'',
                     privateKey:''
                 },
+                createLoading:false,
                 // conn:{
                 //     ip:'10.10.8.214',
                 //     port:'4567',
@@ -247,7 +251,8 @@
                     privateKey:{required: true, message: this.$t('wallet.NodePKRequired'), trigger: 'blur'},
                     ip:{required: true, message: this.$t('wallet.NodeIPRequired'), trigger: 'blur'},
                     port:{required: true, message: this.$t('wallet.NodePortRequired'), trigger: 'blur'}
-                }
+                },
+                fromPath:''
             }
         },
         //数组或对象，用于接收来自父组件的数据
@@ -260,7 +265,7 @@
         },
         //方法
         methods: {
-            ...mapActions(['updateState','updateNetSetting','updateLoading','getCustoms','changeWindow']),
+            ...mapActions(['updateState','updateNetSetting','updateLoading','getCustoms','changeWindow','updateWalletInfo']),
             checkNetname:function(rule, value, callback){
                 if (!value) {
                     return callback(new Error(this.$t('wallet.netNameEmpty')));
@@ -324,7 +329,11 @@
                 }
             },
             back(){
-                this.$router.push('/home')
+                console.log(this.fromPath);
+                if(this.fromPath=='/'){
+                    Settings.deleteUseData('type');
+                }
+                this.$router.back();
             },
             initBtn(){
                 this.$refs['net'].validate((valid) => {
@@ -357,7 +366,8 @@
                             }else{
                                 this.keystore = data;
                                 Object.assign(this.jsonData.alloc,{
-                                    [data.address]:{balance:'0x200000000000000000000000000000000000000000000000000000000000000'}
+                                    // [data.address]:{balance:'0x200000000000000000000000000000000000000000000000000000000000000'}
+                                    [data.address]:{balance:'0x152d02c7e14af6800000'}
                                 });
                                 console.warn('jsonData-->step2',this.jsonData);
                                 this.step = 3;
@@ -375,6 +385,7 @@
                 this.$refs['node'].validate((valid)=>{
                     if(valid){
                         //组合state-nodes
+                        this.createLoading = true;
                         let stateNodes=[],publicKey,_this = this;
                         if(this.nodeList.length>0 && this.nodeList[0].privateKey){
                             publicKey = EthUtil.privateToPublic(new Buffer(this.nodeList[0].privateKey, 'hex')).toString('hex');
@@ -391,8 +402,11 @@
                                     nodeManager.initChain(this.net.name,this.nodeList[0].port);
                                 });
                             }).catch((e)=>{
+                                this.createLoading = false;
                                 console.log(e);
                             });
+                        }else{
+                            this.createLoading = false;
                         }
                     }
                 })
@@ -506,11 +520,25 @@
                     ipcRenderer.send('orignal-window')
                 }
                 this.changeWindow(this.isMaximized)
+            },
+            saveKey(cb){
+                this.keystore.createTime = new Date().getTime();
+                this.updateWalletInfo(this.keystore).then(()=>{
+                    cb();
+                }).catch((e)=>{
+                    cb();
+                    throw e;
+                })
             }
         },
         //生命周期函数
         created() {
 
+        },
+        beforeRouteEnter(to, from, next){
+            next(vm=>{
+                vm.fromPath=from.path;
+            });
         },
         beforeMount() {
 
@@ -535,7 +563,11 @@
         watch: {
             'nodeState':function(val,old){
                 if(old!=2 && val==2){
-                    this.$router.push('/')
+                    this.saveKey(()=>{
+                        fsObj.saveKey(this.keystore.address,JSON.stringify(this.keystore));
+                        this.createLoading = false;
+                        this.$router.push('/')
+                    });
                 }
             }
         },
@@ -665,6 +697,7 @@
                 margin-left:14px;
                 width:90px;
                 height:24px;
+                line-height:24px;
                 font-size:10px;
                 text-align:center;
                 color:#fff;

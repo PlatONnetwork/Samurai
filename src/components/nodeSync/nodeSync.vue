@@ -1,7 +1,11 @@
 <template>
     <div class="node-sync">
         <p>{{$t('nodeSync.syncStatus')}} <span v-if="syncing"><i class="el-icon-loading"></i></span></p>
-        <p>{{$t('nodeSync.Peers')}} : <span class="bold">{{nodeCount}}</span></p>
+        <p>
+            {{$t('nodeSync.Peers')}} :
+            <span v-if="network.type=='test'&&nodeCount==0" class="connecting">Connecting...</span>
+            <span v-else class="bold">{{nodeCount}}</span>
+        </p>
         <p>{{$t('nodeSync.Blocks')}} : <span class="bold">{{remainBlock}}</span></p>
         <p v-if="syncing || nodeCount==0">
             <el-progress :stroke-width="14" :percentage="(highestBlock?(currentBlock/highestBlock):0)*100" color="rgb(35,200,239,1)"></el-progress>
@@ -13,6 +17,7 @@
 </template>
 
 <script>
+    import {mapActions, mapGetters} from 'vuex';
     import nodeManager from '@/services/node-manager';
     import contractService from '@/services/contract-servies';
     import Settings from '@/services/setting';
@@ -29,6 +34,9 @@
                 timer:null
             }
         },
+        computed:{
+            ...mapGetters(['network'])
+        },
         mounted(){
             window.syncInterval = setInterval(this.check,3*1000);
         },
@@ -37,6 +45,7 @@
                 try{
                     contractService.web3.eth.getSyncing((err,data)=>{
                         if(!err && !!data){
+                            this.syncing = true;
                             this.currentBlock = data.currentBlock;
                             this.highestBlock = data.highestBlock;
                             this.remainBlock = data.currentBlock - data.highestBlock;
@@ -46,11 +55,11 @@
                                    clearInterval(window.syncInterval);
                             }
                         }else{
+                            this.syncing = false;
                             this.remainBlock = 0;
                         }
                     });
                     contractService.web3.net.getPeerCount((error, result)=>{
-                        // console.warn(error, result)
                         if(error){
                             throw error;
                         }
@@ -88,6 +97,10 @@
         .bold{
             font-weight:600;
         }
+    }
+    .connecting{
+        font-weight:600;
+        color:#ea106e;
     }
 
 </style>

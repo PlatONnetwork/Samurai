@@ -78,7 +78,9 @@ class Settings {
                         let configJSON = require("../../static/json/platon");
                         fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON))
                     });
-                    fs.writeFileSync(`${this.userDataPath}net_test/init`,0)
+                    if(!fs.existsSync(`${this.userDataPath}net_test/init`)){
+                        fs.writeFileSync(`${this.userDataPath}net_test/init`,0)
+                    }
                 });
                 this.mkf(this.userDataPath+'net_custom',()=>{
                     this.mkf(this.userDataPath+'net_custom/chain');
@@ -103,17 +105,26 @@ class Settings {
     // @returns "Application Support/Mist" in production mode
     // @returns "Application Support/Electron" in development mode
     setKeyPath(type,cb) {
+        console.log('setting---',type);
         if(!type) return;
         let defaultKeyPath = this.userDataPath,userDataPath = this.userDataPath+'keyPath';
         fs.exists(userDataPath, (exists) => {
+            console.log('keypath exits---',exists);
             if(exists){
                 let data =  JSON.parse(fs.readFileSync(userDataPath,{encoding:'utf8'}));
-                this.keyPath = data[type]
-            }else{
-                if(type=='custom'){
-                    this.keyPath = defaultKeyPath+'net_'+type+'/chain/';
+                console.log('data----',data);
+                if(type=='test' || type=='main'){
+                    this.keyPath = data[type]
                 }else{
+                    let chainName = type.replace(/^custom_/,'');
+                    this.keyPath = data[type]?data[type]:(defaultKeyPath+'net_custom'+'/chain/'+chainName+'/keystore');
+                }
+            }else{
+                if(type=='test' || type=='main'){
                     this.keyPath = defaultKeyPath+'net_'+type+'/keystore/';
+                }else{
+                    let chainName = type.replace(/^custom_/,'');
+                    this.keyPath = defaultKeyPath+'net_custom'+'/chain/'+chainName+'/keystore';
                 }
             }
             if(cb && typeof cb=='function'){
