@@ -1,0 +1,10 @@
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 157 init wallet owner: 0x2cace9a6332fd32e08be49bd26afa49b23aac05c:0xfa8710d8c44d887e3eade7b3b8b622cbe83d0110 required: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 160 addresses size: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func validRequirement line 136 ownerCount: 2 required: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 165 address: 0x2cace9a6332fd32e08be49bd26afa49b23aac05c
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 168 address convert: 2cace9a6332fd32e08be49bd26afa49b23aac05c
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 172 push_back: 2cace9a6332fd32e08be49bd26afa49b23aac05c
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 165 address: 0xfa8710d8c44d887e3eade7b3b8b622cbe83d0110
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 168 address convert: fa8710d8c44d887e3eade7b3b8b622cbe83d0110
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 172 push_back: fa8710d8c44d887e3eade7b3b8b622cbe83d0110
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 177 end initWallet
