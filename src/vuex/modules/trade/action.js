@@ -217,19 +217,27 @@ export const tradeAction = {
                 //共享钱包详情页，size比较特殊，要保证首屏待确认的全部加载，已完成的加载20条
                 let pendings=[],compoletes=[];
                 dispatch('getTransactionCount').then((count)=>{
-                    dispatch('getCurShareTradeList',count).then((shareTradeList)=>{
-                        pendings = shareTradeList.filter((item)=>{
-                            return item.pending==1;
-                        });
-                        compoletes = shareTradeList.filter((item)=>{
-                            return item.pending==0;
-                        });
+                    if(count<1){
                         resolve({
-                            total:compoletes.length,
-                            list:compoletes.slice(0,param.size),
-                            pendings:pendings
+                            total:0,
+                            list:[],
+                            pendings:[]
                         });
-                    })
+                    }else{
+                        dispatch('getCurShareTradeList',count).then((shareTradeList)=>{
+                            pendings = shareTradeList.filter((item)=>{
+                                return item.pending==1;
+                            });
+                            compoletes = shareTradeList.filter((item)=>{
+                                return item.pending==0;
+                            });
+                            resolve({
+                                total:compoletes.length,
+                                list:compoletes.slice(0,param.size),
+                                pendings:pendings
+                            });
+                        })
+                    }
                 })
             }else{
                 let walletType = rootState.wallet.walletType,

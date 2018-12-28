@@ -288,19 +288,21 @@
                                 }
                                 _this.getShareConfirmations(item,(data)=>{
                                     if(data.confirmations == data.required){
-                                        _this.pendingTradeList.splice(index,1);
-                                        data.pending = '0';
-                                        data.executed = '1';
-                                        if(_this.tradeList.length==0 || _this.tradeList[_this.tradeList.length-1].id!==item.id){
-                                            _this.tradeList.unshift(data);
-                                        }
+                                        _this.init();
+                                        // _this.pendingTradeList.splice(index,1);
+                                        // data.pending = '0';
+                                        // data.executed = '1';
+                                        // if(_this.tradeList.length==0 || _this.tradeList[_this.tradeList.length-1].id!==item.id){
+                                        //     _this.tradeList.unshift(data);
+                                        // }
                                     }else if(data.ownersList.length - data.rejectList.length < data.required){
-                                        _this.pendingTradeList.splice(index,1);
-                                        data.pending = '0';
-                                        data.executed = '0';
-                                        if(_this.tradeList.length==0 || _this.tradeList[_this.tradeList.length-1].id!==item.id){
-                                            _this.tradeList.unshift(data);
-                                        }
+                                        _this.init();
+                                        // _this.pendingTradeList.splice(index,1);
+                                        // data.pending = '0';
+                                        // data.executed = '0';
+                                        // if(_this.tradeList.length==0 || _this.tradeList[_this.tradeList.length-1].id!==item.id){
+                                        //     _this.tradeList.unshift(data);
+                                        // }
                                     }else{
                                         _this.$set(_this.pendingTradeList,index,data);
                                     }

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>template</title>
+    <title>Samurai</title>
     <% if (htmlWebpackPlugin.options.nodeModules) { %>
       <!-- Add `node_modules/` to global paths so `require` works properly in development -->
       <script>
@@ -17,6 +17,22 @@
     <!-- Set `__static` path to static files in production -->
     <script>
       if (process.env.NODE_ENV !== 'development') window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
+      document.addEventListener("drag",function(event){
+        event.preventDefault();
+      },false);
+      document.addEventListener("dragstart",function(event){
+         event.preventDefault();
+      },false);
+      document.addEventListener("dragend",function(event){
+         event.preventDefault();
+      },false);
+      document.addEventListener("dragover",function(event){
+         event.preventDefault();
+      },false);
+
+      document.addEventListener("drop",function(event){
+         event.preventDefault();
+      },false);
     </script>
 
     <!-- webpack builds are automatically injected -->

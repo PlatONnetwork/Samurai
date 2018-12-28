@@ -43,7 +43,7 @@
                         <el-button v-if="funBody" @click="confirm">{{$t("contracts.execute")}}</el-button>
                     </p>
                 </div>
-                <div class="rSide" v-if="showAbiInfo">
+                <div class="rSide" v-if="abiInfo.length>0">
                     <i class="icon-close" @click="closeSide"></i>
                     <div class="right-contract-name">
                         <span class="contract-name" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}} - </span>
@@ -53,7 +53,7 @@
                     </div>
 
                 </div>
-                <ul class="r-ul-info" v-for="item in abiInfo" :key="item.index" v-if="showAbiInfo">
+                <ul class="r-ul-info" v-for="item in abiInfo" :key="item.index">
                     <li class="rinfo">{{item}}</li>
                 </ul>
                 <!-- <div style="clear:both;"></div> -->
@@ -151,8 +151,7 @@
                 constant:'',
                 hash:'',
                 params:[],
-                abiInfo:[],
-                showAbiInfo:false,
+                abiInfo:[]
             }
         },
         computed: {
@@ -336,15 +335,13 @@
                             contractService.platONCall(JSON.parse(this.contract.abi),this.contract.address,this.fun,keyObject.address,this.params).then((data)=>{
                                 this.abiInfo.push(data)
                                 this.showFunModal = false;
-                                this.showAbiInfo = true;
                             })
                         }
                     });
                 }
-                
+
             },
             closeSide(){
-                this.showAbiInfo = false;
                 this.abiInfo = [];
             },
             refresh(){
@@ -478,7 +475,7 @@
             padding:20px;
             // width: 483px;
             height:150px;
-            
+
             overflow-y: auto;
         }
     }
