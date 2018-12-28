@@ -36,7 +36,7 @@
                             <span class="label">{{$t("wallet.address")}}:</span>
                             <span class="value">{{walletInfo.address}}</span>
                         </p>
-                        <p>
+                        <p class="public-box">
                             <span class="label">{{$t("wallet.pubKey")}}:</span>
                             <span class="value pub">{{walletInfo.pubKey}}</span>
                         </p>
@@ -165,7 +165,7 @@
                 })
             },
             backUp(){
-                keyManager.backUpKey(this.walletInfo.address);
+                keyManager.backUpKey(this.walletInfo.address,this.walletInfo);
             },
             goBack(){
                 this.$router.push('/home')
@@ -259,6 +259,15 @@
                     font-size: 10px;
                 }
             }
+            .public-box{
+                display:flex;
+                .label{
+                    min-width:58px;
+                }
+                .pub{
+                    text-indent:0;
+                }
+            }
         }
         .back{
             margin-top:30px;
@@ -271,6 +280,7 @@
         font-size: 10px;
         color: #F32E25;
         white-space: nowrap;
+        letter-spacing: 1.5px;
     }
     .btn-box{
         margin-top:30px;
@@ -292,7 +302,7 @@
                 width: auto;
             }
         }
-        
+
     }
     }
 </style>
@@ -308,5 +318,5 @@
             position:static;
         }
     }
-    
+
 </style>

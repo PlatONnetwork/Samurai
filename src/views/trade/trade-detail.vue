@@ -79,15 +79,25 @@
         mounted(){
             this.trade = this.$route.query.trade?this.$route.query.trade:{};
             if(this.trade.hash){
-                if(this.trade && this.trade.gasUsed){
-                    this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
-                    this.trade.price = mathService.mul(this.trade.gasPrice,this.trade.gasUsed)
-                }else{
-                    this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
-                    this.trade.blockNumber = '(Pending)';
-                    this.trade.price = '(Pending)';
-                    this.trade.gasUsed = '(Pending)';
-                }
+                contractService.web3.eth.getTransactionReceipt(this.trade.hash,(err,data)=>{
+                    if(data && !data.to){
+                        delete data.to;
+                    }
+                    if(err){
+                        console.error(err);
+                        return;
+                    }
+                    Object.assign(this.trade,data);
+                    if(this.trade && this.trade.gasUsed){
+                        this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
+                        this.trade.price = mathService.mul(this.trade.gasPrice,this.trade.gasUsed)
+                    }else{
+                        this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
+                        this.trade.blockNumber = '(Pending)';
+                        this.trade.price = '(Pending)';
+                        this.trade.gasUsed = '(Pending)';
+                    }
+                });
             }else{  //共享钱包转账交易
                 this.trade.price = '-';
                 if(this.trade.pending!=1){

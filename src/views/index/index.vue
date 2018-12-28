@@ -63,6 +63,7 @@
             return {
                 netType:'test',
                 loadCompolete:false,
+                fromPath:'',
                 // isBig: true,
                 // bg:"url('./images/bj.png')"
             }
@@ -74,6 +75,12 @@
         //计算
         computed: {
             ...mapGetters(['initialUse','network','chainName','isMaximized'])
+        },
+        beforeRouteEnter(to, from, next){
+            next(vm=>{
+                vm.fromPath=from.path;
+                vm.netType = from.path=='/customNet'?'custom':'test'
+            });
         },
         //方法
         methods: {
@@ -123,7 +130,7 @@
                 let localIp = Settings.loadUserData('ip');
                 let localPort = Settings.loadUserData('port');
                 let chainName = Settings.loadUserData('chainName');
-                console.warn('created',localPort);
+                console.warn('created-----init---port-type',localPort,localType);
                 if(localType=='custom' && localPort && chainName){
                     nodeManager.startNode(chainName,localPort).then(()=>{
                         this.loadCompolete = true;
@@ -162,6 +169,7 @@
                 }
                 let path = Settings.userDataPath+'keyPath';
                 fs.exists(path, (exists) => {
+                    console.log('index----',exists);
                     if(!exists){
                         let paths={
                             main:Settings.userDataPath+'net_main/keystore/',
@@ -171,7 +179,11 @@
                         Settings.saveUserData('keyPath',JSON.stringify(paths));
                         Settings.setKeyPath(localType);
                     }else{
-                        Settings.setKeyPath(localType);
+                        let keyType = localType;
+                        if(keyType=='custom'){
+                            keyType='custom_'+this.chainName;
+                        }
+                        Settings.setKeyPath(keyType);
                     }
                 });
             }

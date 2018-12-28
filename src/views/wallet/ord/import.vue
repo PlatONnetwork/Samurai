@@ -75,6 +75,10 @@
                 <el-form-item prop="password">
                     <el-input v-model.trim="byKeyStore.password"
                               type="password"
+                              onpaste="return false"
+                              ondragstart="return false"
+                              ondragEnter="return false"
+                              ondrop="return false"
                               :placeholder="$t('wallet.decryptKeystore')">
                     </el-input>
                 </el-form-item>
@@ -505,6 +509,7 @@
             font-size: 10px;
             color: #F32E25;
             white-space: nowrap;
+            letter-spacing: 1.5px;
         }
     }
 
@@ -536,7 +541,7 @@
             color: #9EABBE;
             letter-spacing: 0.43px;
         }
-        
+
     }
 
 </style>

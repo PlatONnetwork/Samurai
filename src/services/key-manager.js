@@ -147,7 +147,7 @@ const keyManager = {
                 var DD = new Date();
                 OW.document.open();
                 OW.document.write(content);
-                var name = address + ".txt";
+                var name = keystore.account + ".txt";
                 OW.document.execCommand("saveAs", false, "C:/Users/15236/Downloads/"+name);//执行保存，IE6,IE7,IE8有效
                 OW.close();
             }else{
@@ -155,7 +155,7 @@ const keyManager = {
                 var bb = new Blob([content],{type : 'application/json'});
                 var jsonURL=window.URL.createObjectURL(bb);
                 var a = document.createElement('a');
-                a.setAttribute('download', address+'.json');
+                a.setAttribute('download', keystore.account+'.json');
                 a.id='key-save';
                 a.target="_blank";
                 a.href = jsonURL;

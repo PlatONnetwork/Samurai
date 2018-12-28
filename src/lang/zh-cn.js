@@ -184,7 +184,7 @@ export default {
         finished:'已完成',
         failed:'交易失败',
         pending:'确认中',
-        confirm:'确认',
+        confirm:'确 认',
         reject:'拒绝',
         transactionInfo:'交易信息',
         type:'交易类型',
@@ -240,7 +240,7 @@ export default {
             netNameHint:'输入私链网络名称（仅支持字母数字）',
             consensus:'共识算法',
             interval:'出块间隔',
-            cancel:'取消',
+            cancel:'取 消',
             create:'创建创世区块',
             creating:'创建中',
             createWallet:'创建钱包',
@@ -249,7 +249,8 @@ export default {
             rePassword:'确认密码',
             createAndWrite:'创建钱包并写入区块',
             address:'地址',
-            tip:'请注意备份钱包文件.json，丢失无法找回',
+            tip:'请注意备份钱包文件',
+            tip2:'.json，丢失无法找回',
             download:'备份钱包文件',
             nodeaddress:'配置节点地址',
             node:'节点',
@@ -279,10 +280,10 @@ export default {
     },
     form:{
         nonPsw:'密码不能为空',
-        create:'创建',
-        cancel:'取消',
-        submit:'提交', // add
-        sure:'确定',
+        create:'创 建',
+        cancel:'取 消',
+        submit:'提 交', // add
+        sure:'确 定',
         nonOldPsw:'原密码不能为空',
         less6:'密码至少6个字符',
         nonRepPsw:'重复密码不能为空',
@@ -338,8 +339,8 @@ export default {
             fee:'手续费',
             advanceOpt:'更多功能',
             inputHint:'请输入',
-            cancel:'取消',
-            submit:'提交'
+            cancel:'取 消',
+            submit:'提 交'
         },
         watchContract:{
             contName:'合约名称',
@@ -351,10 +352,11 @@ export default {
             contAddressError:'合约地址不正确',
             addressHint:'请输入合约地址0x00',
             contABI:'合约接口',
+            contABIHint:'请输入合约接口ABI',
             contABIEmp:'合约接口不能为空',
             contABIInvalid:'合约接口无法解析',
-            cancel:'取消',
-            add:'添加'
+            cancel:'取 消',
+            add:'添 加'
         }
     }
 };

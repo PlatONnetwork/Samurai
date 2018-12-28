@@ -69,6 +69,7 @@
             <div class="modal-main">
                 <div class="modal-title">
                     {{$t('wallet.deployContract')}}
+                    <span class="modal-close" @click="createConfirm=false"></span>
                 </div>
                 <div class="modal-content">
                     <div class="content">
@@ -309,24 +310,33 @@
             },
             getGas(addr){
                 return new Promise((resolve, reject)=>{
-                    let calcContract = contractService.web3.eth.contract(contractService.getABI(1));
-                    let platONData = calcContract.new.getPlatONData(contractService.getBIN(1));
-                    contractService.web3.eth.estimateGas({
-                        "from":addr,
-                        "data":platONData
-                    },(err,gas)=>{
-                        console.log('估算gas--->',err,gas);
-                        if(err){
-                            throw err;
-                        }
-                        this.gas = gas;
-                        contractService.web3.eth.getGasPrice((error,result)=>{
-                            if(error) reject(error);
-                            this.gasPrice = result;
-                            this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
-                            resolve();
-                        });
-                    })
+
+                    this.gas = 250000000;
+                    contractService.web3.eth.getGasPrice((error,result)=>{
+                        if(error) reject(error);
+                        this.gasPrice = result;
+                        this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
+                        resolve();
+                    });
+
+                    // let calcContract = contractService.web3.eth.contract(contractService.getABI(1));
+                    // let platONData = calcContract.new.getPlatONData(contractService.getBIN(1));
+                    // contractService.web3.eth.estimateGas({
+                    //     "from":addr,
+                    //     "data":platONData
+                    // },(err,gas)=>{
+                    //     console.log('估算gas--->',err,gas);
+                    //     if(err){
+                    //         throw err;
+                    //     }
+                    //     this.gas = gas;
+                    //     contractService.web3.eth.getGasPrice((error,result)=>{
+                    //         if(error) reject(error);
+                    //         this.gasPrice = result;
+                    //         this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
+                    //         resolve();
+                    //     });
+                    // })
                 });
             },
             confirmCreate(){

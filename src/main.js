@@ -27,7 +27,8 @@ if (!process.env.IS_WEB){
 }
 //Vue.config.silent = true;
 Vue.config.productionTip = false
-const browserLanguage = (navigator.language || navigator.browserLanguage).toLowerCase();
+const browserLang = (navigator.language || navigator.browserLanguage).toLowerCase();
+const browserLanguage = browserLang.indexOf('en')=='-1'?'zh-cn':'en';
 const localLang = window.localStorage.getItem('user_lang')?window.localStorage.getItem('user_lang'):browserLanguage
 console.warn('browserLanguage',browserLanguage);
 const i18n = new VueI18n({

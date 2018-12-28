@@ -14,9 +14,12 @@
                 </el-form-item>
                 <el-form-item :label="$t('contracts.amount')" prop="value">
                     <el-input v-model.trim="newContract.value" type="number" :placeholder="$t('contracts.amountHint')">
-                        <el-button slot="append" @click="sendAll">All</el-button>
+                        <el-button class="append" slot="append" @click="sendAll">ALL</el-button>
                     </el-input>
-                    <span>{{$t("contracts.wantSend")}} {{newContract.value || 0}} Energon</span>
+                    <span>{{$t("contracts.wantSend")}} 
+                        <span class="EnergonCount">{{newContract.value || 0}}</span>
+                        Energon
+                    </span>
                 </el-form-item>
                 <el-form-item :label="$t('contracts.watchContract.contName')" prop="name">
                     <el-input v-model.trim="newContract.name" :placeholder="$t('contracts.watchContract.nameHint')">
@@ -55,7 +58,7 @@
                 </el-form-item>
                 <el-form-item :label="$t('contracts.selectFee')">
                     <span class="send-slider">
-                        <fee-slider @sel="selFee"></fee-slider>
+                        <fee-slider @sel="selFee" :estimateGas="gas"></fee-slider>
                     </span>
                 </el-form-item>
             </el-form>
@@ -66,7 +69,10 @@
         </div>
         <div class="modal confirm" v-if="showConfirm">
             <div class="modal-main">
-                <div class="modal-title">{{$t("contracts.createCont.creatCont")}}</div>
+                <div class="modal-title">
+                    {{$t("contracts.createCont.creatCont")}}
+                    <span class="modal-close" @click="showConfirm=false"></span>
+                </div>
                 <div class="modal-content">
                     <div class="confirm-content">
                         <p>{{$t("wallet.amount")}}<span class="txt">{{newContract.value}}Energon</span></p>
@@ -122,7 +128,7 @@
                 showConfirm:false,
                 confirmShowMore:false,
                 balance:0,
-                gas: "0.01",
+                gas: null,
                 gasPrice: 0,
                 // gas:null,
                 calcContract: '',
@@ -260,14 +266,18 @@
                         }else if(this.newContract.bin == ''){
                             this.$message.error(this.$t('contracts.contByteEmpty'));
                         }else{
-                            this.getGas().then((gas)=> {
-                                this.gas = gas;
-                                this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*gas;
-                                this.showConfirm = true;
-                                this.newContract.psw='';
-                            }).catch((e)=>{
-                                throw e;
-                            })
+                            // this.getGas().then((gas)=> {
+                            //     this.gas = gas;
+                            //     this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*gas;
+                            //     this.showConfirm = true;
+                            //     this.newContract.psw='';
+                            // }).catch((e)=>{
+                            //     throw e;
+                            // })
+                            this.gas = 250000000;
+                            this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*this.gas;
+                            this.showConfirm = true;
+                            this.newContract.psw='';
                         }
                     } else {
                         console.log('error submit!!');
@@ -550,6 +560,12 @@
         font-size: 12px;
         line-height: 1;
         padding-top: 4px;
+    }
+    .EnergonCount{
+        font-weight: bold;
+    }
+    .append{
+        width: 52px;
     }
 </style>
 <style lang="less">

@@ -1,11 +1,15 @@
 {
     "name": "Samurai_wallet",
     "version": "0.2.13",
-    "author": "矩阵元技术（深圳）有限公司<support@juzix.io>",
+    "author": "www.platon.network<support@platon.network>",
     "description": "Samurai钱包客户端",
     "license": null,
     "main": "./dist/electron/main.js",
+    "homepage": "https://www.platon.network/",
     "scripts": {
+        "win": "node build/build.js && electron-builder -w --x64",
+        "mac": "node build/build.js && electron-builder --mac --arch=x64 ",
+        "linux": "node build/build.js && electron-builder --linux deb tar.xz",
         "build": "node build/build.js && electron-builder",
         "build:dir": "node build/build.js && electron-builder --dir",
         "build:clean": "cross-env BUILD_TARGET=clean node build/build.js",
@@ -18,7 +22,7 @@
     },
     "build": {
         "productName": "Samurai",
-        "buildVersion": "0.2.0.4",
+        "buildVersion": "0.2.0.6",
         "appId": "org.simulatedgreg.electron-vue",
         "directories": {
             "output": "dist"
@@ -33,11 +37,6 @@
                 "filter": [
                     "48x48.png"
                 ]
-            },
-            {
-                "from": "src/services/platon-exe/",
-                "to": "platon_exe",
-                "filter": []
             },
             {
                 "from": "src/services/demo1/",
@@ -65,10 +64,24 @@
         },
         "win": {
             "icon": "build/icons/icon.ico",
-            "requestedExecutionLevel": "requireAdministrator"
+            "requestedExecutionLevel": "requireAdministrator",
+            "extraFiles": [
+                {
+                    "from": "src/services/platon-exe/",
+                    "to": "platon_exe",
+                    "filter": []
+                }
+            ]
         },
         "linux": {
-            "icon": "build/icons"
+            "icon": "build/icons",
+            "extraFiles": [
+                {
+                    "from": "src/services/linux-platon-exe/",
+                    "to": "platon_exe",
+                    "filter": []
+                }
+            ]
         },
         "portable": {
             "requestExecutionLevel": "admin"
@@ -98,7 +111,7 @@
         "vue": "^2.5.2",
         "vue-clipboard2": "^0.2.1",
         "vue-electron": "^1.0.6",
-        "vue-i18n": "^8.3.2",
+        "vue-i18n": "^8.4.0",
         "vue-qr": "^1.5.2",
         "vue-router": "^2.5.3",
         "vuex": "^2.3.1",
@@ -119,8 +132,8 @@
         "css-loader": "^0.28.4",
         "del": "^2.2.1",
         "devtron": "^1.1.0",
-        "electron": "^1.8.8",
-        "electron-builder": "^19.56.2",
+        "electron": "^3.0.11",
+        "electron-builder": "^20.38.3",
         "electron-debug": "^1.4.0",
         "electron-devtools-installer": "^2.0.1",
         "extract-text-webpack-plugin": "^2.0.0-beta.4",

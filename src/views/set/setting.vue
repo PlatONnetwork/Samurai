@@ -168,9 +168,13 @@
                             })
                         });
                         let data =  JSON.parse(fs.readFileSync(Settings.userDataPath+'keyPath',{encoding:'utf8'}));
-                        data[_this.netType] = dist.replace(/\\/g,'/')+'/';
+                        let curType = _this.netType;
+                        if(_this.netType=='custom'){
+                            curType = 'custom_'+this.chainName;
+                        }
+                        data[curType] = dist.replace(/\\/g,'/')+'/';
                         Settings.saveUserData('keyPath',JSON.stringify(data));
-                        Settings.setKeyPath(_this.netType,()=>{
+                        Settings.setKeyPath(curType,()=>{
                             _this.currentPath = Settings.keyPath
                         });
                     }
@@ -228,7 +232,8 @@
         mounted() {
             this.netType = (this.network.type=='custom')?'custom_'+this.chainName:this.network.type;
             this.language =this.lang;
-            this.currentPath = this.network.type=='custom'?`${Settings.keyPath}${this.chainName}/keystore`:Settings.keyPath;
+            // this.currentPath = this.network.type=='custom'?`${Settings.keyPath}${this.chainName}/keystore`:Settings.keyPath;
+            this.currentPath = Settings.keyPath;
             this.getCustoms();
         },
         //监视

@@ -1,5 +1,5 @@
 <template>
-    <div class="send-transcation format-style" style="height:auto">
+    <div class="send-transcation format-style">
         <div class="send-content card">
             <el-form ref="sendTranscation"
                      v-model="sendTranscation"
@@ -23,13 +23,16 @@
                 </div>
                 <el-form-item :label="$t('wallet.amountSend')">
                     <el-input v-model.trim="sendTranscation.value" @blur="changeVal" :placeholder="$t('wallet.amountHint')" type="number">
-                        <el-button slot="append" @click="sendAll">All</el-button>
+                        <el-button class="append" slot="append" @click="sendAll">ALL</el-button>
                     </el-input>
-                    <span>{{$t("wallet.wantTo")}}{{sendTranscation.value || 0}}Energon</span>
+                    <span>{{$t("wallet.wantTo")}}
+                        <span class="EnergonCount">{{sendTranscation.value || 0}}</span>
+                        Energon
+                    </span>
                 </el-form-item>
                 <el-form-item :label="$t('wallet.selectFee')">
                     <span class="send-slider">
-                        <fee-slider @sel="selFee"></fee-slider>
+                        <fee-slider @sel="selFee" :estimateGas="gas"></fee-slider>
                     </span>
                 </el-form-item>
                 <span @click="moreFun" class="cur more">{{$t("wallet.advance")}} <i class="el-icon-arrow-down"></i></span>
@@ -45,7 +48,10 @@
 
         <div class="modal confirm" v-if="showConfirm">
             <div class="modal-main">
-                <div class="modal-title">{{$t("wallet.sendTransaction")}}</div>
+                <div class="modal-title">
+                    {{$t("wallet.sendTransaction")}}
+                    <span class="modal-close" @click="showConfirm=false"></span>
+                </div>
                 <div class="modal-content">
                     <div class="confirm-content">
                         <p>{{$t("wallet.amount")}}<span class="txt">{{sendTranscation.value}}Energon</span></p>
@@ -61,7 +67,7 @@
                 </div>
                 <div class="modal-btn">
                     <el-button class="cancel" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="send" type="primary" :disabled="sendLoading">{{$t("form.submit")}}</el-button>
+                    <el-button class="subBtn" @click="send" type="primary" :disabled="sendLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -176,46 +182,60 @@
                             return;
                         }
                         if(this.walletType==1){
-                            let param = {
-                                "to":this.sendTranscation.to,
-                                "value": contractService.web3.toHex(contractService.web3.toWei(this.sendTranscation.value, "ether"))
-                            };
-                            if(this.sendTranscation.input && !/^\s*$/g.test(this.sendTranscation.input)){
-                                param["data"] = contractService.web3.toHex(this.sendTranscation.input)
+                            try{
+                                let gas1 = contractService.web3.toHex(this.sendTranscation.input).length*100+287760;
+                                resolve(gas1);
+                            }catch(e){
+                                resolve(287760);
                             }
-                            contractService.web3.eth.estimateGas(param,(err,data)=>{
-                                console.log('估算gas--->',err,data);
-                                if(err){
-                                    reject(err)
-                                }
-                                resolve(data);
-                            })
+
+                            // let param = {
+                            //     "to":this.sendTranscation.to,
+                            //     "value": contractService.web3.toHex(contractService.web3.toWei(this.sendTranscation.value, "ether"))
+                            // };
+                            // if(this.sendTranscation.input && !/^\s*$/g.test(this.sendTranscation.input)){
+                            //     param["data"] = contractService.web3.toHex(this.sendTranscation.input)
+                            // }
+                            // contractService.web3.eth.estimateGas(param,(err,data)=>{
+                            //     console.log('估算gas--->',err,data);
+                            //     if(err){
+                            //         reject(err)
+                            //     }
+                            //     resolve(data);
+                            // })
                         }else{
                             //共享钱包发送交易,gas为submit_estimated_gas + confirm_estimated_gas
-                            let param={
-                                destination:this.sendTranscation.to,
-                                from:this.fromW.address,
-                                value:contractService.web3.toWei(this.sendTranscation.value,"ether"),
-                                data:contractService.web3.toHex(this.sendTranscation.input),
-                                len:contractService.web3.toHex(this.sendTranscation.input).length,
-                                time:new Date().getTime(),
-                                fee:mathService.mul(this.sendTranscation.gas,10000000000)
-                            };
-                            let param1=[param.destination,param.from,param.value,param.data,param.len,param.time,param.fee];
-                            const MyContract = contractService.web3.eth.contract(contractService.getABI(1));
-                            const myContractInstance = MyContract.at(this.wallet.address);
-                            const platOnData = myContractInstance['submitTransaction'].getPlatONData(...param1);
-                            contractService.web3.eth.estimateGas({
-                                "from":this.wallet.admin.address,
-                                "to":this.wallet.address,
-                                "data":platOnData
-                            },(err,data)=>{
-                                console.log('估算gas--->',err,data);
-                                if(err){
-                                    reject(err)
-                                }
-                                resolve(data);
-                            })
+                            // let param={
+                            //     destination:this.sendTranscation.to,
+                            //     from:this.fromW.address,
+                            //     value:contractService.web3.toWei(this.sendTranscation.value,"ether"),
+                            //     data:contractService.web3.toHex(this.sendTranscation.input),
+                            //     len:contractService.web3.toHex(this.sendTranscation.input).length,
+                            //     time:new Date().getTime(),
+                            //     fee:mathService.mul(this.sendTranscation.gas,10000000000)
+                            // };
+                            // let param1=[param.destination,param.from,param.value,param.data,param.len,param.time,param.fee];
+                            // const MyContract = contractService.web3.eth.contract(contractService.getABI(1));
+                            // const myContractInstance = MyContract.at(this.wallet.address);
+                            // const platOnData = myContractInstance['submitTransaction'].getPlatONData(...param1);
+                            // contractService.web3.eth.estimateGas({
+                            //     "from":this.wallet.admin.address,
+                            //     "to":this.wallet.address,
+                            //     "data":platOnData
+                            // },(err,data)=>{
+                            //     console.log('估算gas--->',err,data);
+                            //     if(err){
+                            //         reject(err)
+                            //     }
+                            //     resolve(data);
+                            // })
+                            try{
+                                let gas1 = contractService.web3.toHex(this.sendTranscation.input).length*100+287760;
+                                resolve(gas1);
+                            }catch(e){
+                                resolve(287760);
+                            }
+
                         }
                     }
                 });
@@ -398,6 +418,9 @@
 </script>
 
 <style lang="less" scoped>
+    .send-transcation{
+        height: calc(~"100% - 90px");
+    }
     .cur{
         cursor:pointer;
     }
@@ -416,7 +439,7 @@
         width:445px;
     }
     .send-content{
-        height: 560px;
+        height: 100%;
         box-sizing: border-box;
         margin: 10px auto;
         padding-top: 20px;
@@ -475,6 +498,7 @@
                 }
                 .more-txt{
                     padding-left:10px;
+                    word-break: break-all;
                 }
                 .inputb{
                     margin:10px 10px 0;
@@ -494,6 +518,15 @@
                 }
             }
         }
+    }
+    // .cancel,.subBtn{
+    //     font-weight: 900;
+    // }
+    .append{
+        width: 52px;
+    }
+    .EnergonCount{
+        font-weight: bold;
     }
 </style>
 <style lang="less">
