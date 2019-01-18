@@ -5,6 +5,7 @@ let Web3 = require('web3'),
     path = require('path'),
     Tx = require('ethereumjs-tx');
 const net = require('net');
+import nodeManager from '@/services/node-manager';
 
 //是否为数组
 const isArray = (o) => {
@@ -58,6 +59,7 @@ class ContractServies {
 		this.timeout = 60; //超时时间
 		this.isConnected = false; //连接状态
         this.calcContract = '';
+        this.appContractAddress='0x1000000000000000000000000000000000000001';
 	}
 
     /**
@@ -70,6 +72,9 @@ class ContractServies {
 	    switch(type){
             case 1:
                 return JSON.parse(fs.readFileSync(`${filePath}/multisig.cpp.abi.json`,'utf8'));
+                break;
+            case 2:
+                return JSON.parse(fs.readFileSync(`${filePath}/candidateConstract.json`,'utf8'));
                 break;
         }
     }
@@ -87,12 +92,13 @@ class ContractServies {
         }
     }
 
-	setProvider(url,mode) {
+	setProvider(url,mode,netType,chainName) {
 		return new Promise((resolve,reject)=>{
+            let ipcNode = nodeManager.getipcNode(netType,chainName);
             if(mode=='ipc'){
                 try {
                     const client = net.Socket();
-                    const ipcNode = '\\\\.\\pipe\\platon.ipc';
+                    // const ipcNode = '\\\\.\\pipe\\platon.ipc';
                     const web3 = new Web3(new Web3.providers.IpcProvider(ipcNode, client));
                     this.web3 = web3;
                     this.isConnected = true;
@@ -146,11 +152,11 @@ class ContractServies {
      */
 	platONDeploy(ABI,BIN,from,privateKey,gas,gasPrice) {
 		return new Promise((resolve, reject)=>{
-			console.log(`--deploy start--`,ABI,BIN,from,privateKey,gas,gasPrice);
+			// console.log(`--deploy start--`,ABI,BIN,from,privateKey);
             this.calcContract = this.web3.eth.contract(ABI);
+            // const platONData = this.calcContract.new.getPlatONData(BIN);
             const platONData = this.calcContract.new.getPlatONData(BIN);
-            // const platONData = BIN
-            // console.log('platONData:', platONData);
+            console.log('platONData:', gasPrice);
 			this.web3.eth.getTransactionCount(from, (err, data) => {
 				// console.warn('getTransactionCount', err, data);
 				if (err) {
@@ -172,27 +178,13 @@ class ContractServies {
 
 				let serializedTx = tx.serialize();
 				this.calcContract.deploy('0x' + serializedTx.toString('hex'),(err, myContract)=>{
-					console.log('myContract', myContract, err);
-					if (!err) {
-						let count=0;
-						let timer = setInterval(()=>{
-                            count++;
-							if(myContract.address){
-								clearInterval(timer);
-                                // console.log("contract deploy transaction hash 2: " + myContract.transactionHash) //部署合约的交易哈希值
-                                // console.log("contract deploy transaction address: " + myContract.address) //部署合约的地址
-								this._contracts[myContract.address] = myContract;
-                                resolve({hash:myContract.transactionHash,address:myContract.address});
-							}else if(count==100){
-                                clearInterval(timer);
-                                // console.log("contract deploy transaction hash: " + myContract.transactionHash) //部署合约的交易哈希值
-                                reject({hash:myContract.transactionHash});
-							}
-						},1000);
-					} else {
+					// console.log('myContract', myContract, err);
+                    if(!err){
+                        resolve({hash:myContract.transactionHash});
+                    }else{
                         reject(err);
-						// console.log(`contract deploy error:`, err)
-					}
+                    }
+
 				});
 			})
 		});
@@ -207,14 +199,20 @@ class ContractServies {
 	 * @param _from 发起方
 	 * @param privateKey 发起方私钥
      */
-    platONSendTransaction(ABI,contractAddress,funName,_params,_from,privateKey,gas,gasPrice) {
+    platONSendTransaction(ABI,contractAddress,funName,_params,_from,privateKey,gas,gasPrice,value,async,tradetype) {
         return new Promise((resolve, reject)=>{
-            console.log(`--platONSendTransaction start--`,ABI,contractAddress,funName,_params,_from,privateKey,gas,gasPrice);
+            console.log(`--platONSendTransaction start--`,ABI,contractAddress,funName,_params,_from,privateKey,gas,gasPrice,value);
+            console.log(`--platONSendTransaction start--,gas--`,gas);
+            console.log(`--platONSendTransaction start--gasPrice--`,gasPrice);
             const MyContract = this.web3.eth.contract(ABI);
             const myContractInstance = MyContract.at(contractAddress);
+            console.log('MyContract---->',myContractInstance);
             let params1 = JSON.parse(_params);
             console.log('params1---->',params1);
-            const platOnData = myContractInstance[funName].getPlatONData(...params1);
+            console.log('tradetype---->',tradetype);
+            const platOnData = myContractInstance[funName].getPlatONData(...params1,{
+                transactionType:tradetype?tradetype:2
+            });
             console.warn('platOnData--->',platOnData);
             this.web3.eth.getTransactionCount(_from, (err, data) => {
                 // console.warn('getTransactionCount', err, data);
@@ -225,40 +223,54 @@ class ContractServies {
                 const number = data.toString(16);
                 const params = {
                     nonce: '0x' + number,
+                    // nonce: '0x' + 999,
                     "gas": gas?(this.web3.toHex(gas)):"0x766709",
                     "gasPrice": gasPrice?(this.web3.toHex(gasPrice)):"0x8250de00",
                     data: platOnData,
                     from: _from,
                     to: myContractInstance.address,
-                    value: "0x0",
-
+                    value: value?(this.web3.toHex(this.web3.toWei(value, 'ether'))):"0x0",
+                    // value: value?(Number(this.web3.toWei(value, 'ether'))):0,
                 };
                 console.log(`testTransfer params:\n`, JSON.stringify(params));
                 let tx = new Tx(params);
-                // console.log('tx-->', tx,privateKey);
+                console.log('tx-->', tx);
                 tx.sign(privateKey);
                 let serializedTx = tx.serialize();
+                console.log('0x' + serializedTx.toString('hex'));
                 this.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'),(err, hash)=>{
-                    if (!err){
-                        console.log(`platONSendTransaction hash:`, hash);
-                        this.getTransactionReceipt(hash, (code, data) => {
-                            console.log('sendRawTransaction code==', code,data);
-                            if(code==1000){
-                                reject('超时');
+                    console.log(err,hash);
+                    if(!async){
+                        if(!err){
+                            resolve({hash:hash});
+                        }else{
+                            if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
+                                window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
                             }
-                            if(data.logs && data.logs.length>0){
-                                const result = myContractInstance.decodePlatONLog(data.logs[0]);
-                                console.log('sendRawTransaction result==', result);
-                                resolve({hash:hash,result:result});
-                            }else{
-                                resolve({hash:hash});
-                            }
-                        })
-                    }else {
-                        if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
-                            window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
+                            reject({err:err});
                         }
-                        reject(err);
+                    }else{
+                        if (!err){
+                            console.log(`platONSendTransaction hash:`, hash);
+                            this.getTransactionReceipt(hash, (code, data) => {
+                                console.log('sendRawTransaction code==', code,data);
+                                if(code==1000){
+                                    reject('超时');
+                                }
+                                if(data.logs && data.logs.length>0){
+                                    const result = myContractInstance.decodePlatONLog(data.logs[0]);
+                                    console.log('sendRawTransaction result==', result);
+                                    resolve({hash:hash,result:result});
+                                }else{
+                                    resolve({hash:hash});
+                                }
+                            })
+                        }else {
+                            if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
+                                window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
+                            }
+                            reject(err);
+                        }
                     }
                 });
             })
@@ -319,7 +331,7 @@ class ContractServies {
      * @param cb
      */
     sendTransaction(from,to,value,priKey,input,gas,gasPrice,cb){
-		// console.warn('sendTransaction-->',from,to,value,priKey,input,gas,gasPrice);
+		console.warn('sendTransaction-->',from,to,value,priKey,input,gas,gasPrice);
         //_from为发起交易的地址
         var _from = from;
         //nonce随机数，这里取该账号的交易数量
@@ -334,23 +346,25 @@ class ContractServies {
 
             var rawTx = {
                 nonce: '0x'+number,//随机数
-                gas:'0x'+90000,
-				// gas:this.web3.toHex(gas),
-                gasPrice:'0x'+((gasPrice).toString(16)),
+                // gas:'0x'+90000,
+				gas:this.web3.toHex(gas),
+                // gasPrice:'0x'+((gasPrice).toString(16)),
+                gasPrice:this.web3.toHex(gasPrice),
                 to: to,//接受方地址或者合约地址
                 value: '0x'+((value).toString(16)),
-                data: input
+                data: '0xc9880000000000000000'
             };
             try{
                 //使用私钥对原始的交易信息进行签名，得到签名后的交易数据
-                // console.warn('rawTx',rawTx);
+                console.warn('rawTx',rawTx);
                 var tx = new Tx(rawTx);
                 tx.sign(privateKey);
 
                 var serializedTx = tx.serialize();
+                console.log('0x' + serializedTx.toString('hex'));
                 this.web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'), function(err, hash) {
                     if (!err){
-                        // console.log(hash);
+                        console.log('sendRawTransaction---->',err,hash);
                         cb(0,hash);
                     }else {
                         if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
@@ -413,7 +427,7 @@ class ContractServies {
      */
     getTransactionReceipt(hash, fn) {
         console.log('getTransactionReceipt hash==>', hash);
-        let id = '',data = {},wrapCount=60;
+        let id = '',data = {},wrapCount=100;
         this.web3.eth.getTransactionReceipt(hash,(err,result)=>{
             if(err) throw err;
             console.log(`result:`, result);
@@ -440,6 +454,29 @@ class ContractServies {
             }
         })
     }
+
+
+
+    getTransactionByHash(ABI,contractAddress,hash,fn){
+        const MyContract = this.web3.eth.contract(ABI);
+        const myContractInstance = MyContract.at(contractAddress);
+        console.log('getTransactionReceipt hash==>', hash);
+        this.web3.eth.getTransactionReceipt(hash,(err,result)=>{
+            if(err) throw err;
+            console.log(`result:`, result);
+            if (result && result.transactionHash && hash == result.transactionHash) {
+                if (result.logs.length != 0) {
+                    const decodeLog = myContractInstance.decodePlatONLog(result.logs[0]);
+                    // console.log('sendRawTrasaction result==>', data);
+                    fn(0, decodeLog);
+                    // delete fn;
+                } else {
+                    fn(1001, '合约异常，失败');
+                }
+            }
+        })
+    }
+
 
     getFilePath=() =>{
         // return "C:\\Users\\yann_liang\\AppData\\Local\\Programs\\console\\platon_exe"

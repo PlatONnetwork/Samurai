@@ -47,8 +47,7 @@ export const settingAction = {
         state.netLoading = bool;
     },
     deleteTxn(){
-        Settings.deleteUseData('txn.json');
-        Settings.deleteUseData('net_custom/txn.json');
+        Settings.deleteUseData('net_test/txn.json');
     },
     updateChainName({state,commit},name){
         console.log('update chainName',name);

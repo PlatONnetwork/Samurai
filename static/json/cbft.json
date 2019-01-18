@@ -1,0 +1,15 @@
+{
+  "period": 1,
+  "epoch": 250000,
+  "maxLatency": 200,
+  "legalCoefficient": 1.0,
+  "duration": 10,
+  "ppos": {
+    "candidate": {
+      "depositLimit": 10,
+      "maxCount": 10,
+      "maxChair": 4,
+      "refundBlockNumber": 1
+    }
+  }
+}

@@ -90,15 +90,6 @@ function exportPrivitekeyToJson(privateKey,account,password,cb){
             console.log("valut: " + keyObject);
             keyObject.publicKey = EthUtil.privateToPublic(new Buffer(privateKey, 'hex')).toString('hex');
             cb(keyObject);
-            //     getPublicKey(privateKey,(e,pub)=>{
-            //     console.warn(111,e,pub)
-            //     if(e){
-            //         cb(null);
-            //     }else{
-            //         keyObject.publicKey = pub;
-            //         cb(keyObject);
-            //     }
-            // });
         });
 }
 export default importByMnemonic

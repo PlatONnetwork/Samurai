@@ -1,7 +1,8 @@
 <template>
     <div class="side-bar">
-       <el-menu class="menu" default-active="0">
-               <el-menu-item v-for="(item, index) in menu" :style="{color: item.icon? 'inherint': '#fff',opacity:item.parent?'1':'0.6'}"   @click="changeRoute(item.path)" :index="index + ''" :key='index' >
+       <el-menu class="menu" default-active="1" @select="handleSelect">
+               <el-menu-item v-for="(item, index) in menu" :style="{color: item.icon? 'inherint': '#fff',opacity:item.parent?'1':'0.6'}"
+                        @click.native="changeRoute(item.path)" :index="index + ''" :key='index' disabled >
                    <i v-if="item.icon" class="iconfont" :class="item.icon"></i> {{item.name}}
                </el-menu-item>
        </el-menu>
@@ -19,6 +20,7 @@
             }
         },
         computed:{
+            ...mapGetters(['lang']),
             menu:function(){
                 return [{
                     name: this.$t('sideBar.main'),
@@ -37,12 +39,17 @@
                     name: this.$t('sideBar.contract'),
                     icon: 'icon-contract',
                     path: '/contract'
-                 },
+                 },{
+                    name: this.$t('sideBar.application'),
+                    icon: '',
+                    path:'',
+                    parent:true
+                 },{
+                    name: this.$t('sideBar.validatorNode'),
+                    icon: 'icon_vote',
+                    path:'/validator-node',
+                },
                     // {
-                    //     name: '应用',
-                    //     icon: '',
-                    //     path:''
-                    // },{
                     //     name: '投票',
                     //     icon: 'icon-vote',
                     //     path: ''
@@ -58,11 +65,11 @@
                         icon: 'icon-Shape',
                         path: '/setting'
                     }
-                    // ,{
-                    //     name: '帮助',
-                    //     icon: 'icon-help',
-                    //     path: ''
-                    // }
+                    ,{
+                        name: this.$t('sideBar.help'),
+                        icon: 'icon-help',
+                        path: ''
+                    }
                 ]
             }
         },
@@ -73,8 +80,21 @@
                 this.updateTradeType(null);
                 this.updateWalletType(1);
                 this.$router.push(path);
-            }
-
+            },
+            handleSelect(key) {
+                if(key==8 && this.lang=='zh-cn'){
+                    // 中文wiki
+                    this.openUrl('https://github.com/PlatONnetwork/wiki/wiki/%5BChinese-Simplified%5D-Samurai-%E9%92%B1%E5%8C%85')
+                }
+                else if(key==8 && this.lang=='en'){
+                    // 英文文wiki
+                    this.openUrl('https://github.com/PlatONnetwork/wiki/wiki/%5BEnglish%5D-Samurai-Wallet')
+                }
+            },
+            openUrl(url){
+                const shell = require('electron').shell;
+                shell.openExternal(url);
+            },
         }
     }
 </script>
@@ -109,6 +129,10 @@
         .icon-help{
             padding-left:28.5px;
             background: url("./images/4.icon_help.svg") no-repeat left center;
+        }
+        .icon_vote{
+            padding-left:28.5px;
+            background: url("./images/icon_vote.svg") no-repeat left center;
         }
     }
 

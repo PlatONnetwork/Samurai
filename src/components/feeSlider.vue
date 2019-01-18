@@ -14,9 +14,15 @@
                         show-stops>
                 </el-slider>
             </div>
-            <el-input class="gas-input" v-model.trim="fee" @blur="changeGas" type="number"></el-input><span class="gray">Energon</span>
+            <input class="el-input__inner gas-input"
+                   type="text"
+                   @input="change"
+                   @change="change"
+                   :value="inpNum"/>
+            <!--<el-input class="gas-input" v-model.trim="fee" @blur="changeGas" type="number" :maxlength=5 onkeypress="return ((event.keyCode>=48&&event.keyCode<=57)||event.keyCode==46)"-->
+                      <!--@change="checkNumber" ></el-input>-->
+            <span class="gray">Energon</span>
         </span>
-        <p>{{$t('wallet.estimatedTime')}}：{{$t('contracts.within')}} {{expectTime}}{{optionsTime==30?$t('contracts.second'):$t('contracts.withinmins')}}</p>
     </div>
 </template>
 
@@ -24,7 +30,6 @@
     import {mapActions, mapGetters} from 'vuex';
     import contractService from '@/services/contract-servies';
     import mathService from '@/services/math';
-
     export default {
         name: "fee-slider",
         data() {
@@ -36,13 +41,17 @@
                 copyGas:null,
                 optionsTime:0,
                 gasPrice:0,
-                fee:0
+                fee:0,
+                oldNum:''
             }
 
         },
         props:(['estimateGas']),
         computed: {
-            ...mapGetters(['network'])
+            ...mapGetters(['network']),
+            inpNum () {
+                return this.oldNum
+            }
         },
         mounted() {
             this.getGasOptions((options)=>{
@@ -58,8 +67,36 @@
         },
         methods: {
             ...mapActions(['getGasOptions']),
+            change (event) {
+                let val = event.target.value.trim();
+                // 只能是正整数或空,可根据需求修改正则
+                if (/^[0-9]+\.?\d*$|^$/.test(val) && !/^0{2,}/.test(val) && (val.indexOf('.')==-1 || val.length-val.indexOf('.')<10)) {
+                    this.oldNum = val;
+                    if(this.estimateGas){
+                        let options = this.options;
+                        let unitPrice = mathService.div(this.oldNum,this.estimateGas);
+                        if(unitPrice>options[options.length-1].gasPrice || unitPrice==options[options.length-1].gasPrice){
+                            this.gasSlider = options.length*10;
+                            this.gasPrice=this.toNonExponential(options[options.length-1].gasPrice);
+                            this.fee = mathService.mul(this.estimateGas,this.gasPrice);
+                            this.oldNum =this.fee;
+                        }else if(unitPrice < options[0].gasPrice || unitPrice== options[0].gasPrice){
+                            this.gasPrice= this.toNonExponential(options[0].gasPrice);
+                            this.gasSlider = 0;
+                            this.fee = mathService.mul(this.estimateGas,this.gasPrice);
+                            this.oldNum =this.fee;
+                        }else{
+                            let num = Math.round((unitPrice/options[options.length-1].gasPrice).toFixed(1)*options.length);
+                            this.gasSlider = (num-1)*10;
+                        }
+                    }
+                } else {
+                    event.target.value = this.oldNum
+                }
+
+            },
             gasSel(){
-                if(this.options && this.options.length>1){
+                if(this.estimateGas){
                     let options = this.options;
                     let index = this.gasSlider/10;
                     this.gasPrice = this.toNonExponential(options[index].gasPrice);
@@ -75,32 +112,26 @@
                         this.gasPrice = this.toNonExponential(this.copyGas);
                         this.copyGas = null;
                     }
-                    if(this.estimateGas){
-                        this.fee = mathService.mul(this.estimateGas,this.gasPrice);
-                    }else{
-                        this.fee = ''
-                    }
+                    this.fee = mathService.mul(this.estimateGas,this.gasPrice);
                 }
             },
             changeGas(){
-                this.copyGas = null;
-                let options = this.options;
-                let unitPrice = mathService.div(this.fee,this.estimateGas);
-                if(unitPrice>options[options.length-1].gasPrice || unitPrice==options[options.length-1].gasPrice){
-                    this.gasSlider = options.length*10;
-                    this.gasPrice=this.toNonExponential(options[options.length-1].gasPrice);
-                }else if(this.gasPrice< options[0].gasPrice || this.gasPrice== options[0].gasPrice){
-                    this.gasPrice= this.toNonExponential(options[0].gasPrice);
-                    this.gasSlider = 0;
-                }else{
-                    this.copyGas = this.toNonExponential(this.gasPrice);
-                    let num = Math.round((this.gasPrice/options[options.length-1].gasPrice).toFixed(1)*options.length);
-                    this.gasSlider = (num-1)*10;
-                }
                 if(this.estimateGas){
+                    this.copyGas = null;
+                    let options = this.options;
+                    let unitPrice = mathService.div(this.fee,this.estimateGas);
+                    if(unitPrice>options[options.length-1].gasPrice || unitPrice==options[options.length-1].gasPrice){
+                        this.gasSlider = options.length*10;
+                        this.gasPrice=this.toNonExponential(options[options.length-1].gasPrice);
+                    }else if(this.gasPrice< options[0].gasPrice || this.gasPrice== options[0].gasPrice){
+                        this.gasPrice= this.toNonExponential(options[0].gasPrice);
+                        this.gasSlider = 0;
+                    }else{
+                        this.copyGas = this.toNonExponential(this.gasPrice);
+                        let num = Math.round((this.gasPrice/options[options.length-1].gasPrice).toFixed(1)*options.length);
+                        this.gasSlider = (num-1)*10;
+                    }
                     this.fee = mathService.mul(this.estimateGas,this.gasPrice);
-                }else{
-                    this.fee = ''
                 }
             },
             toNonExponential(num) {
@@ -117,6 +148,10 @@
             },
             estimateGas:function(val){
                 this.fee = mathService.mul(val,this.gasPrice);
+            },
+            fee:function(val){
+                console.log('val change');
+                this.oldNum = val;
             }
         }
     }
@@ -128,6 +163,7 @@
     }
     .slider{
         display:flex;
+        align-items: center;
         .lb{
             flex-grow:1;
         }
@@ -147,6 +183,8 @@
 </style>
 <style lang="less">
     .fee-slider{
+        font-size: 12px;
+        color: #525768;
         .el-slider{
             .el-slider__runway{
                 margin:2px 0;

@@ -1,13 +1,12 @@
 <template>
     <div class="wallet-detail format-style">
         <div class="card wallet-detail-wrapper">
-            <div class="wallet-icon"></div>
+            <div :class="[wallet.icon?wallet.icon:'icon-bg','wallet-icon-1']"></div>
             <div class="wallet-detail-info">
                 <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">{{wallet.account | sliceName}}</p>
                 <p class="balance">
                     <span class="wallet-name">{{balance}} </span>Energon
                     <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
-                    <!-- <i class="refresh" @click="refresh"></i> -->
                 </p>
                 <p class="address">{{wallet.address}}</p>
             </div>
@@ -135,6 +134,8 @@
     import {mapGetters, mapActions} from 'vuex';
     import tradeListComponent from '@/components/trade/list';
     import refresh from '@/components/refresh/refresh';
+    import Settings from '@/services/setting';
+    import fs from 'fs';
     export default {
         name: "o-wallet-details",
         data() {
@@ -287,6 +288,13 @@
                                     }
                                 }
                                 fsObj.WriteFile('walletInfo.json',JSON.stringify(retData),(err) =>{
+                                    try{
+                                        if(fs.existsSync(`${Settings.keyPath}/${this.wallet.address}.json`)){
+                                            fs.unlinkSync(`${Settings.keyPath}/${this.wallet.address}.json`);
+                                        }
+                                    }catch(e){
+                                        console.log(e)
+                                    }
                                     this.WalletListAction(type);
                                     this.$message.success(this.$t('wallet.deleteSuccess'));
                                     this.$router.push('/o-wallet-list')
@@ -418,15 +426,6 @@
     .dan{
         color: #F32E25;
     }
-    // .refresh{
-    //     display:inline-block;
-    //     width:14px;
-    //     height:14px;
-    //     vertical-align: middle;
-    //     cursor:pointer;
-    //     background: url("../images/controls.svg") no-repeat center center;
-    //     background-size: contain;
-    // }
     .wallet-detail-wrapper{
         padding:14px 30px 2px 14px;
         min-height: 109px;
@@ -448,11 +447,16 @@
             padding-left:18.2px;
             background:url("../images/icon_positioning.svg") no-repeat left center;
         }
-        .wallet-icon{
+        .icon-bg{
+            background: url("../images/icon_user.png") no-repeat center center;
+            background-size: contain;
+        }
+        .wallet-icon-1{
             width: 40px;
             height: 40px;
             margin: 21px 12px 0 0;
-            background: url("../images/icon_user.png") no-repeat center center;
+            background-repeat:no-repeat;
+            background-position: center center;
             background-size: contain;
         }
         .wallet-detail-info{
@@ -504,15 +508,19 @@
         color: #9EABBE;
         letter-spacing: 0.43px;
     }
-    .modify-psw{
-        .modal-main{
-            width:483px;
+    .modal{
+       .modal-main{
+           width:483px;
             .modal-content{
                 padding:20px;
-                .el-input{
-                    width:100%;
-                }
             }
+            .el-input{
+                width:100%;
+            }
+       }
+    }
+    .modify-psw{
+        .modal-main{
             .modal-btn{
                 padding-right:20px;
                 height:48.5px;
@@ -530,6 +538,7 @@
     // .cancel,.sureBtn{
     //     font-weight: 900;
     // }
+
 </style>
 <style lang="less">
     .wallet-detail{
@@ -541,6 +550,13 @@
                 position:static;
             }
         }
+    }
+    .el-popover{
+        min-width: 126px;
+        left:832px !important;
+    }
+    .popper__arrow{
+        left:92px !important;
     }
 </style>
 

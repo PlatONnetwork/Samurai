@@ -7,12 +7,13 @@
             </div>
             <side-bar></side-bar>
             <node-sync></node-sync>
-            <span class="net-name">{{network.type=='custom'?chainName:network.type}}</span>
+            <span class="net-name">{{network.type=='custom'?chainName:(network.type.toUpperCase()+'-NET')}}</span>
         </div>
         <div class="right">
             <v-header>
                 <span v-if="headR" class="felx-box">
                     <span class="header icon-back" v-if="flag=== 'child'" style="-webkit-app-region: no-drag;cursor: pointer;" @click="goBack"></span>
+                    <span v-if="path=='/o-wallet-accept'" class="accept">{{title | PathName}}-</span>
                     <sel-self :optionVs="WalletListGetter" :defaultSel="curWallet" style="-webkit-app-region: no-drag"  @back="selAWallet"></sel-self>
                 </span>
                 <span v-else>
@@ -50,17 +51,20 @@
             return {
                 flag: '',
                 headR:false,
+                path:'',
+                title:'',
             }
         },
         computed: {
-            ...mapGetters(['network','lang','WalletListGetter','curWallet','chainName',])
+            ...mapGetters(['network','lang','WalletListGetter','curWallet','chainName','nodeState'])
         },
         watch: {
           $route: function (n, o) {
               // this.title = this.$t(n.name);
+              this.path = n.path;
               this.title = n.name;
               this.flag = n.meta.flag;
-              if(n.path=='/o-wallet-details' || n.path=='/o-wallet-share-detail'){
+              if(n.path=='/o-wallet-details' || n.path=='/o-wallet-share-detail' || n.path=='/o-wallet-accept'){
                   this.headR = true;
               }else{
                   this.headR = false;
@@ -76,6 +80,7 @@
             this.flag = this.$route.meta.flag;
         },
         mounted(){
+            if(this.nodeState==2)return;
             Settings.init().then(()=>{
                 let localType = Settings.loadUserData('type');
                 let localIp = Settings.loadUserData('ip');
@@ -86,7 +91,7 @@
                 }else if(localType=='main' || localType=='test'){
                     //todo  后续注释掉
                     // contractService.setProvider('http://192.168.9.76:6788','http').then(()=>{
-                    // // contractService.setProvider('http://127.0.0.1:7793','http').then(()=>{
+                    // // contractService.setProvider('http://10.10.8.242:6789','http').then(()=>{
                     //     this.updateState(2);
                     //     this.updateNetSetting({
                     //         initialUse:false,
@@ -163,11 +168,16 @@
                 transform: translatex(-50%);
                 bottom:20px;
                 padding:0 16.5px;
+                max-width:96px;
                 height:28px;
                 line-height:28px;
                 color:#fff;
+                font-size:12px;
                 border: 1px solid #EA106E;
                 border-radius: 4px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
         .right{
@@ -192,6 +202,10 @@
     .felx-box{
         display: flex;
         padding-left:6px;
+    }
+    .accept{
+        position:relative;
+        top:7px;
     }
 
 </style>

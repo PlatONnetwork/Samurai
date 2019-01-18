@@ -6,7 +6,8 @@ import {contractGetter } from './getter'
 import {contractMutation } from './mutation'
 export default {
   state:{
-      contractList:[]
+      contractList:[],
+      contrachHash:{}
   },
   actions:contractAction,
   getters:contractGetter,

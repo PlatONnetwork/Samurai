@@ -50,6 +50,7 @@ function createWindow() {
         height: 672,
         minWidth: 980,
         minHeight: 672,
+        icon: iconPath,
         useContentSize: true,
         iconNativeImage: iconPath,
         frame: false, //创建无边框窗口

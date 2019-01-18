@@ -44,7 +44,22 @@ export default Vue.filter('PathName', function(value) {
             return window.vueVm.$i18n.t('contracts.deployCont');
             break;
         case '观察合约':
-            return window.vueVm.$i18n.t('contracts.watchCont');
+            return window.vueVm.$i18n.t('contracts.addWatchCont');
+            break;
+        case '竞选节点':
+            return window.vueVm.$i18n.t('application.validatorNode');
+            break;
+        case '我的竞选节点':
+            return window.vueVm.$i18n.t('application.myValidatorNode');
+            break;
+        case '节点竞选申请':
+            return window.vueVm.$i18n.t('application.apply'); 
+            break;
+        case '增加质押':
+            return window.vueVm.$i18n.t('application.increase'); 
+            break;
+        case '减持质押':
+            return window.vueVm.$i18n.t('application.reduce'); 
             break;
         default:
             return value;

@@ -8,7 +8,8 @@ export default {
         curWallet:'',
         pageLoading:false,
         totalBalance:0,
-        norTotalBalance:0
+        norTotalBalance:0,
+        initParams:{}
     },
     actions:WalletAction,
     getters: WalletGetter,

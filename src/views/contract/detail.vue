@@ -2,7 +2,7 @@
     <div class="contract-list format-style">
         <div class="card content">
             <div class="contract-info">
-                <div class="contract-icon"></div>
+                <div class="contract-icon" :class="contract.icon"></div>
                 <div class="contract-detail-info">
                     <p class="contract-name" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}}</p>
                     <p class="balance">
@@ -64,13 +64,15 @@
         <div class="modal abi-modal" v-if="showABIModal">
             <div class="modal-main">
                 <div class="modal-title">
-                    {{$t("contracts.interface")}}
+                    {{$t("contracts.contractInterface")}}
                     <span class="modal-close" @click="handleCancel"></span>
                 </div>
                 <div class="modal-content f12">
                     <p class="abiView">{{contract.abi}}</p>
+                    <!-- <textarea class="abiView" :value="contract.abi" readonly></textarea> -->
                 </div>
                 <div class="modal-btn">
+                    <el-button type="primary" @click="copyContract">{{$t('contracts.copyContract')}}</el-button>
                     <el-button type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
@@ -103,10 +105,10 @@
                 </div>
                 <div class="modal-content f12">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">0.00Energon</span></p>
+                        <p>{{$t("wallet.amount")}}<span class="txt"><span class="bold">0.00</span> Energon</span></p>
                         <p>From<span class="txt">{{keyObject.address}}</span></p>
                         <p>To<span class="txt">{{contract.address}}</span></p>
-                        <p>{{$t("wallet.fee")}}<span class="txt">{{gas}}Energon</span></p>
+                        <p>{{$t("wallet.fee")}}<span class="txt"><span class="bold">{{gas}}</span> Energon</span></p>
                     </div>
                     <p class="inputb">
                         <el-input :placeholder="$t('wallet.input')+(keyObject.account)+' '+$t('wallet.walletPsw')" type="password" v-model.trim="psw"></el-input>
@@ -311,7 +313,7 @@
                         console.log(' this.params----', this.params);
                         // abi中的constant参数为false时是交易类的，返回hash。为true时是call查询，返回结果
                         if(this.constant == 'false'){
-                            contractService.platONSendTransaction(JSON.parse(this.contract.abi),this.contract.address,this.fun,JSON.stringify(this.params),keyObject.address,priKey).then((data)=>{
+                            contractService.platONSendTransaction(JSON.parse(this.contract.abi),this.contract.address,this.fun,JSON.stringify(this.params),keyObject.address,priKey,false,false,false,true,2).then((data)=>{
                                 console.log('hash-->result--->',data.hash);
                                 this.hash = data.hash
                                 let obj={
@@ -352,6 +354,15 @@
             refreshValue(cost){
                 this.balance=cost;
             },
+            copyContract(){
+                this.$copyText(this.contract.abi).then((e) => {
+                    this.$message.success(this.$t('wallet.copySuccess'));
+                    this.isTest = false
+                }, function (e) {
+                    this.$message.error(this.$t('wallet.copyFail'));
+                    this.isTest = false
+                })
+            }
         },
         filters:{
             'sliceName':function(name){
@@ -391,7 +402,22 @@
     .contract-icon{
         margin-right:12px;
         width:40px;
-        background: url("./images/Oval.png") no-repeat center;
+        background: no-repeat center;
+    }
+    .contract-icon1{
+        background-image: url('./images/Oval1.png');
+    }
+    .contract-icon2{
+        background-image: url('./images/Oval2.png');
+    }
+    .contract-icon3{
+        background-image: url('./images/Oval3.png');
+    }
+    .contract-icon4{
+        background-image: url('./images/Oval4.png');
+    }
+    .contract-icon5{
+        background-image: url('./images/Oval5.png');
     }
     .contract-name{
         font-size: 14px;
@@ -573,6 +599,9 @@
         font-size: 12px;
         color: #24272B;
         letter-spacing: 0.43px;
+    }
+    .bold{
+        font-weight: bold;
     }
 </style>
 

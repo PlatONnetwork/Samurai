@@ -1,0 +1,126 @@
+.my-node-content{
+  height:100%;
+  .header{
+    padding:14px 20px 0 14px;
+    background-color:#fff;
+    box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
+  }
+  .node-info{
+    display:flex;
+    height:70.8px;
+    border-bottom:solid 1px #EEE;
+    .pic{
+      padding-top:10.4px;
+      margin-right:12px;
+      min-width:40px;
+      width:40px;
+      height:40px;
+      img{
+        display: block;
+        width:100%;
+        border-radius:40px;
+      }
+    }
+    .name{
+      flex-grow: 1;
+      height:70.8px;
+      line-height:30px;
+      font-size: 12px;
+      color: #120000;
+      >span{
+        display: block;
+      }
+      .bold{
+        font-size: 14px;
+        color: #24272B;
+        font-weight: 600;
+      }
+      .time{
+        color: #525768;
+      }
+    }
+    .node-state{
+      padding-top:18.4px;
+      min-width:77px;
+      width:77px;
+      height:70.8px;
+      line-height:70.8px;
+    }
+  }
+  .pledge-info{
+    padding:10px 0 6px 0;
+    font-size: 12px;
+    color: #525768;
+    display:flex;
+    .atp-li{
+      flex-grow: 1;
+    }
+    .perc-li{
+      min-width:136px;
+      width:136px;
+    }
+    li{
+      p{
+        margin-bottom:8px;
+      }
+      .txt{
+        font-size: 14px;
+        color: #24272B;
+        font-weight: 600;
+      }
+    }
+  }
+  .detail{
+    height:calc(~"100% - 172px");
+    padding:14px 20px;
+    margin-top:16px;
+    background: #FFFFFF;
+    box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
+    border-radius: 4px;
+    color: #24272B;
+    .title{
+      font-size: 14px;
+      font-weight:600;
+    }
+    .block{
+      padding:14px 0 4px;
+      border-bottom:solid 1px #EEE;
+      font-size: 12px;
+      &:last-of-type{
+        border-bottom:none;
+      }
+      .sub-title{
+        font-weight:600;
+      }
+      p{
+        margin-bottom:10px;
+      }
+      .label-txt{
+        display:inline-block;
+        width:133px;
+        color: #525768;
+      }
+      .candidateId-box{
+        display: flex;
+        .label-txt{
+          min-width:133px;
+        }
+      }
+      .candidateId{
+        word-break: break-all;
+      }
+      .net{
+        color: #18C2E9;
+      }
+    }
+  }
+}
+.el-input-group__append{
+  width:52px;
+  color:#fff;
+  background: #9EABBE;
+  border-radius: 0 4px 4px 0;
+  .el-button{
+    width:52px;
+  }
+}

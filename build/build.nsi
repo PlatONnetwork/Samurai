@@ -4,7 +4,7 @@
 
 ; 安装程序初始定义常量
 !define PRODUCT_NAME "Samurai"
-!define PRODUCT_VERSION ""; 加版本号，开头多加一个空格！
+!define PRODUCT_VERSION " 0.3.0.9"; 加版本号，开头多加一个空格！
 !define PRODUCT_PUBLISHER "www.platon.network<support@platon.network>"
 !define PRODUCT_WEB_SITE "https://www.platon.network"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Samurai.exe"
@@ -126,8 +126,8 @@ Function SetCustom
   SectionGetFlags ${SecA} $0
   StrCmp $0 0 0 +2
     WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "Flags" "Disabled"
-  StrCmp $0 1 0 +2    ; 如果组件勾选了，还需要去掉 Disabled，这两行代码不能省略
-    WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "Flags" ""
+  StrCmp $0 1 0 +2   ; 如果组件勾选了，还需要去掉 Disabled，这两行代码不能省略
+    WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "Flags" "Disabled"
 
 ; 预定义组件安装路径
   WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "State" "$APPDATA\Samurai"
@@ -188,11 +188,19 @@ SectionEnd
 Function un.onInit
   MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all its components?" IDYES +2
   Abort
+  ;检测程序是否运行
+  FindProcDLL::FindProc "Samurai.exe"
+   Pop $R0
+   IntCmp $R0 1 0 no_run
+   MessageBox MB_ICONSTOP "卸载程序检测到 ${PRODUCT_NAME} 正在运行，请关闭之后再卸载！"
+   Quit
+   no_run:
 FunctionEnd
 
 Function un.onUninstSuccess
-  HideWindow
-  MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) has been successfully removed from your computer."
+  MessageBox MB_ICONINFORMATION|MB_OK "Opening leftover data directories(backup before deleting!)" IDOK ok
+  ok:
+    ExecShell explore "$APPDATA\Samurai"
 FunctionEnd
 
 ; 以下是卸载程序通过安装日志卸载文件的专用函数，请不要随意修改

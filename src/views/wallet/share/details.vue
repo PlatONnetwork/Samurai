@@ -2,13 +2,12 @@
     <div class="wallet-detail format-style">
         <div class="card wallet-detail-wrapper">
             <div class="wallet-info">
-                <div class="wallet-icon"></div>
+                <div :class="[wallet.icon?wallet.icon:'icon-bg','wallet-icon-1']"></div>
                 <div class="wallet-detail-info">
                     <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">{{wallet.account | sliceName}}</p>
                     <p class="balance">
                         <span class="wallet-name">{{balance}} </span>Energon
                         <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
-                        <!-- <i class="refresh" @click="refresh"></i> -->
                     </p>
                     <p class="address">{{wallet.address}}</p>
                 </div>
@@ -34,26 +33,14 @@
             </div>
             <div class="owner-list">
                 <div class="lt">
-                    <p class="title">{{$t('wallet.sharedOwners')}}({{wallet.required}}/{{owners.length}})</p>
+                    <p class="title">{{$t('wallet.sharedOwners')}}({{wallet.required}}/{{wallet.ownersArr && wallet.ownersArr.length}})</p>
                     <ul>
-                        <li v-for="(owner,index) in ownersTrans" :key="owner.address">
+                        <li v-for="(owner,index) in wallet.ownersArr" :key="owner.address">
                             <span class="index">{{index+1}}</span>
-                            <span class="userName">{{owner.account}}</span>
+                            <span class="userName" :title="owner.account&&owner.account.length>10?owner.account:''">{{owner.account}}</span>
                             <span>{{owner.address}}</span>
                         </li>
                     </ul>
-                </div>
-                <div class="rt">
-                    <p class="title">{{$t('wallet.walletOwner')}}</p>
-                    <div class="admin-owner">
-                        <span class="owner-box"></span>
-                        <p class="mulit_line">
-                            <span style="font-size:12px;">
-                                {{wallet.admin&&wallet.admin.account}}
-                            </span>
-                            <i>&nbsp;</i>
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -76,6 +63,7 @@
                     <p class="abiView">{{ABIFile}}</p>
                 </div>
                 <div class="modal-btn">
+                    <el-button type="primary" @click="copyConfirm(2)">{{$t('wallet.copy')}}</el-button>
                     <el-button type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
@@ -94,7 +82,7 @@
                 </div>
                 <div class="modal-btn">
                     <el-button @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button @click="copyConfirm"  type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button @click="copyConfirm(1)"  type="primary">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -119,8 +107,6 @@
                 showLoadMore:true,
                 showABIModal:false,
                 ABIFile:null,
-                owners:[],
-                ownersTrans:[],
                 isOwner:false,
                 tradeTimer:null,
                 pageSize:20
@@ -136,41 +122,35 @@
             this.init();
         },
         methods: {
-            ...mapActions(['WalletListAction','replaceWallet','getWalletByAddress']),
+            ...mapActions(['WalletListAction','replaceWallet','getWalletByAddress','getOrd']),
             init(){
                 let _this = this;
                 let arr = this.WalletListGetter.filter((item)=>{
                     return item.address==_this.curWallet;
                 });
-                this.ownersTrans=[];
                 if(arr && arr.length>0){
                     this.wallet = arr[0];
                     if(this.wallet.address){
                         contractService.web3.eth.getBalance(this.wallet.address,(err,data)=>{
                             this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
                         });
-                        contractService.platONCall(contractService.getABI(1),this.wallet.address,'getRequired',this.wallet.admin.address).then((required)=>{
+                        contractService.platONCall(contractService.getABI(1),this.wallet.address,'getRequired',this.wallet.address).then((required)=>{
                             console.log('getRequired--->',required);
                             this.wallet.required = required;
                         });
                         clearInterval(window.balanceInterval);
                         window.balanceInterval = setInterval(_this.refresh,5*1000);
-                        contractService.platONCall(contractService.getABI(1),this.wallet.address,'getOwners',this.wallet.admin.address).then((result)=>{
-                            this.owners = result.split(":");
-                            this.owners = this.owners.map((v)=>{return '0x'+v});
-                            if(this.owners.indexOf(this.wallet.admin.address)!==-1){
+                        this.getOrd().then((ords)=>{
+                            let ownersArr = this.wallet.ownersArr.map((owner)=>{
+                                return owner.address
+                            });
+                            let atLocalOwners = ords.filter((ord)=>{
+                                return ownersArr.indexOf(ord.address)!==-1
+                            });
+                            if(atLocalOwners.length>0){
                                 this.isOwner = true;
                             }else{
                                 this.isOwner = false;
-                            };
-                            if(this.wallet.ownersArr){
-                                this.ownersTrans = JSON.parse(JSON.stringify(this.wallet.ownersArr));
-                            }else{
-                                this.owners.forEach((o)=>{
-                                    this.getWalletByAddress(o).then((obj)=>{
-                                        this.ownersTrans.push({account:obj?obj.account:'',address:o})
-                                    })
-                                });
                             }
                         });
                     }
@@ -195,19 +175,27 @@
             },
             doCopy(){
                 if(this.network.type=='main'){
-                    this.copyConfirm();
+                    this.copyConfirm(1);
                 }else{
                     this.isTest = true;
                 }
             },
-            copyConfirm(){
-                this.$copyText(this.wallet.address).then((e) => {
-                    this.$message.success(this.$t('wallet.copySuccess'));
-                    this.isTest = false
-                }, function (e) {
-                    this.$message.error(this.$t('wallet.copyFail'));
-                    this.isTest = false
-                })
+            copyConfirm(num){
+                if(num==1){
+                    this.$copyText(this.wallet.address).then((e) => {
+                        this.$message.success(this.$t('wallet.copySuccess'));
+                        this.isTest = false
+                    }, function (e) {
+                        this.$message.error(this.$t('wallet.copyFail'));
+                        this.isTest = false
+                    })
+                }else{
+                    this.$copyText(this.ABIFile).then((e) => {
+                        this.$message.success(this.$t('wallet.copySuccess'));
+                    }, function (e) {
+                        this.$message.error(this.$t('wallet.copyFail'));
+                    })
+                }
             },
             handleSend(){
                 if((this.balance-0)==0){
@@ -330,15 +318,6 @@
     .dan{
         color: #F32E25;
     }
-    // .refresh{
-    //     display:inline-block;
-    //     width:14px;
-    //     height:14px;
-    //     vertical-align: middle;
-    //     cursor:pointer;
-    //     background: url("../images/icon_controls.svg") no-repeat center center;
-    //     background-size: contain;
-    // }
     .wallet-detail-wrapper{
         padding:14px 0 2px 14px;
         box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
@@ -362,11 +341,16 @@
             padding-left:18.2px;
             background:url("../images/icon_positioning.svg") no-repeat left center;
         }
-        .wallet-icon{
+        .icon-bg{
+            background: url("../images/icon_user.png") no-repeat center center;
+            background-size: contain;
+        }
+        .wallet-icon-1{
             width: 40px;
             height: 40px;
             margin: 21px 12px 0 0;
-            background: url("../images/icon_user.png") no-repeat center center;
+            background-repeat:no-repeat;
+            background-position: center center;
             background-size: contain;
         }
         .wallet-detail-info{
@@ -429,6 +413,7 @@
                 display:inline-block;
                 width:90%;
                 vertical-align:middle;
+                word-break: break-all;
             }
             .mulit_line i{
                 width:1px;
@@ -496,7 +481,14 @@
         letter-spacing: 0.43px;
     }
     .userName{
+        position:relative;
+        top:3px;
         margin-right: 5px;
+        display:inline-block;
+        width:108px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-weight: 900
     }
 </style>

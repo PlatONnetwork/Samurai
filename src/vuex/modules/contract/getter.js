@@ -4,5 +4,8 @@
 export const contractGetter = {
     contractListGetter(state){
         return state.contractList;
+    },
+    contractHashGetter(state){
+        return state.contrachHash;
     }
 };

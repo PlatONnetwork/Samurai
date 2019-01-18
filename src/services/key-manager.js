@@ -135,27 +135,36 @@ const keyManager = {
             alert('无可用钱包，请先创建或导入钱包文件');
             return;
         }else{
-            if(this.checkAvailable(address)){
-                content = JSON.stringify(this.checkAvailable(address));
-            }else{
+            if(keystore){
                 content = JSON.stringify(keystore);
+            }else{
+                content = JSON.stringify(this.checkAvailable(address));
             }
         }
         if (content) {
+            try{
+                let parseObj = JSON.parse(content);
+                if(parseObj.account){
+                    delete parseObj.account
+                }
+                content = JSON.stringify(parseObj)
+            }catch(e){
+                throw e;
+            }
+            console.log('content',content);
             if(myBrowser()=="IE"){
                 var OW = window.open('', "_blank", "");
                 var DD = new Date();
                 OW.document.open();
                 OW.document.write(content);
-                var name = keystore.account + ".txt";
+                var name = keystore.address + ".txt";
                 OW.document.execCommand("saveAs", false, "C:/Users/15236/Downloads/"+name);//执行保存，IE6,IE7,IE8有效
                 OW.close();
             }else{
-                var href=content;
                 var bb = new Blob([content],{type : 'application/json'});
                 var jsonURL=window.URL.createObjectURL(bb);
                 var a = document.createElement('a');
-                a.setAttribute('download', keystore.account+'.json');
+                a.setAttribute('download', keystore.address+'.json');
                 a.id='key-save';
                 a.target="_blank";
                 a.href = jsonURL;
@@ -206,7 +215,7 @@ const keyManager = {
         if(typeof(content)=='string'){
             content = JSON.parse(content);
         };
-        if(content.account){
+        if(content.address){
             this.interFn(content,password,function(err,privateKey){
                 if(err==0){
                     var userObj = {

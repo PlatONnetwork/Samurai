@@ -25,6 +25,8 @@
                 <el-form-item prop="priKey">
                     <el-input type="textarea"
                               :placeholder="$t('wallet.inputPKHint')"
+                              :autosize="{minRows: 2,maxRows:6}"
+                              resize="none"
                               v-model.trim="byPriKey.priKey">
                     </el-input>
                 </el-form-item>
@@ -55,6 +57,11 @@
                      ref="byKeyStore"
                      :model="byKeyStore"
                      :rules="byKeyStoreRule">
+                <el-form-item prop="account">
+                    <el-input :placeholder="$t('wallet.walletName')"
+                              v-model.trim="byKeyStore.account">
+                    </el-input>
+                </el-form-item>
                 <span v-show="hasRead" class="file-box">
                     {{$t("wallet.browse")}}
                         <input type="file"
@@ -66,8 +73,7 @@
                 </span><span v-show="hasRead" class="f12">{{$t("wallet.unselectedFile")}}</span>
                 <el-form-item v-show="!hasRead">
                     <span class="document icon-left"></span>
-                    <el-input class="input-file" disabled v-model.trim="fileName">
-                    </el-input>
+                    <el-input class="input-file" disabled v-model.trim="fileName"></el-input>
                     <span class="document icon-size">{{fileSize}}</span>
                     <span class="document icon-right" @click="stop"></span>
                     <span v-show="!hasRead"  class="line"></span>
@@ -105,6 +111,8 @@
                 <el-form-item prop="assitant">
                     <el-input type="textarea"
                               :placeholder="$t('wallet.inputPhraseHint')"
+                              :autosize="{minRows: 2,maxRows:6}"
+                              resize="none"
                               v-model.trim="byAssitant.assitant">
                     </el-input>
                 </el-form-item>
@@ -156,28 +164,10 @@
                     password: '',
                     passwordConfirm: ''
                 },
-                // byPriKeyRule: {
-                //     account:{required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
-                //     priKey: [
-                //         {required: true, message: this.$t('wallet.PKRequired'), trigger: 'blur'},
-                //         {min: 64, max:64, message: this.$t('wallet.PKlength'),trigger: 'blur'}
-                //     ],
-                //     password:[
-                //         {required: true, message: this.$t('form.nonPsw'), trigger: 'blur'},
-                //         {min: 6, message: this.$t('form.less6'),trigger: 'blur'}
-                //     ],
-                //     passwordConfirm: [
-                //         {validator: this.checkPass, trigger: 'blur'}
-                //     ]
-                // },
                 byKeyStore: {
+                    account:'',
                     password:''
                 },
-                // byKeyStoreRule: {
-                //     password:[
-                //         {required: true, message: this.$t('form.nonPsw'), trigger: 'blur'}
-                //     ]
-                // },
                 byAssitant: {
                     account: '',
                     assitant: '',
@@ -185,21 +175,6 @@
                     passwordConfirm: ''
 
                 },
-                // byAssitantRule: {
-                //     account: [
-                //         {required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
-                //     ],
-                //     assitant: [
-                //         {required: true, message: this.$t('wallet.PhraseRequired'), trigger: 'blur'},
-                //     ],
-                //     password:[
-                //         {required: true, message: this.$t('form.nonPsw'), trigger: 'blur'},
-                //         {min: 6, message: this.$t('form.less6'),trigger: 'blur'}
-                //     ],
-                //     passwordConfirm: [
-                //         {validator: this.checkPass2, trigger: 'blur'}
-                //     ]
-                // }
             }
         },
         computed: {
@@ -222,6 +197,7 @@
             },
             byKeyStoreRule(){
                 return{
+                    account:{required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
                     password:[
                         {required: true, message: this.$t('form.nonPsw'), trigger: 'blur'}
                     ]
@@ -338,6 +314,7 @@
                             if(data) {
                                 try{
                                     let dataToObj = JSON.parse(data.toString().replace(/\n\r/g,''));
+                                    dataToObj.account = this.byKeyStore.account;
                                     console.warn('dataToObj--->',dataToObj);
                                     keyManager.importKey(
                                         dataToObj,
@@ -396,10 +373,13 @@
                     });
                 }
                 if(flag){
+                    keyObj.address = '0x'+keyObj.address.replace(/^0x/,'');
                     keyObj.createTime = new Date().getTime();
+                    keyObj.icon = 'wallet-icon'+Math.floor((Math.random()*5)+1);
+                    let backUpObj = JSON.parse(JSON.stringify(keyObj));
                     let type = this.network.type;
                     this.updateWalletInfo(keyObj).then(()=>{
-                        fsObj.saveKey(keyObj.address,JSON.stringify(keyObj));
+                        fsObj.saveKey(backUpObj.address,JSON.stringify(backUpObj));
                         this.WalletListAction(type);
                         this.$message.success(this.$t('wallet.importSuccess'));
                         this.hasRead = true;
@@ -507,7 +487,8 @@
         .warn{
             margin:-2px 0 10px;
             font-size: 10px;
-            color: #F32E25;
+            // color: #F32E25;
+            color: #F5A623;
             white-space: nowrap;
             letter-spacing: 1.5px;
         }
@@ -525,6 +506,8 @@
         .input-file{
             .el-input__inner{
                 padding-left:43px;
+                padding-right:86px;
+                text-overflow: ellipsis;
                 border-bottom:solid 2px #9EABBE;
             }
         }
@@ -537,9 +520,9 @@
             background: #fff;
         }
         .el-textarea .el-textarea__inner{
-            font-family: PingFangHK-Regular;
-            color: #9EABBE;
-            letter-spacing: 0.43px;
+            font-family: "Arial";
+            color: #1f2d3d;
+            font-size:12px;
         }
 
     }

@@ -5,11 +5,6 @@
               <el-form-item prop="account">
                   <el-input v-model.trim="newWallet.account" :placeholder="$t('wallet.sharedWalletName')"></el-input>
               </el-form-item>
-              <el-form-item :label="$t('wallet.walletOwner')">
-                  <el-select v-model="newWallet.ordWallet" @change="ordChange()" :placeholder="$t('wallet.selectHint')">
-                      <el-option v-for="wallet in ordWalletList" :value="wallet.address" :label="(wallet.account.length>16?(wallet.account.slice(0,16)+'...'):wallet.account)+'-'+wallet.balance+'Energon'" :placeholder="$t('wallet.selectHint')"></el-option>
-                  </el-select>
-              </el-form-item>
               <el-form-item prop="address">
                   <el-input v-model.trim="newWallet.address" :placeholder="$t('wallet.enterSharedAddr')"></el-input>
               </el-form-item>
@@ -35,7 +30,6 @@
                 ordWalletList:[],
                 newWallet:{
                     account:'',
-                    ordWallet:'',
                     ordAccount:'',
                     address:''
                 },
@@ -66,7 +60,7 @@
             })
         },
         methods: {
-            ...mapActions(['WalletListAction','updateWalletInfo','getOrd','getShare','getOrdByAddress']),
+            ...mapActions(['WalletListAction','updateWalletInfo','getOrd','getShare','getOrdByAddress','getWalletByAddress']),
             checkAddress(rule, value, callback){
                 if (value === '') {
                     callback(new Error(this.$t('wallet.nonSharedAddr')));
@@ -88,13 +82,6 @@
             },
             goBack(){
                 this.$router.push('/home')
-            },
-            ordChange(){
-                this.ordWalletList.forEach((item)=>{
-                    if(item.address==this.newWallet.ordWallet){
-                        this.newWallet.ordAccount = item.account;
-                    }
-                });
             },
             add(){
                 this.$refs['newWallet'].validate((valid)=>{
@@ -120,17 +107,30 @@
                                             type:'share',
                                             account:this.newWallet.account,
                                             address:this.newWallet.address,
-                                            admin:{
-                                                address:this.newWallet.ordWallet,
-                                                account:this.newWallet.ordAccount
-                                            },
-                                            createTime:new Date().getTime()
+                                            state:1,
+                                            createTime:new Date().getTime(),
+                                            icon:'wallet-icon'+Math.floor((Math.random()*5)+1)
                                         };
-                                        contractService.platONCall(contractService.getABI(1),this.newWallet.address,'getRequired',this.newWallet.ordWallet).then((required)=>{
+                                        contractService.platONCall(contractService.getABI(1),this.newWallet.address,'getRequired',this.newWallet.address).then((required)=>{
                                             keyObj.required = required;
-                                            this.updateWalletInfo(keyObj).then(()=>{
-                                                this.$message.success(this.$t('wallet.addShareSuccess'));
-                                                this.$router.push('/o-wallet-list')
+                                            keyObj.ownersArr=[];
+                                            contractService.platONCall(contractService.getABI(1),this.newWallet.address,'getOwners',this.newWallet.address).then((result)=>{
+                                                let owners = result.split(":");
+                                                owners = owners.map((v)=>{return '0x'+v});
+                                                owners.forEach((o)=>{
+                                                    keyObj.ownersArr.push({address:o});
+                                                });
+                                                if(keyObj.ownersArr.length>0){
+                                                    keyObj.ownersArr.map((m)=>{
+                                                        this.getWalletByAddress(m.address).then((obj)=>{
+                                                            m.account = obj?obj.account:'';
+                                                        })
+                                                    })
+                                                }
+                                                this.updateWalletInfo(keyObj).then(()=>{
+                                                    this.$message.success(this.$t('wallet.addShareSuccess'));
+                                                    this.$router.push('/o-wallet-list')
+                                                });
                                             });
                                         });
                                     }
@@ -154,12 +154,7 @@
             }
         },
         watch:{
-            ordWalletList:function(val){
-                if(val.length>0){
-                    this.newWallet.ordWallet = val[0].address;
-                    this.newWallet.ordAccount = val[0].account;
-                }
-            }
+
         }
     }
 </script>

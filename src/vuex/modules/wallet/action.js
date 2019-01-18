@@ -8,31 +8,86 @@ import fs from 'fs';
 import Options from '../../../../static/json/config'
 export const WalletAction = {
     getWallets({state,commit,rootState},walletType){
+        let type = rootState.setting.network.type,
+            fileName_s = walletType==1?fileName:fileNameS;
+        let data = fs.readFileSync(`${Settings.userDataPath}${fileName_s}`);
+        if(data && data!=="{}"){
+            let retData = JSON.parse(data.toString().replace(/\n\r/g,'')),walletCate=type;
+            if(type=='custom'){
+                walletCate = 'custom_'+rootState.setting.chainName;
+            }
+            let arr = retData[walletCate],unknownNum=1;
+            if(walletType==1){
+                arr.forEach((item)=>{
+                    if(!item.account){
+                        item.account='Unknown'+(unknownNum<10?'0':'')+unknownNum;
+                        unknownNum++;
+                    }
+                });
+                retData[walletCate] = arr;
+                fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(retData))
+            }
+            if(arr && arr.length>0){
+                arr.sort(function(a,b){
+                    let value1 = a['createTime'];
+                    let value2 = b['createTime'];
+                    return value1 - value2;
+                });
+            }
+            return arr || [];
+        }else{
+            return [];
+        }
+    },
+    getWalletsA({state,commit,rootState},walletType){
         return new Promise((resolve, reject)=>{
             let type = rootState.setting.network.type,
                 fileName_s = walletType==1?fileName:fileNameS;
             fsObj.ReadFile(Settings.userDataPath,fileName_s,(err, data) => {
-                if(data){
+                if(data && data!=="{}"){
                     let retData = JSON.parse(data.toString().replace(/\n\r/g,'')),walletCate=type;
                     if(type=='custom'){
                         walletCate = 'custom_'+rootState.setting.chainName;
                     }
-                    resolve(retData[walletCate] || []);
+                    let arr = retData[walletCate],unknownNum=1;
+                    if(walletType==1){
+                        arr.forEach((item)=>{
+                            if(!item.account){
+                                item.account='Unknown'+(unknownNum<10?'0':'')+unknownNum;
+                                unknownNum++;
+                            }
+                        });
+                        retData[walletCate] = arr;
+                        fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(retData))
+                    }
+                    if(arr && arr.length>0){
+                        arr.sort(function(a,b){
+                            let value1 = a['createTime'];
+                            let value2 = b['createTime'];
+                            return value1 - value2;
+                        });
+                    }
+                    resolve(arr || []);
                 }else{
-                    reject([]);
+                    resolve([]);
                 }
             })
         })
     },
     //获取普通钱包列表
-    getOrd({state,commit,rootState,dispatch}){
+    async getOrd({state,commit,rootState,dispatch}){
+        return await dispatch('getWallets',1);
+        // return new Promise((resolve, reject)=>{
+        //     dispatch('getWallets',1).then((data)=>{
+        //         resolve(data);
+        //     }).catch((e)=>{
+        //         reject();
+        //     });
+        // })
+    },
+    getOrdA({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
             dispatch('getWallets',1).then((data)=>{
-                data.sort(function(a,b){
-                    let value1 = a['createTime'];
-                    let value2 = b['createTime'];
-                    return value1 - value2;
-                });
                 resolve(data);
             }).catch((e)=>{
                 reject();
@@ -42,7 +97,7 @@ export const WalletAction = {
     //获取余额不为0的普通钱包列表
     getBalOrd({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
-            dispatch('getOrd').then((data)=>{
+            dispatch('getOrdA').then((data)=>{
                 let arr=[],count=0;
                 data.forEach((item)=>{
                     contractService.web3.eth.getBalance(item.address,(err,data)=>{
@@ -57,11 +112,6 @@ export const WalletAction = {
                 let timer = setInterval(()=>{
                     if(count==data.length){
                         clearInterval(timer);
-                        arr.sort(function(a,b){
-                            let value1 = a['createTime'];
-                            let value2 = b['createTime'];
-                            return value1 - value2;
-                        });
                         resolve(arr)
                     }
                 },1000)
@@ -71,17 +121,18 @@ export const WalletAction = {
     //获取共享钱包列表
     getShare({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
-            dispatch('getWallets',2).then((data)=>{
+            dispatch('getWalletsA',2).then((data)=>{
                 resolve(data);
             }).catch((e)=>{
-                reject();
-            });
+                reject(e)
+            })
+
         })
     },
     //获取当前情景下钱包列表
-    WalletListAction({state,commit,rootState,dispatch}){
+    async WalletListAction({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
-            dispatch('getWallets',state.walletType).then((data)=>{
+            dispatch('getWalletsA',state.walletType).then((data)=>{
                 commit('UPDATE_WALLET_LIST',data);
                 resolve(data);
             }).catch((e)=>{
@@ -90,42 +141,44 @@ export const WalletAction = {
         })
     },
     //获取所有钱包列表
-    getAllWallets({state,commit,rootState,dispatch}){
+     getAllWallets({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
             let arr=[];
-            dispatch('getWallets',1).then((ords)=>{
-                ords.sort(function(a,b){
-                    let value1 = a['createTime'];
-                    let value2 = b['createTime'];
-                    return value1 - value2;
-                });
-                dispatch('getWallets',2).then((shares)=>{
-                    shares.sort(function(a,b){
-                        let value1 = a['createTime'];
-                        let value2 = b['createTime'];
-                        return value1 - value2;
-                    });
+            dispatch('getWalletsA',1).then((ords)=>{
+                dispatch('getWalletsA',2).then((shares)=>{
                     arr = ords.concat(shares);
                     resolve(arr);
                 })
             })
         })
-
     },
     //根据钱包地址返回该钱包是否在当前客户端
-    isAtLocal({state,commit,dispatch,rootState},address){
+    async isAtLocal({state,commit,dispatch,rootState},address){
+        let data = await dispatch('getOrd');
         return new Promise((resolve, reject)=>{
-            dispatch('getOrd').then((data)=>{
-                let arr = data.filter((item)=>{
-                    return item.address==address;
-                });
-                if(arr.length>0){
-                    resolve(true)
-                }else{
-                    resolve(false)
-                }
-            })
+            let arr = data.filter((item)=>{
+                return item.address==address;
+            });
+            if(arr.length>0){
+                resolve(true)
+            }else{
+                resolve(false)
+            }
         })
+
+
+        // return new Promise((resolve, reject)=>{
+        //     dispatch('getOrd').then((data)=>{
+        //         let arr = data.filter((item)=>{
+        //             return item.address==address;
+        //         });
+        //         if(arr.length>0){
+        //             resolve(true)
+        //         }else{
+        //             resolve(false)
+        //         }
+        //     })
+        // })
     },
     //根据钱包地址返回该钱包是否是一个共享钱包
     async isSharedWallet({state,commit,dispatch,rootState},address){
@@ -144,19 +197,28 @@ export const WalletAction = {
         })
     },
     //根据钱包地址返回普通钱包
-    getOrdByAddress({state,commit,dispatch,rootState},address){
-        return new Promise((resolve, reject)=>{
-            dispatch('getOrd').then((data)=>{
-                let arr = data.filter((item)=>{
-                    return item.address==address;
-                });
-                if(arr.length>0){
-                    resolve(arr[0]);
-                }else{
-                    resolve(null)
-                }
-            });
-        })
+    async getOrdByAddress({state,commit,dispatch,rootState},address){
+        let ords = await dispatch('getOrd');
+        let arr = ords.filter((item)=>{
+            return item.address==address;
+        });
+        if(arr.length>0){
+            return arr[0];
+        }else{
+            return null
+        }
+        // return new Promise((resolve, reject)=>{
+        //     dispatch('getOrd').then((data)=>{
+        //         let arr = data.filter((item)=>{
+        //             return item.address==address;
+        //         });
+        //         if(arr.length>0){
+        //             resolve(arr[0]);
+        //         }else{
+        //             resolve(null)
+        //         }
+        //     });
+        // })
     },
     //根据钱包地址返回共享钱包
     getShareByAddress({state,commit,dispatch,rootState},address){
@@ -216,7 +278,7 @@ export const WalletAction = {
     //获取所有钱包的总余额
     getTotalBalance({state,commit,dispatch}){
         let total=0,count=0;
-        dispatch('getOrd').then((ords)=>{
+        dispatch('getOrdA').then((ords)=>{
             ords.forEach((ord)=>{
                 contractService.web3.eth.getBalance(ord.address,(err,data)=>{
                     if(err) return null;
@@ -246,7 +308,7 @@ export const WalletAction = {
     //获取普通钱包的总余额
     getNormalTotalBalance({state,commit,dispatch}){
         let total=0,count=0;
-        dispatch('getOrd').then((ords)=>{
+        dispatch('getOrdA').then((ords)=>{
             ords.forEach((ord)=>{
                 contractService.web3.eth.getBalance(ord.address,(err,data)=>{
                     if(err) return null;
@@ -269,7 +331,6 @@ export const WalletAction = {
                 resolve(data?data.admin:null);
             })
         })
-
     },
     updateCurWallet({state,commit},address){
         state.curWallet = address;
@@ -286,9 +347,11 @@ export const WalletAction = {
                         }
                     });
                     fsObj.WriteFile(fileName, JSON.stringify(retData), (err) => {
-                        if(err){
+                        if(!err){
                             fsObj.saveKey(obj.address,JSON.stringify(obj));
                             commit('UPDATE_WALLET_LIST',retData[type]);
+                            //替换keystore目录下的钱包文件
+                            // let keyPath Settings.keyPath
                             resolve();
                         }else{
                             reject();
@@ -309,7 +372,7 @@ export const WalletAction = {
     //更新普通钱包列表
     updateWalletInfo({state,commit,rootState},keyObj){
         return new Promise((resolve, reject)=>{
-            let fileName1 = (state.walletType==1)?fileName:fileNameS
+            let fileName1 = (state.walletType==1)?fileName:fileNameS;
             fsObj.ReadFile('',fileName1, (err, data)=> {
                 if(err){
                     reject(1,err);
@@ -344,7 +407,123 @@ export const WalletAction = {
             });
         });
     },
+    //根据交易hash ，监控到交易上链后，更新联名钱包创建的进度和联名钱包地址
+    insertShareAddress({state,commit,rootState},obj) {
+        return new Promise((resolve, reject) => {
+            fsObj.ReadFile('', fileNameS, (err, data) => {
+                if (err) {
+                    reject(1, err);
+                    throw err;
+                }
+                let result = {};
+                let type = rootState.setting.network.type,
+                    chainName = rootState.setting.chainName,
+                    walletCate = type;
+                if (type == 'custom') {
+                    walletCate = 'custom_' + chainName;
+                }
+                if (data) {
+                    let retData = JSON.parse(data.toString().replace(/\n\r/g, ''));
+                    retData[walletCate].forEach((item)=>{
+                        obj.forEach((oItem)=>{
+                            if(item.hash == oItem.hash){
+                                Object.assign(item,oItem)
+                            }
+                        })
+                    });
+                    result = retData
+                }
+                fsObj.WriteFile(fileNameS, JSON.stringify(result), (err1) => {
+                    if (err1) {
+                        reject(1, err1);
+                        throw err1;
+                    }
+                    resolve();
+                })
+            });
+        })
+    },
     updatePageLoading({state,commit},bool){
         state.pageLoading = bool;
+    },
+    updateInitParams({state,commit},param){
+        state.initParams[param.hash] = param.value
+    },
+    deleteInitParam({state,commit},hash){
+        // state.initParams[hash] = undefined;
+        delete state.initParams[hash];
+    },
+    //同步本地钱包文件下的文件到钱包列表
+    loadKeyStore({state,commit,rootState}){
+        try{
+            let paths = fs.readdirSync(Settings.keyPath),
+                files=[];
+            let type = rootState.setting.network.type,
+                chainName = rootState.setting.chainName,
+                walletCate = type;
+            if (type == 'custom') {
+                walletCate = 'custom_' + chainName;
+            }
+            let walletInfoData = fs.readFileSync(`${Settings.userDataPath}${fileName}`,{encoding:'utf8'}),result={},retData,curRetData;
+            if (walletInfoData) {
+                retData = JSON.parse(walletInfoData.toString().replace(/\n\r/g, '')),
+                    curRetData = retData[walletCate];
+            }
+            paths.forEach(function(path) {
+                let file = fs.statSync(`${Settings.keyPath}/${path}`);
+                if(file.isFile()){
+                    if(path.slice(path.lastIndexOf('.'),path.length)=='.json'){
+                        let fileContent = fs.readFileSync(`${Settings.keyPath}/${path}`,{encoding:'utf8'});
+                        if(fileContent.indexOf('"kdfparams":')!=-1){
+                            try{
+                                let keyObj = JSON.parse(fileContent);
+                                keyObj.address='0x'+keyObj.address.replace(/^0x/,'');
+                                keyObj.createTime = new Date(file.birthtime).getTime();
+                                let curKeyObj = curRetData.filter((item)=>{
+                                    return item.address==keyObj.address
+                                });
+                                if(curKeyObj.length>0){
+                                    keyObj.account = curKeyObj[0].account;
+                                    keyObj.icon = curKeyObj[0].icon?curKeyObj[0].icon:'wallet-icon'+Math.floor((Math.random()*5)+1);
+                                }
+                                files.push(keyObj);
+                            }catch(e){
+                                throw e;
+                            }
+                        }
+                    }
+                }
+            });
+            retData[walletCate]=files;
+            result = retData;
+            fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(result))
+        }catch(e){
+            console.log(e)
+        }
+    },
+    //删除共享钱包
+    deleteShare({state,commit,rootState},hash){
+        // return new Promise((resolve, reject)=>{
+            let type = rootState.setting.network.type;
+            fsObj.ReadFile(Settings.userDataPath,fileNameS,(err, data) => {
+                if(data && data!=="{}"){
+                    let retData = JSON.parse(data.toString().replace(/\n\r/g,'')),walletCate=type;
+                    if(type=='custom'){
+                        walletCate = 'custom_'+rootState.setting.chainName;
+                    }
+                    let arr = retData[walletCate];
+                    arr.forEach((item,index)=>{
+                        if(item.hash==hash){
+                            arr.splice(index,1);
+                        }
+                    });
+                    retData[walletCate]=arr;
+                    fs.writeFileSync(`${Settings.userDataPath}${fileNameS}`,JSON.stringify(retData));
+                    // resolve();
+                }else{
+                    // resolve();
+                }
+            })
+        // })
     }
 };

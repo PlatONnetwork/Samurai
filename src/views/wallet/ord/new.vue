@@ -21,7 +21,6 @@
                             <el-button class="cancel" @click="goBack">{{$t("form.cancel")}}</el-button>
                             <el-button type="primary" style="float: right;" @click="newOWallet('newWallet')">{{$t("form.create")}}</el-button>
                         </p>
-
                     </el-form>
                 </div>
                 <div class="center box2" v-if="active==2">
@@ -37,16 +36,16 @@
                             <span class="value">{{walletInfo.address}}</span>
                         </p>
                         <p class="public-box">
-                            <span class="label">{{$t("wallet.pubKey")}}:</span>
-                            <span class="value pub">{{walletInfo.pubKey}}</span>
+                            <span class="label" :style="{minWidth:lang=='en'?'68px':'58px'}">{{$t("wallet.pubKey")}}:</span>
+                            <span class="value pub">{{walletInfo.publicKey}}</span>
                         </p>
                         <p>
                             <span class="label">{{$t("wallet.signature")}}:</span>
-                            <span class="value">{{walletInfo.sign}}</span>
+                            <span class="value">{{walletInfo.crypto.kdfparams.prf}}</span>
                         </p>
                         <p>
                             <span class="label">{{$t("wallet.prikey")}}:</span>
-                            <span class="value">{{walletInfo.priKey}}</span>
+                            <span class="value">{{privatekey}}</span>
                         </p>
                         <p class="tip">{{$t("wallet.tipSaveJson")}} <el-button @click="backUp" type="primary">{{$t("wallet.downloadJson")}}</el-button> </p>
                     </div>
@@ -96,6 +95,7 @@
                     sign: '',
                     priKey: ''
                 },
+                privatekey:null
             }
 
         },
@@ -142,18 +142,19 @@
                            (err,keyObj) => {
                              if(err == 0){
                               this.active = 2;
-                               this.walletInfo.account = keyObj.account;
-                               this.walletInfo.address = keyObj.address;
-                               this.walletInfo.sign = keyObj.crypto.kdfparams.prf;
-                               this.walletInfo.pubKey = keyObj.publicKey;
+                               this.walletInfo = JSON.parse(JSON.stringify(keyObj));
                                keyObj.createTime = new Date().getTime();
-                               let backUpForDevelop = Object.assign({}, keyObj);
-                               let type = this.network.type;
                                fsObj.saveKey(keyObj.address,JSON.stringify(keyObj));
+                               let backUpForDevelop = JSON.parse(JSON.stringify(keyObj));
+                               backUpForDevelop.icon = 'wallet-icon'+Math.floor((Math.random()*5)+1);
+                               let type = this.network.type;
                                this.updateWalletInfo(backUpForDevelop).then(()=>{
                                    this.WalletListAction(type).then(()=>{
                                        keyManager.recover(keyObj.address, this.newWallet.password,'hex', (err, key) => {
-                                           this.walletInfo.priKey = key;
+                                           this.privatekey = key;
+                                           setTimeout(()=>{
+                                               keyManager.backUpKey(keyObj.address,keyObj);
+                                           },100);
                                        });
                                    })
                                }).catch((e)=>{
@@ -165,6 +166,7 @@
                 })
             },
             backUp(){
+                console.log(this.walletInfo);
                 keyManager.backUpKey(this.walletInfo.address,this.walletInfo);
             },
             goBack(){
@@ -261,9 +263,6 @@
             }
             .public-box{
                 display:flex;
-                .label{
-                    min-width:58px;
-                }
                 .pub{
                     text-indent:0;
                 }
@@ -278,7 +277,7 @@
     .warn{
         margin:-2px 0 10px;
         font-size: 10px;
-        color: #F32E25;
+        color: #F5A623;
         white-space: nowrap;
         letter-spacing: 1.5px;
     }

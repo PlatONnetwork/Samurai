@@ -1,5 +1,5 @@
 <template>
-    <div class="wallet-new format-style">
+    <div class="wallet-new-share format-style">
         <div class="card wallet-content">
             <p class="step center"></p>
             <div v-if="active==1" class="box center">
@@ -40,11 +40,11 @@
                 <div class="wallet-info">
                     <p class="title">
                         <span class="label">{{$t("wallet.name")}}:</span>
-                        <span class="value">{{newWallet.account}}</span>
+                        <span class="value bold">{{newWallet.account}}</span>
                     </p>
                     <p class="title">
                         <span class="label">{{$t('wallet.sharedOwners')}}:</span>
-                        <span class="value">{{newWallet.owners.length}}</span>
+                        <span class="value bold">{{newWallet.owners.length}}</span>
                     </p>
                     <p v-for="(owner,index) in newWallet.owners" class="owner">
                         <span>{{index+1}}</span>
@@ -58,11 +58,11 @@
                         </el-select>
                     </p>
                 </div>
-                <p class="btn-box">
-                    <el-button class="cancel" @click="backStep">{{$t('form.back')}}</el-button>
-                    <el-button type="primary" @click="create('newWallet')">{{$t('form.create')}}</el-button>
-                </p>
             </div>
+            <p class="btn-box" v-if="active==2">
+                <el-button class="cancel" @click="backStep">{{$t('form.back')}}</el-button>
+                <el-button type="primary" @click="create('newWallet')" class="letter-s">{{$t('form.create')}}</el-button>
+            </p>
         </div>
 
         <div class="modal create-confirm" v-if="createConfirm">
@@ -79,12 +79,12 @@
                         <p>{{$t('wallet.fee')}} <span class="txt">{{price}}Energon</span></p>
                     </div>
                     <p class="psw-box">
-                        <el-input v-model.trim="psw" :placeholder="$t('wallet.input')+newWallet.owners[0].account+$t('wallet.walletPsw')" type="password"></el-input>
+                        <el-input v-model.trim="psw" :disabled="createLoading" :placeholder="$t('wallet.input')+newWallet.owners[0].account+$t('wallet.walletPsw')" type="password"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="createConfirm=false">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="confirmCreate" type="primary" :disabled="createLoading">{{$t("form.submit")}}</el-button>
+                    <el-button class="cancel" @click="createConfirm=false" :disabled="createLoading">{{$t("form.cancel")}}</el-button>
+                    <el-button @click="confirmCreate" type="primary" :loading="createLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -178,7 +178,7 @@
             })
         },
         methods: {
-            ...mapActions(['WalletListAction','updateWalletInfo','updatePageLoading','getBalOrd','isAtLocal','isSharedWallet']),
+            ...mapActions(['WalletListAction','updateWalletInfo','getBalOrd','isAtLocal','isSharedWallet','updateInitParams','saveTractRecord']),
             checkPass(rule, value, callback){
                 if (value === '') {
                     callback(new Error(formServies.notEmpty(value).msg));
@@ -263,7 +263,7 @@
                                     let ret = await _this.isSharedWallet(item.address);
                                     if(ret){
                                         _this.tipIndex.push(index);
-                                        _this.tipTxt[index]=_this.$t('wallet.isShareAddress');
+                                        _this.tipTxt[index]=_this.$t('wallet.inVaildSharedAddr');
                                         resolve(false);
                                     }else{
                                         addressList.push(item.address);
@@ -284,7 +284,6 @@
                         }
                     });
                 })
-
             },
             create(){
                 //估算gas :部署合约
@@ -310,7 +309,6 @@
             },
             getGas(addr){
                 return new Promise((resolve, reject)=>{
-
                     this.gas = 250000000;
                     contractService.web3.eth.getGasPrice((error,result)=>{
                         if(error) reject(error);
@@ -351,40 +349,45 @@
                         this.$message.error(this.$t('form.wrongPsw'));
                     }else{
                         let params = [this.getOwners().join(':'),this.signNum];
-                        this.updatePageLoading(true);
                         this.createLoading = true;
                         contractService.platONDeploy(contractService.getABI(1),contractService.getBIN(1),keyobject.address,priKey,this.gas,this.gasPrice).then((data)=>{
-                            this.contract = data;
-                            contractService.platONSendTransaction(contractService.getABI(1),data.address,'initWallet',JSON.stringify(params),keyobject.address,priKey).then(()=>{
-                                this.createLoading = false;
-                                this.updateWalletInfo({
-                                    type:'share',
-                                    account:this.newWallet.account,
-                                    address:data.address,
-                                    admin:{
-                                        account:keyobject.account,
-                                        address:keyobject.address,
-                                    },
-                                    ownersArr:ownersArr,
-                                    required:this.signNum,
-                                    createTime:new Date().getTime()
-                                }).then(()=>{
-                                    this.updatePageLoading(false);
+                            this.updateInitParams({
+                                hash:data.hash,
+                                value:priKey
+                            });
+                            let tradeObj={
+                                tradeTime:new Date().getTime(),
+                                hash:data.hash,
+                                value:0,
+                                gasPrice:this.gasPrice,
+                                fromAccount:keyobject.account,
+                                from:keyobject.address,
+                                type:'createJointWallet',
+                                state:0
+                            };
+                            this.updateWalletInfo({
+                                hash:data.hash,
+                                state:0,
+                                type:'share',
+                                account:this.newWallet.account,
+                                admin:{
+                                    account:keyobject.account,
+                                    address:keyobject.address,
+                                },
+                                ownersArr:ownersArr,
+                                required:this.signNum,
+                                createTime:new Date().getTime(),
+                                icon:'wallet-icon'+Math.floor((Math.random()*5)+1),
+                                processWidth:25
+                            }).then(()=>{
+                                this.saveTractRecord(tradeObj).then(()=>{
                                     this.$message.success(this.$t('wallet.createShareSuccess'));
                                     this.$router.push('/o-wallet-list')
                                 });
-                            }).catch((e)=>{
-                                this.createLoading = false;
-                                this.updatePageLoading(false);
-                                if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
-                                    window.vueVm.$message.warning(this.$t('wallet.cannotTrans2'));
-                                }else{
-                                    this.$message.error(this.$t('wallet.createShareFail'))
-                                }
-                            })
+                            });
                         }).catch((e)=>{
+                            console.log(e);
                             this.createLoading = false;
-                            this.updatePageLoading(false);
                             if(e.toString().indexOf('insufficient funds for gas * price + value')!==-1){
                                 window.vueVm.$message.warning(this.$t('wallet.cannotTrans2'));
                             }else{
@@ -429,6 +432,9 @@
         height: 100%;
         font-size: 12px;
         color: #24272B;
+    }
+    .letter-s{
+        letter-spacing: 3px;
     }
     .box{
         text-align: center;
@@ -510,13 +516,16 @@
         margin: 0 auto;
     }
     .box2{
-        width: 587px;
-        height: 450px;
-        margin: 20px 10px 0 auto;
+        position:absolute;
+        left:50%;
+        -webkit-transform: translateX(-50%);
+        transform: translateX(-50%);
+        width: 456px;
+        height:calc(~"100% - 85px");
+        /*margin: 20px 10px 0 auto;*/
         overflow-x: hidden;
-        overflow-y: scroll;
+        overflow-y: auto;
         .icons{
-            margin-left: 50px;
             width:300px;
         }
         .icons:before{
@@ -526,6 +535,7 @@
             background: url("../images/icon_4.svg") no-repeat center center;
         }
         .wallet-info{
+            margin-left:54px;
             margin-top:20px;
             padding:12px 14px;
             width:300px;
@@ -635,7 +645,7 @@
     }
 </style>
 <style lang="less">
-    .wallet-new{
+    .wallet-new-share{
         .el-input{
             width:300px;
         }
