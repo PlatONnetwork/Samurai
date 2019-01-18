@@ -9,7 +9,17 @@
                     <el-input v-model.trim="newContract.address" :placeholder="$t('contracts.watchContract.addressHint')"></el-input>
                 </el-form-item>
                 <el-form-item :label="$t('contracts.watchContract.contABI')" prop="abi">
-                    <el-input v-model.trim="newContract.abi" type="textarea" :rows="7" :placeholder="$t('contracts.watchContract.contABIHint')"></el-input>
+                    <el-upload
+                            class="import2"
+                            action="https://jsonplaceholder.typicode.com/posts/"
+                            accept= ".json"
+                            :on-change="getAbi"
+                            :auto-upload="true"
+                            :show-file-list='false'>
+                        <div class="import2-icon-text">{{$t("contracts.import")}}.abi {{$t("contracts.file")}}</div>
+                    </el-upload>
+                    <el-input v-model.trim="newContract.abi" type="textarea" :rows="7"  :autosize="{minRows: 7,maxRows:16}"
+                              resize="none" :placeholder="$t('contracts.watchContract.contABIHint')"></el-input>
                 </el-form-item>
             </el-form>
             <p class="btn-box">
@@ -24,6 +34,7 @@
     import {mapGetters, mapActions} from 'vuex'
     import Settings from '@/services/setting';
     import contractService from '@/services/contract-servies';
+    import fsObj from '@/services/fs-service'
     var fs = require("fs");
     export default {
         name: 'contractAdd',
@@ -113,7 +124,8 @@
                                                 let contractObj = {
                                                     name:this.newContract.name,
                                                     address:contract.address,
-                                                    abi:this.newContract.abi
+                                                    abi:this.newContract.abi,
+                                                    icon:'contract-icon'+Math.floor((Math.random()*5)+1)
                                                 };
                                                 this.updateContractInfo(contractObj).then(()=>{
                                                     this.$router.push('/contract')
@@ -136,6 +148,12 @@
 
                 })
 
+            },
+            getAbi(file){
+                fsObj.ReadFile(file.raw.path,'',(err, Abidata)=>{
+                    this.newContract.abi = Abidata
+                });
+                console.log('get abi')
             },
             checkAbi(abi){
                 try{
@@ -161,6 +179,23 @@
     // .cancel,.addBtn{
     //     font-weight: 900;
     // }
+    .import2{
+        position: absolute;
+        top: -30px;
+        // right: 18px;
+        left: 596px;
+        width: 80px;
+        height: 35px;
+    }
+    .import2-icon-text{
+        width: 123px;
+        height: 35px;
+        background:url("./images/icon_import2.svg") no-repeat 4px;
+        font-family: PingFangHK-Regular;
+        font-size: 12px;
+        color: #18C2E9;
+        letter-spacing: 0.43px;
+    }
 </style>
 <style lang="less">
     .content{

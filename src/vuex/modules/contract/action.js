@@ -53,6 +53,36 @@ export const contractAction = {
                 }
                 resolve();
             });
+        });
+    },
+    saveContractHash({state,commit},param){
+        commit('UPDATE_CONTRACT_HASH',param);
+    },
+    insertAddress({state,commit,rootState},obj) {
+        return new Promise((resolve, reject) => {
+            fsObj.ReadFile('', fileName, (err, data) => {
+                if (err) {
+                    reject(1, err);
+                    throw err;
+                }
+                let netType =  rootState.setting.network.type=='custom'?'custom_'+rootState.setting.chainName:rootState.setting.network.type;
+
+                if (data) {
+                    let retData = JSON.parse(data.toString().replace(/\n\r/g, ''));
+                    retData[netType].forEach((item)=>{
+                        if(item.hash == obj.hash){
+                            Object.assign(item,obj)
+                        }
+                    });
+                    fsObj.WriteFile(fileName, JSON.stringify(retData), (err1) => {
+                        if (err1) {
+                            reject(1, err1);
+                            throw err1;
+                        }
+                        resolve();
+                    })
+                }
             });
+        })
     },
 }

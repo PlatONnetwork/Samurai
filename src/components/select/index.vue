@@ -145,9 +145,10 @@
             i{
                 position:absolute;
                 right:0;
-                top:13px;
-                color:#bfcbd9;
-                font-size:10px;
+                top:14px;
+                // color:#bfcbd9;
+                // font-size:10px;
+                font-size:12px;
             }
         }
         ul{

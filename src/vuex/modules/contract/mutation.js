@@ -5,5 +5,8 @@ import Settings from '@/services/setting'
 export const contractMutation = {
     ['UPDATE_CONTRACT_LIST'](state,data){
         state.contractList = data;
+    },
+    ['UPDATE_CONTRACT_HASH'](state,data){
+        state.contrachHash = data;
     }
 };

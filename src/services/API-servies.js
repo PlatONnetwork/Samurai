@@ -24,12 +24,10 @@ const encodeParams = (params) => {
 class ApiService {
     constructor() {
 
-        this.user = {
-            register: this.post.bind(this, API.USER.register),
-            login: this.post.bind(this, API.USER.login),
-            getMenuList: this.post.bind(this, API.USER.getMenuList),
-            logout: this.post.bind(this, API.USER.logout),
-        }
+
+        this.file = {
+            upload: this.uploadFile.bind(this, API.FILE.upload),//文件上传
+        };
 
         this.interceptorsOfReq();
         this.interceptorsOfRes();
@@ -79,6 +77,26 @@ class ApiService {
             console.log("请求失败");
             return Promise.reject(error);
         });
+    }
+
+    /**
+     * 上传文件
+     * @param url -上传的url
+     * @param fileObject -文件对象
+     * 这里特意给这个方法做了清空http header参数的操作，因为这里涉及到跨域，清空头部参数将请求置为简单请求，可通过浏览器预检请求。
+     * @returns {Promise.<TResult>}
+     */
+    uploadFile(url, params) {
+        Http.defaults.headers.post={};
+        let formData = new FormData();
+        formData.append("file", params.file, params.fileName);
+        return Http({
+            url: url + "?fileName=" + params.fileName + "&fileSize=" + params.fileSize + "&policy=" + params.policy,
+            // url:url,
+            method: 'POST',
+            data: formData,
+            headers: { 'Content-Type': 'multipart/form-data' }
+        }).then((res) => res.data);
     }
 
 }

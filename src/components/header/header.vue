@@ -73,7 +73,7 @@
             font-weight: 600;
             position: relative;
             top: -6px;
-            padding-left: 14px;
+            padding-left: 9px;
             height: 22px;
             font-size: 16px;
             color: #24272B;

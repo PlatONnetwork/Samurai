@@ -44,7 +44,7 @@ export const tradeAction = {
                 }else{
                     let tradeCount = 0;
                     shares.forEach((share)=>{
-                        contractService.platONCall(contractService.getABI(1),share.address,'getTransactionList',share.admin.address,[0,num]).then((result)=>{
+                        contractService.platONCall(contractService.getABI(1),share.address,'getTransactionList',share.address,[0,num]).then((result)=>{
                             if(result=='0x' || result=='') {
                                 count++;
                                 tradeCount++;
@@ -73,9 +73,9 @@ export const tradeAction = {
                                             type:'transfer'
                                         };
                                         //判断交易状态，如果已签名数+剩余未签名数<签名数，该笔交易置为交易失败
-                                        contractService.platONCall(contractService.getABI(1),share.address,'getOwners',share.admin.address,[]).then((owners)=>{
-                                            contractService.platONCall(contractService.getABI(1),share.address,'getRequired',share.admin.address).then((required)=>{
-                                                contractService.platONCall(contractService.getABI(1),share.address,'getMultiSigList',share.admin.address,[_arr[8]]).then((multiSigList)=>{
+                                        contractService.platONCall(contractService.getABI(1),share.address,'getOwners',share.address,[]).then((owners)=>{
+                                            contractService.platONCall(contractService.getABI(1),share.address,'getRequired',share.address).then((required)=>{
+                                                contractService.platONCall(contractService.getABI(1),share.address,'getMultiSigList',share.address,[_arr[8]]).then((multiSigList)=>{
                                                     let ownersList = owners.split(":");
                                                     let arr = multiSigList.replace(/^\:|\:$/g,'').split(":");
                                                     let confirmList = arr[1].replace(/^\,|\,$/g,'').split(",");
@@ -137,11 +137,10 @@ export const tradeAction = {
             if(!curWallet) resolve(0);
             dispatch('getWalletByAddress',curWallet).then((wallet)=>{
                 if(!wallet) return;
-                contractService.platONCall(contractService.getABI(1),wallet.address,'getListSize',wallet.admin.address,[]).then((count)=>{
+                contractService.platONCall(contractService.getABI(1),wallet.address,'getListSize',wallet.address,[]).then((count)=>{
                     resolve(count)
                 })
             });
-
        })
     },
     //获取当前共享钱包的交易列表
@@ -151,7 +150,7 @@ export const tradeAction = {
             dispatch('getWalletByAddress',curWallet).then((curObj)=>{
                 if(!curObj) resolve([]);
                 let shareTradeList=[],count=0;
-                contractService.platONCall(contractService.getABI(1),curObj.address,'getTransactionList',curObj.admin.address,[0,num]).then((result)=>{
+                contractService.platONCall(contractService.getABI(1),curObj.address,'getTransactionList',curObj.address,[0,num]).then((result)=>{
                     if(result=='0x') return;
                     let arr = result.replace(/\:$/g,'').split(":");
                     if(!/^\s*$/g.test(result)){
@@ -176,9 +175,9 @@ export const tradeAction = {
                                 type:'transfer'
                             };
                             //判断交易状态，如果已签名数+剩余未签名数<签名数，该笔交易置为交易失败
-                            contractService.platONCall(contractService.getABI(1),curObj.address,'getOwners',curObj.admin.address,[]).then((owners)=>{
-                                contractService.platONCall(contractService.getABI(1),curObj.address,'getRequired',curObj.admin.address).then((required)=>{
-                                    contractService.platONCall(contractService.getABI(1),curObj.address,'getMultiSigList',curObj.admin.address,[_arr[8]]).then((multiSigList)=>{
+                            contractService.platONCall(contractService.getABI(1),curObj.address,'getOwners',curObj.address,[]).then((owners)=>{
+                                contractService.platONCall(contractService.getABI(1),curObj.address,'getRequired',curObj.address).then((required)=>{
+                                    contractService.platONCall(contractService.getABI(1),curObj.address,'getMultiSigList',curObj.address,[_arr[8]]).then((multiSigList)=>{
                                         let ownersList = owners.split(":");
                                         let arr = multiSigList.replace(/^\:|\:$/g,'').split(":");
                                         let confirmList = arr[1].replace(/^\,|\,$/g,'').split(",");
@@ -327,5 +326,106 @@ export const tradeAction = {
     },
     updateTradeType({state,commit},type){
         state.tradeType = type;
+    },
+    // 更新交易进度条
+    updatetradeProcess({state,commit,rootState},list){
+        let processObj = {};
+        list.forEach((trade)=>{
+            if(trade.hash && !trade.isCompolete){
+                processObj[trade.hash] = trade.processWidth
+            }
+        });
+        return new Promise((resolve, reject)=>{
+            try{
+                let cate=null,filePath;
+                if(rootState.setting.network.type=='custom'){
+                    cate = rootState.setting.chainName;
+                }
+                if(cate){
+                    filePath = Setting.userDataPath+'net_'+rootState.setting.network.type+'/'+cate+'_txn.json';
+                }else{
+                    filePath = Setting.userDataPath+'net_'+rootState.setting.network.type+'/txn.json';
+                }
+                if(fs.existsSync(filePath)){
+                    let data = fs.readFileSync(filePath, { encoding: 'utf8' });
+                    try{
+                        data = JSON.parse(data);
+                        data.forEach((item)=>{
+                            if(item.hash && processObj[item.hash]){
+                                 item.processWidth = processObj[item.hash];
+                            }
+                        });
+                        fs.writeFileSync(filePath,JSON.stringify(data));
+                        resolve();
+                    }catch(e){
+                        resolve();
+                    }
+                }else{
+                    resolve();
+                }
+            }catch(err){
+                console.error(err)
+            }
+        })
+    },
+    hasPendingTrade({state,commit,rootState,dispatch},trade){
+        return new Promise((resolve, reject)=>{
+            let cate=null,filePath;
+            if(rootState.setting.network.type=='custom'){
+                cate = rootState.setting.chainName;
+            }
+            if(cate){
+                filePath = Setting.userDataPath+'net_'+rootState.setting.network.type+'/'+cate+'_txn.json';
+            }else{
+                filePath = Setting.userDataPath+'net_'+rootState.setting.network.type+'/txn.json';
+            }
+            if(fs.existsSync(filePath)){
+                let tradeData = fs.readFileSync(filePath, { encoding: 'utf8' }),cateTradeData;
+                try{
+                    cateTradeData = JSON.parse(tradeData);
+                    if(cateTradeData && cateTradeData.length>0){
+                        let curAddrTrade = cateTradeData.filter((item)=>{
+                            return item.from==trade.from && item.to==trade.to && item.type=='jointWalletExecution'
+                        });
+                        if(curAddrTrade.length>0){
+                            curAddrTrade.sort((a,b)=>{
+                                return b.tradeTime - a.tradeTime;
+                            });
+                            contractService.web3.eth.getTransactionReceipt(curAddrTrade[0].hash,(err,tradeInfo)=>{
+                                resolve(!tradeInfo);
+                            })
+                        }else{
+                            resolve(false)
+                        }
+                    }else{
+                        resolve(false)
+                    }
+                }catch(e){
+                    resolve(false)
+                }
+            }else{
+                resolve(false)
+            }
+        });
+    },
+    //获取联名钱包交易的可执行用户
+    async getAvailOwner({state,commit,rootState,dispatch},addr){
+        //获取查看是否有等待上链的交易,查到有待上链的，就没必要再次确认签名了
+        async function _getOrdByAddress(address,cb){
+            cb(await dispatch('getOrdByAddress',address));
+        }
+        let joint = await dispatch('getShareByAddress',addr),ownersArr = joint.ownersArr,localWallets=[];
+        for(let i=0;i<ownersArr.length;i++){
+            let isAtLocal = await dispatch('isAtLocal',ownersArr[i].address);
+            if(isAtLocal){
+                localWallets.push(ownersArr[i]);
+            }
+        }
+        localWallets.forEach((local)=>{
+            _getOrdByAddress(local.address,(wallet)=>{
+                Object.assign(local,wallet)
+            });
+        });
+        return localWallets;
     }
-}
+};

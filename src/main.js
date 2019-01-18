@@ -10,6 +10,7 @@ import VueQriously from 'vue-qriously'
 Vue.use(VueQriously)
 import VueI18n from 'vue-i18n'//多语言
 import messages from '@/lang/index'
+import Vuex from 'vuex'
 Vue.use(VueI18n);
 //css
 import '../static/css/reset.css'
@@ -20,7 +21,7 @@ import '../static/css/element-ui.css'
 import "./less/index.less"
 
 Vue.use(ElementUI);
-
+Vue.use(Vuex);
 
 if (!process.env.IS_WEB){
     Vue.use(require('vue-electron'));
@@ -42,5 +43,7 @@ window.vueVm = new Vue({
   el: '#app',
   router,
   i18n,
-  store
+  store,
+  Vuex:store.commit('CHANGE_LANG',localLang),
 });
+

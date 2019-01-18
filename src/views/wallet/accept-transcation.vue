@@ -54,6 +54,11 @@
                     _this.wallet = curWalletArr[0];
                 }
             }
+        },
+        watch:{
+            'curWallet':function(){
+                this.init();
+            }
         }
     }
 </script>

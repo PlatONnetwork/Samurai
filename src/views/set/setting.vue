@@ -16,7 +16,7 @@
         <p class="des-txt">{{$t("settings.path")}}:{{currentPath}}<el-button @click="modifyPath">{{$t("settings.change")}}</el-button></p>
         <!--<input type="file" id="id" name="image" class="getImgUrl_file" @change="preview($event)">-->
 
-        <p class="title">{{$t("settings.about")}}</p>
+        <!-- <p class="title">{{$t("settings.about")}}</p> -->
         <!--<p :class="[lang=='en'?'txt-en':'','des-txt']">{{$t("settings.system")}}V1.0.0 <el-button>{{$t("settings.check")}}</el-button></p>-->
         <!--<p class="des-txt">{{$t("settings.applyTest")}} <el-button @click="apply">{{$t("settings.apply")}}</el-button></p>-->
         <p class="title">{{$t("settings.community")}}</p>
@@ -86,16 +86,14 @@
                     return;
                 }else if(this.netType=='test'){
                     //连接主网络
-                    this.updateLoading(true);
+                    // this.updateLoading(true);
                     nodeManager.stop('_node').then(()=>{
                         console.log('setting.vue stop _node');
-                        nodeManager.conncetNet(this.netType).then(()=>{
-                            console.log('setting.vue 连接测试网络成功');
-                            // this.$message.success(`网络成功设置为PlatON ${this.netType}网络`);
-                            this.$message.success(this.$t('settings.netSet')+this.netType+this.$t('settings.networkSet'));
-                            setTimeout(()=>{
-                                this.$router.push('/')
-                            },1000);
+                        this.$router.push({
+                            path:'/',
+                            query:{
+                                type:'test'
+                            }
                         })
                     })
                 }else{
@@ -111,15 +109,14 @@
                             proc='_connect';
                         }
                         nodeManager.stop(proc).then(()=>{
-                            nodeManager.startNode(name,port).then(()=>{
-                                this.$message.success(this.$t('settings.netSet')+name+this.$t('settings.networkSet'));
-                                setTimeout(()=>{
-                                    this.$router.push('/')
-                                },1000);
-                            }).catch(()=>{
-                                // this.$message.error(`启动私有网络${name}失败`)
-                                this.$message.error(this.$t('settings.stratNet')+name+this.$t('settings.failure'));
-                            })
+                            this.$router.push({
+                                path:'/',
+                                query:{
+                                    type:'custom',
+                                    chainName:name,
+                                    chainPort:port
+                                }
+                            });
                         })
                     }
                 }
@@ -268,12 +265,13 @@
 
 <style lang="less" scoped>
     .setting{
-        margin-top:-60px;
-        margin-left:11px;
+        // margin-top:-60px;
+        // margin-left:11px;
         padding:7px 22px;
+        margin: -60px 10px 0 10px;
         height:calc(~"100% - 66px");
         background-color: #fff;
-        border-radius:4px;
+        border-radius:10px;
         color: #525768;
         font-size:12px;
         .title{

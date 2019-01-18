@@ -1,6 +1,6 @@
 {
-    "name": "Samurai_wallet",
-    "version": "0.2.13",
+    "name": "Samurai",
+    "version": "0.3.9",
     "author": "www.platon.network<support@platon.network>",
     "description": "Samurai钱包客户端",
     "license": null,
@@ -9,7 +9,7 @@
     "scripts": {
         "win": "node build/build.js && electron-builder -w --x64",
         "mac": "node build/build.js && electron-builder --mac --arch=x64 ",
-        "linux": "node build/build.js && electron-builder --linux deb tar.xz",
+        "linux": "node build/build.js && electron-builder --linux tar.xz",
         "build": "node build/build.js && electron-builder",
         "build:dir": "node build/build.js && electron-builder --dir",
         "build:clean": "cross-env BUILD_TARGET=clean node build/build.js",
@@ -22,7 +22,7 @@
     },
     "build": {
         "productName": "Samurai",
-        "buildVersion": "0.2.0.6",
+        "buildVersion": "0.3.0.9",
         "appId": "org.simulatedgreg.electron-vue",
         "directories": {
             "output": "dist"
@@ -60,7 +60,14 @@
             ]
         },
         "mac": {
-            "icon": "build/icons/icon.icns"
+            "icon": "build/icons/icon.icns",
+            "extraFiles": [
+                {
+                    "from": "src/services/linux-platon-exe/",
+                    "to": "platon_exe",
+                    "filter": []
+                }
+            ]
         },
         "win": {
             "icon": "build/icons/icon.ico",
@@ -115,7 +122,7 @@
         "vue-qr": "^1.5.2",
         "vue-router": "^2.5.3",
         "vuex": "^2.3.1",
-        "web3": "git+ssh://git@192.168.9.66:Juzix-Platon/web3j-js.git#develop"
+        "web3": "git+ssh://git@192.168.9.66:PlatON/client-sdk-js.git#0.3.0_dev"
     },
     "devDependencies": {
         "babel-core": "^6.22.1",
@@ -132,8 +139,8 @@
         "css-loader": "^0.28.4",
         "del": "^2.2.1",
         "devtron": "^1.1.0",
-        "electron": "^3.0.11",
-        "electron-builder": "^20.38.3",
+        "electron": "^3.1.0",
+        "electron-builder": "^20.38.4",
         "electron-debug": "^1.4.0",
         "electron-devtools-installer": "^2.0.1",
         "extract-text-webpack-plugin": "^2.0.0-beta.4",

@@ -40,47 +40,28 @@ class Settings {
     init() {
         return new Promise((resolve, reject)=>{
             console.info(`Running in production mode: ${this.inProductionMode}`);
-
-            if (this.rpcMode === 'http') {
-                console.warn(
-                    'Connecting to a node via HTTP instead of ipcMain. This is less secure!!!!'.toUpperCase()
-                );
-            }
-            store.dispatch('initSetting',{
-                appVersion:packageJson.version,
-                rpcMode:this.rpcMode
-            });
-
-            //获取用户数据存储目录
-            let exePath = nodeManager.getExePath();
-            let pathProc = child_process.execFile("getUserDataPath.bat", null, {
-                cwd: exePath,
-            },  (error, stdout, stderr)=> {
-                if (error !== null) {
-                    console.log("exec error" + error);
-                    reject();
-                }
-            });
-            pathProc.stdout.once('data', (data)=>{
-                console.log('stdout: ' + data);
-                const arr = data.trim().split(/\s+/);
-                console.log('UserDataPath=', arr[2]);
-                let dataPath = arr[2];
-                dataPath = dataPath.replace(/\\/g,'/')+'/';
-                this.userDataPath = dataPath;
+            const run=() =>{
                 //初始化文件存储目录
                 this.mkf(this.userDataPath+'net_main',()=>{
                     this.mkf(this.userDataPath+'net_main/keystore')
                 });
                 this.mkf(this.userDataPath+'net_test',()=>{
                     this.mkf(this.userDataPath+'net_test/keystore');
-                    this.mkf(this.userDataPath+'net_test/data',()=>{
-                        let configJSON = require("../../static/json/platon");
-                        fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON))
-                    });
                     if(!fs.existsSync(`${this.userDataPath}net_test/init`)){
                         fs.writeFileSync(`${this.userDataPath}net_test/init`,0)
+                    }else{
+                        let dataExit = fs.existsSync(`${this.userDataPath}net_test/data/platon`);
+                        console.log('dataExit----',dataExit);
+                        fs.writeFileSync(`${this.userDataPath}net_test/init`,dataExit?1:0);
                     }
+                    this.mkf(this.userDataPath+'net_test/data',()=>{
+                        // let cbftJSON = require("../../static/json/cbft.json");
+                        // fs.writeFileSync(`${this.userDataPath}net_test/data/cbft.json`,JSON.stringify(cbftJSON));
+                        let configJSON = require("../../static/json/platon");
+                        fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON));
+                        let staticNodesJSON = require("../../static/json/static-nodes.json");
+                        fs.writeFileSync(`${this.userDataPath}net_test/data/static-nodes.json`,JSON.stringify(staticNodesJSON));
+                    });
                 });
                 this.mkf(this.userDataPath+'net_custom',()=>{
                     this.mkf(this.userDataPath+'net_custom/chain');
@@ -95,8 +76,55 @@ class Settings {
                 if(!fs.existsSync(`${this.userDataPath}contractList.json`)){
                     this.saveUserData('contractList.json',JSON.stringify({}))
                 }
+                if(!fs.existsSync(`${this.userDataPath}nodeApplyList.json`)){
+                    this.saveUserData('nodeApplyList.json',JSON.stringify({}))
+                }
+                if(!fs.existsSync(`${this.userDataPath}nodeQuitList.json`)){
+                    this.saveUserData('nodeQuitList.json',JSON.stringify({}))
+                }
                 resolve();
+            }
+            if (this.rpcMode === 'http') {
+                console.warn(
+                    'Connecting to a node via HTTP instead of ipcMain. This is less secure!!!!'.toUpperCase()
+                );
+            }
+            store.dispatch('initSetting',{
+                appVersion:packageJson.version,
+                rpcMode:this.rpcMode
             });
+
+            //获取用户数据存储目录
+            // let exePath = nodeManager.getExePath();
+            // let pathProc = child_process.execFile("getUserDataPath.bat", null, {
+            //     cwd: exePath,
+            // },  (error, stdout, stderr)=> {
+            //     if (error !== null) {
+            //         console.log("exec error" + error);
+            //         reject();
+            //     }
+            // });
+            // pathProc.stdout.once('data', (data)=>{
+            //     console.log('stdout: ' + data);
+            //     const arr = data.trim().split(/\s+/);
+            //     console.log('UserDataPath=', arr[2]);
+            //     let dataPath = arr[2];
+            //     dataPath = dataPath.replace(/\\/g,'/')+'/';
+            //     this.userDataPath = dataPath;
+            //     run();
+            // });
+
+            let dataPath = app.getPath('appData');
+            dataPath = dataPath.replace(/\\/g,'/')+'/';
+            console.log('dataPath----',dataPath);
+            // this.userDataPath = dataPath+'\\Samurai\\';
+            this.mkf(dataPath + '/Samurai', () => {
+                this.userDataPath =path.join( dataPath,'','Samurai/');
+                this.userDataPath = this.userDataPath.replace(/\\/g,'/');
+                console.log(`appData dataPath=${this.userDataPath},${dataPath}`)
+                run();
+            });
+
 
        });
 
@@ -154,107 +182,9 @@ class Settings {
         return app.getPath('home');
     }
 
-    // get cli() {
-    //     return argv;
-    // }
-
     get appVersion() {
         return packageJson.version;
     }
-
-    get appName() {
-        return this.uiMode === 'mist' ? 'Mist' : 'Ethereum Wallet';
-    }
-
-    get appLicense() {
-        return packageJson.license;
-    }
-
-    // get inProductionMode() {
-    //     return defaultConfig.production;
-    // }
-
-    //
-    // get swarmURL() {
-    //     return argv.swarmurl;
-    // }
-    //
-    // get gethPath() {
-    //     return argv.gethpath;
-    // }
-    //
-    // get ethPath() {
-    //     return argv.ethpath;
-    // }
-    //
-    // get rpcMode() {
-    //     if (argv.rpc && argv.rpc.indexOf('http') === 0) return 'http';
-    //     if (argv.rpc && argv.rpc.indexOf('ws:') === 0) {
-    //         console.warn(
-    //             'Websockets are not yet supported by Mist, using default IPC connection'
-    //         );
-    //         argv.rpc = null;
-    //         return 'ipc';
-    //     } else return 'ipc';
-    // }
-
-    get rpcConnectConfig() {
-        if (this.rpcMode === 'ipc') {
-            return {
-                path: this.rpcIpcPath
-            };
-        }
-
-        return {
-            hostPort: this.rpcHttpPath
-        };
-    }
-
-    // get rpcHttpPath() {
-    //     return this.rpcMode === 'http' ? argv.rpc : null;
-    // }
-
-    get rpcIpcPath() {
-        // let ipcPath = this.rpcMode === 'ipc' ? argv.rpc : null;
-
-        if (ipcPath) {
-            return ipcPath;
-        }
-
-        ipcPath = this.userHomePath;
-
-        if (process.platform === 'darwin') {
-            ipcPath += '/Library/Ethereum/geth.ipc';
-        } else if (
-            process.platform === 'freebsd' ||
-            process.platform === 'linux' ||
-            process.platform === 'sunos'
-        ) {
-            ipcPath += '/.ethereum/geth.ipc';
-        } else if (process.platform === 'win32') {
-            ipcPath = '\\\\.\\pipe\\geth.ipc';
-        }
-
-        console.debug(`IPC path: ${ipcPath}`);
-
-        return ipcPath;
-    }
-
-    // get nodeType() {
-    //     return argv.node;
-    // }
-    //
-    // get network() {
-    //     return argv.network;
-    // }
-    //
-    // get syncmode() {
-    //     return argv.syncmode;
-    // }
-    //
-    // get nodeOptions() {
-    //     return argv.nodeOptions;
-    // }
 
     get language() {
         return this.loadConfig('ui.i18n');
@@ -263,12 +193,6 @@ class Settings {
     set language(langCode) {
         this.saveConfig('ui.i18n', langCode);
     }
-
-
-
-    // get skiptimesynccheck() {
-    //     return argv.skiptimesynccheck;
-    // }
 
 
     saveConfig(key, value) {

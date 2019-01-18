@@ -1,10 +1,61 @@
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 157 init wallet owner: 0x2cace9a6332fd32e08be49bd26afa49b23aac05c:0xfa8710d8c44d887e3eade7b3b8b622cbe83d0110 required: 2
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 160 addresses size: 2
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func validRequirement line 136 ownerCount: 2 required: 2
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 165 address: 0x2cace9a6332fd32e08be49bd26afa49b23aac05c
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 168 address convert: 2cace9a6332fd32e08be49bd26afa49b23aac05c
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 172 push_back: 2cace9a6332fd32e08be49bd26afa49b23aac05c
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 165 address: 0xfa8710d8c44d887e3eade7b3b8b622cbe83d0110
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 168 address convert: fa8710d8c44d887e3eade7b3b8b622cbe83d0110
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 172 push_back: fa8710d8c44d887e3eade7b3b8b622cbe83d0110
-file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func initWallet line 177 end initWallet
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getRequired line 287 getRequired required: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getListSize line 294 getTransactionCount count: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 0
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 10000000000000000000 time: 1546928769093 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 1
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1000000000000000000 time: 1546928839268 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 388 getTransactionList: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|10000000000000000000|1546928769093|0x0|2880600|1|0|0:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1000000000000000000|1546928839268|0x0|2880600|1|0|1:
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getRequired line 287 getRequired required: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func submitTransaction line 189 input args 0xdc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 0x4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 1500000000000000000 3 1546929101213 2880600
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func addTransaction line 300 addTransaction
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func notNull line 131 address: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func addTransaction line 305 get transaction id: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func addTransaction line 319 emit event: Submission 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func submitTransaction line 193 submitTransaction transactionId: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getRequired line 287 getRequired required: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getListSize line 294 getTransactionCount count: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 0
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 10000000000000000000 time: 1546928769093 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 1
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1000000000000000000 time: 1546928839268 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1500000000000000000 time: 1546929101213 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 388 getTransactionList: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|10000000000000000000|1546928769093|0x0|2880600|1|0|0:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1000000000000000000|1546928839268|0x0|2880600|1|0|1:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1500000000000000000|1546929101213|0x0|2880600|1|0|2:
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func confirmTransaction line 199 sender: 294babe5463e3422280c8ef160bb9d73c63348bc transactionId: 2 blocknum: 717
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func ownerExists line 86 owner is exist: true
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func notExecuted line 126 txid: 2 false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getRequired line 287 getRequired required: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getListSize line 294 getTransactionCount count: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 0
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 10000000000000000000 time: 1546928769093 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 1
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1000000000000000000 time: 1546928839268 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1500000000000000000 time: 1546929101213 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 388 getTransactionList: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|10000000000000000000|1546928769093|0x0|2880600|1|0|0:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1000000000000000000|1546928839268|0x0|2880600|1|0|1:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1500000000000000000|1546929101213|0x0|2880600|1|0|2:
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getRequired line 287 getRequired required: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getListSize line 294 getTransactionCount count: 3
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 0
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 10000000000000000000 time: 1546928769093 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 1
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1000000000000000000 time: 1546928839268 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 370 get transaction: 2
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 376 from: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3 dest: dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13 value: 1500000000000000000 time: 1546929101213 fee: 2880600 pending: true executed: false
+file /home/juzhen/yangzhou/test/testacross/Platon-contract/user/multisig/multisig.cpp func getTransactionList line 388 getTransactionList: 4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|10000000000000000000|1546928769093|0x0|2880600|1|0|0:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1000000000000000000|1546928839268|0x0|2880600|1|0|1:4352bc02eecc1c8b4c7e65a55a70fddef6d3d3b3|dc44c1b4c9eb0b674c5b3f5ff7a961e21f180d13|1500000000000000000|1546929101213|0x0|2880600|1|0|2:
+init success...
+into invokeNotify...
+into invokeNotify...
+into invokeNotify...
+into invokeNotify...
+init success...
+into invokeNotify...
+init success...
+into invokeNotify...
+init success...
+into invokeNotify...
+into invokeNotify...
+init success...
+into invokeNotify...
+init success...
+into invokeNotify...
+init success...

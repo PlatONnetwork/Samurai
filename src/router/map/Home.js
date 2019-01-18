@@ -5,6 +5,7 @@ const coin = reserved => require(['@/views/set/coin'], reserved);
 import Wallet from './Wallet'
 import Trade from './Trade'
 import Contract from './Contract'
+import Application from './application'
 export default {
     path: '/home',
     name: 'home',
@@ -35,6 +36,12 @@ export default {
         Contract.list,
         Contract.newContract,
         Contract.add,
-        Contract.detail
+        Contract.detail,
+        Application.validatorNode,
+        Application.myNode,
+        Application.nodeApply,
+        Application.nodeDetail,
+        Application.increaseStake,
+        Application.reduceStake,
     ]
 }

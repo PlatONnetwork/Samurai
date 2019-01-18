@@ -11,24 +11,25 @@
     text-align: justify;
     text-align-last: justify;
 }
+.bold{
+    font-weight:600;
+}
+.tc{
+    text-align: center;
+}
 .tabs{
     span{
-        width: 130px;
+        padding:0 5px;
+        //width: 130px;
         height: 28px;
-        line-height: 28px;
+        line-height: 22px;
         text-align: center;
         margin-left: 30px;
         display: inline-block;
         cursor: pointer;
         &.selected{
-            &:after{
-                display: block;
-                content: '';
-                width: 130px;
-                height: 3px;
-                border-radius: 4px;
-                background: #18C2E9;
-            }
+            color: #18C2E9;
+            border-bottom:solid 3px #18C2E9;
         }
     }
 }
@@ -111,4 +112,53 @@
     .ml-40{
         margin-left:142px;
     }
+}
+
+//进度条
+.process{
+    position:absolute;
+    bottom:-1px;
+    left:0;
+    width:100%;
+    height:2px;
+    span{
+        display:block;
+        height:2px;
+        background: #18C2E9;
+        box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
+    }
+}
+
+.letter-space{
+    letter-spacing: 3px;
+}
+
+//钱包icon
+.wallet-icon{
+    width: 68px;
+    height: 130px;
+    background-repeat:no-repeat;
+    background-position: center center;
+}
+.wallet-icon1{
+    background-image: url('../../../static/images/Oval1.png');
+}
+.wallet-icon2{
+    background-image: url('../../../static/images/Oval2.png');
+}
+.wallet-icon3{
+    background-image: url('../../../static/images/Oval3.png');
+}
+.wallet-icon4{
+    background-image: url('../../../static/images/Oval4.png');
+}
+.wallet-icon5{
+    background-image: url('../../../static/images/Oval5.png');
+}
+//合约地址
+.contract-addr{
+    padding-left:18px;
+    white-space: nowrap;
+    background: url("../../../static/images/contract-addr.svg") no-repeat left center;
+    background-size: contain;
 }

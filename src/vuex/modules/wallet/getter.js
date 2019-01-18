@@ -16,5 +16,8 @@ export const WalletGetter = {
     },
     nortotalBalance(state){
         return state.norTotalBalance
+    },
+    initParams(state){
+        return state.initParams
     }
 }

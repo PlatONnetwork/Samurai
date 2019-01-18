@@ -1,20 +1,25 @@
 <template>
     <div class="contract-list format-style">
         <div :class="[contractList&&contractList.length>0?'':'non-wallet','card content']">
-            <div class="contract-item"
+            <div
                  v-for="(item, index) in contractList"
+                 :class="[!item.address?'contract-pointer':'','contract-item']"
                  :key="item.address"
                  @click="goToDetail(item)">
                 <div class="contract-icon" :class="item.icon"></div>
                 <div class="info">
-                    <p>{{item.name | sliceName}}</p>
-                    <p class="i-wallet"> <span class="font14">{{item.balance}}</span> <span class="font10">Energon</span></p>
+                    <p class="bold">{{item.name | sliceName}}</p>
+                    <p class="i-wallet"> <span class="font14 bold">{{item.balance}}</span> <span class="font10">Energon</span></p>
                     <div class="addr-box">
                         <p class="addr i-address f12 ">
                             {{item.address}}
                         </p>
                     </div>
                 </div>
+                <p class="process" v-if="!item.address">
+                    <!--<el-progress :stroke-width="14" :percentage="item.processWidth" color="rgb(35,200,239,1)"></el-progress>-->
+                    <span :style="{width:item.processWidth+'%'}"></span>
+                </p>
             </div>
             <div :class="[lang=='en'?'font10':'','add-bottom']">
                 <el-button class="f12 w-80" @click="newContract">{{$t("contracts.deployCont")}}</el-button>
@@ -46,34 +51,60 @@
             });
         },
         methods: {
-            ...mapActions(['contractListAction','getOrd','getNormalTotalBalance']),
+            ...mapActions(['contractListAction','getOrd','getNormalTotalBalance','insertAddress']),
             init(){
                 this.contractList = this.contractListGetter;
                 this.getNormalTotalBalance()
                 if(this.contractList){
-                    this.contractList.map((item)=>{
-                        !item.icon && (item.icon='contract-icon'+Math.floor((Math.random()*5)+1))
-                    });
                     this.getBalance();
                 }
                 clearInterval(window.contractBalanceTasksTimer);
                 window.contractBalanceTasksTimer = setInterval(this.getBalance,5*1000);
             },
             getBalance(){
+                console.log('getBalance----');
                 let _this = this;
                 if(this.contractList){
                     this.contractList.forEach((item,index)=>{
-                        contractService.web3.eth.getBalance(item.address,(err,data)=>{
-                            if(err){
-                                clearInterval(window.contractBalanceTasksTimer);
-                                return;
-                            }
-                            let balance=contractService.web3.fromWei(data.toString(10), 'ether');
-                            // item.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
-                            // balance = contractService.web3.toWei(balance)
-                            item.balance = (Math.floor(Number(balance) * 100) / 100)
-                            _this.$set(_this.contractList,index,item)
-                        });
+                        console.log('item.address---',item.address);
+                        if(item.address){
+                            contractService.web3.eth.getBalance(item.address,(err,data)=>{
+                                console.log('hahahh',err,data);
+                                if(err){
+                                    clearInterval(window.contractBalanceTasksTimer);
+                                    return;
+                                }
+                                let balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                                item.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
+                                console.log('item.balance-----',item.balance)
+                                // balance = contractService.web3.toWei(balance)
+                                // item.balance = (Math.floor(Number(balance) * 100) / 100)
+                                _this.$set(_this.contractList,index,item)
+                            });
+                        }
+                        else{
+                            contractService.web3.eth.getTransactionReceipt(item.hash,(err,data)=>{
+                                // console.log('hash',this.contractList)
+                                // console.log('通过hash得到地址',data)
+                                if(!item.processWidth){
+                                    item.processWidth = 30;
+                                }else{
+                                    item.processWidth+=(item.processWidth>80?0:20)
+                                }
+                                if(data){
+                                    item.address = data.contractAddress;
+                                    _this.insertAddress({
+                                        hash:item.hash,
+                                        address:data.contractAddress
+                                    });
+                                }else{
+                                    item.balance = '0.00';
+                                }
+                                _this.$set(_this.contractList,index,item);
+                            })
+                        }
+
+
                     });
                 }
             },
@@ -121,6 +152,11 @@
                 }
             }
         },
+        beforeDestroy() {
+            if(window.contractBalanceTasksTimer){
+                clearInterval(window.contractBalanceTasksTimer);
+            }
+        },
     }
 </script>
 
@@ -137,6 +173,7 @@
         flex-wrap: wrap;
         align-content: flex-start;
         .contract-item{
+            position: relative;
             // width: 230px;
             width: 32%;
             // height: 130px;
@@ -154,7 +191,7 @@
             .contract-icon{
                 width: 68px;
                 height: 130px;
-                background:url("./images/Oval1.png") no-repeat center center;
+                background: no-repeat center center;
                 // background: no-repeat center center;
                 background-repeat:no-repeat;
                 background-position: center center;
@@ -188,15 +225,17 @@
             }
             .i-address{
                 padding-left: 20px;
-                background:url("./images/icon_positioning.svg") no-repeat left center;
+                background:url("./images/icon_positioning.svg") no-repeat left 1px;
             }
             .addr-box{
                 width: 100%;
                 .addr{
-                    overflow:hidden;
-                    text-overflow:ellipsis;
                     display:-webkit-box;
+                    overflow:hidden;
+                    word-break:break-all;
+                    text-overflow:ellipsis;
                     -webkit-line-clamp:2;
+                    -webkit-box-orient: vertical;
                 }
             }
             .font14{
@@ -209,6 +248,9 @@
             .font12{
                 font-size:12px;
             }
+        }
+        .contract-pointer{
+            pointer-events: none;
         }
     }
     .font10{
@@ -245,5 +287,8 @@
     }
     .empty{
         width: 32%;
+    }
+    .bold{
+        font:bold;
     }
 </style>

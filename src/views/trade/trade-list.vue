@@ -4,7 +4,7 @@
             <span :class="[lang=='en'?'sel-en':'','wallet-sel']">
                 <sel-self :optionVs="wallets" :defaultSel="wallet" @back="selAWallet"></sel-self>
             </span>
-            <el-select v-model="type" @change="selType">
+            <!-- <el-select v-model="type" @change="selType">
                 <el-option value="" :label="$t('trade.allTypes')">{{$t("trade.allTypes")}}</el-option>
                 <el-option
                         v-for="item in types"
@@ -12,7 +12,7 @@
                         :label="item.label"
                         :value="item.value">
                 </el-option>
-            </el-select>
+            </el-select> -->
         </div>
         <div class="trade-con">
             <tradeList-component ref="child1" :pageNum="pageSize" :type="type" pageFrom="tradeList"></tradeList-component>
@@ -141,12 +141,14 @@
             cursor:pointer;
         }
         .trade-con{
+            width:100%;
             height: calc(~"100% - 36px");
             overflow-y: auto;
             overflow-x: hidden;
         }
         .wallet-sel{
             padding-left:6px;
+            margin-top: 1px;
         }
     }
     .new-list{

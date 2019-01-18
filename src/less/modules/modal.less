@@ -37,6 +37,7 @@
             font-weight: 100;
             background: url(../../../static/images/cancel.png) no-repeat center center;
             background-size: contain;
+            border:none;
         }
         .modal-content {
             padding:40px 36px 30px 25px;
@@ -65,6 +66,100 @@
                 border: 1px solid #18C2E9;
                 color:#18C2E9;
             }
+        }
+    }
+}
+.modal.confirm{
+    .modal-main{
+        width:483px;
+        font-size: 12px;
+        .modal-content{
+            padding:12px;
+            .confirm-content{
+                padding:14px 10px;
+                height:126px;
+                background: #ECEFF6;
+                p{
+                    color: #24272B;
+                    margin-bottom:9px;
+                    .txt{
+                        margin:0;
+                        float:right;
+                        color: #000000;
+                    }
+                }
+            }
+            .more{
+                margin:10px;
+                cursor:pointer;
+                i{
+                    font-size:10px;
+                }
+            }
+            .more-txt{
+                padding-left:10px;
+            }
+            .inputb{
+                margin:10px 10px 0;
+                .el-input{
+                    width:100%;
+                }
+            }
+        }
+        .modal-btn{
+            padding-top:7.5px;
+            line-height:1;
+            height:48.5px;
+            button{
+                width:79px;
+                height:32px;
+                font-size:12px;
+            }
+        }
+    }
+}
+.sel-owner{
+    .modal-main{
+        width:483px;
+        .modal-content{
+            padding:12px 20px;
+        }
+    }
+    .owners-list>li{
+        display:flex;
+        margin-bottom:10px;
+        padding:10px 20px;
+        height:70px;
+        border: 1px solid #ECF1F8;
+        border-radius: 4px;
+        font-size: 14px;
+        color: #24272B;
+        font-weight:bold;
+        cursor:pointer;
+        &:hover,&.avail-cur{
+            border-color:#18C2E9;
+        }
+        &.avail-disabled{
+            background: #ECEFF6;
+        }
+        &.avail-disabled:hover{
+            border-color:#ECEFF6;
+            cursor:not-allowed;
+        }
+        .lt{
+            margin-right:9px;
+            min-width:40px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+        .txt{
+            font-size: 10px;
+            color: #22272C;
+            font-weight: normal;
+        }
+        .marB{
+            margin-bottom:10px;
         }
     }
 }

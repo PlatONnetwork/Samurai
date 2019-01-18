@@ -16,9 +16,8 @@
             <span class="label">{{$t("trade.tradeStatus")}}</span>
             <span v-if="trade.hash">
                 <span v-if="trade.isCompolete" class="success">{{$t("trade.finished")}}</span>
-                <span v-else-if="trade.isFail" class="danger">{{$t("settings.fail")}}</span>
-                <span v-else-if="trade.trxConfirmations==0" class="pending">Pending(0 comfirm)</span>
-                <span v-else class="pending">{{$t("trade.pending")}}({{trade.trxConfirmations}}/{{trade.confirmations}})</span>
+                <span v-else-if="trade.isFail || trade.state==2" class="danger">{{$t("settings.fail")}}</span>
+                <span v-else class="pending">{{$t("trade.pending")}}</span>
             </span>
             <span v-else :class="trade.executed==0?'danger':''">
                 {{trade.executed==1?$t("trade.finished"):$t("settings.fail")}}
@@ -26,8 +25,8 @@
         </p>
         <p>
             <span class="label">{{$t("trade.sum")}}</span>
-            <span v-if="trade.hash">{{trade.value-0}}Energon</span>
-            <span v-else>{{trade.value-0 | fromWei}}Energon</span>
+            <span v-if="trade.hash">{{trade.value-0}} Energon</span>
+            <span v-else>{{trade.value-0 | fromWei}} Energon</span>
         </p>
         <p>
             <span class="label">{{$t("trade.from")}}</span>
@@ -35,11 +34,12 @@
         </p>
         <p>
             <span class="label">{{$t("trade.to")}}</span>
-            <span>{{trade.to}}</span>
+            <span v-if="trade.to">{{trade.to}}</span>
+            <span v-else>{{trade.type | tradeType}}</span>
         </p>
         <p>
             <span class="label">{{$t("trade.fee")}}</span>
-            <span>{{trade.price}}{{(trade.price!=='(Pending)' && trade.price!=='-')?'Energon':''}}</span>
+            <span>{{trade.price}}{{(trade.price!=='(Pending)' && trade.price!=='-')?' Energon':''}}</span>
         </p>
         <p v-if="trade.hash">
             <span class="label">{{$t("trade.gas")}}</span>
@@ -47,7 +47,7 @@
         </p>
         <p v-if="trade.hash">
             <span class="label">{{$t("trade.energon")}}</span>
-            <span>{{trade.gasPrice}}<span v-if="trade.gasPrice!=='(Pending)'">Energon</span></span>
+            <span>{{trade.gasPrice}}<span v-if="trade.gasPrice!=='(Pending)'"> Energon</span></span>
         </p>
         <p v-if="trade.hash">
             <span class="label">{{$t("trade.block")}}</span>
@@ -80,22 +80,36 @@
             this.trade = this.$route.query.trade?this.$route.query.trade:{};
             if(this.trade.hash){
                 contractService.web3.eth.getTransactionReceipt(this.trade.hash,(err,data)=>{
-                    if(data && !data.to){
-                        delete data.to;
-                    }
                     if(err){
                         console.error(err);
                         return;
                     }
-                    Object.assign(this.trade,data);
-                    if(this.trade && this.trade.gasUsed){
-                        this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
-                        this.trade.price = mathService.mul(this.trade.gasPrice,this.trade.gasUsed)
+                    if(data){
+                        if(!data.to){
+                            delete data.to;
+                        }
+                        Object.assign(this.trade,data);
+                        if(this.trade && this.trade.gasUsed){
+                            contractService.web3.eth.getTransaction(this.trade.hash,(error,txData)=>{
+                                if(err) return;
+                                if(txData){
+                                    this.trade.gasPrice = mathService.toNonExponential(contractService.web3.fromWei(txData.gasPrice,'ether'));
+                                }else{
+                                    this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
+                                }
+                                this.trade.price = mathService.mul(this.trade.gasPrice,this.trade.gasUsed)
+                            });
+                        }else{
+                            this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
+                            this.trade.blockNumber = '(Pending)';
+                            this.trade.price = '(Pending)';
+                            this.trade.gasUsed = '(Pending)';
+                        }
                     }else{
                         this.trade.gasPrice = contractService.web3.fromWei(this.trade.gasPrice,'ether');
-                        this.trade.blockNumber = '(Pending)';
-                        this.trade.price = '(Pending)';
-                        this.trade.gasUsed = '(Pending)';
+                        this.trade.blockNumber = '-';
+                        this.trade.price = '-';
+                        this.trade.gasUsed = '-';
                     }
                 });
             }else{  //共享钱包转账交易
@@ -121,9 +135,10 @@
 
 <style lang="less" scoped>
     .trade-detail{
-        margin-left:8px;
+        margin-left:10px;
         padding:8px 20px;
-        width:calc(~"100% - 8px");
+        width:calc(~"100% - 20px");
+        border-radius:10px;
         font-size: 12px;
         color: #24272B;
         background-color: #fff;

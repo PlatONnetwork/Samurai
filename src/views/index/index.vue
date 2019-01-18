@@ -1,6 +1,6 @@
 <template>
     <div class="wrapper"  style="-webkit-app-region: drag" ref="bg">
-        <span class="txt-bg">Welcome to Samurai </span>
+        <span class="txt-bg" v-if="initialUse==false">Welcome to Samurai </span>
         <span class="logo"></span>
         <div class="beginCenter" v-if="loadCompolete" style="height:100%">
             <div v-if="initialUse">
@@ -25,18 +25,24 @@
                         </li>
                     </ul>
                     <p class="btn-box" style="-webkit-app-region: no-drag">
-                        <el-button @click="next()">{{$t("settings.joiningNet")}}</el-button>
+                        <el-button @click="next()" :loading="connectLoading">{{$t("settings.joiningNet")}}</el-button>
                     </p>
                 </div>
             </div>
             <div v-else class="welcome-page">
                 <p class="welcomeP">Welcome to Samurai  </p>
                 <p class="btn-box2"  style="-webkit-app-region: no-drag"><el-button class="enter-button" @click="goToMain()">{{$t("sideBar.enter")}}>></el-button></p>
-                <span class="cur-net">{{network.type=='custom'?chainName:network.type}}</span>
+                <span class="cur-net">{{network.type=='custom'?chainName:(network.type.toUpperCase()+'-NET')}}</span>
             </div>
         </div>
         <div v-else class="loading">
-            <i class="el-icon-loading" style="font-size:80px;"></i>
+            <div class="loading-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
         </div>
         <div class="custom-header" style="-webkit-app-region: drag">
             <span @click="close" style="-webkit-app-region: no-drag"> <i class="close"></i></span>
@@ -64,6 +70,7 @@
                 netType:'test',
                 loadCompolete:false,
                 fromPath:'',
+                connectLoading:false,
                 // isBig: true,
                 // bg:"url('./images/bj.png')"
             }
@@ -87,6 +94,7 @@
             ...mapActions(['updateState','updateNetSetting','changeWindow']),
             selNet(type){
                 // if(type=='main') return;
+                if(this.connectLoading) return;
                 this.netType=type;
             },
             next(){
@@ -95,8 +103,12 @@
                 if(this.netType=='custom'){
                     this.$router.push('/customNet')
                 }else if(this.netType=='main' || this.netType=='test'){
+                    this.connectLoading = true;
                     nodeManager.conncetNet(this.netType).then(()=>{
+                        this.connectLoading = false;
                         console.log('index.vue 连接测试网络成功');
+                    }).catch(()=>{
+                        this.connectLoading = false;
                     })
                 }
             },
@@ -125,14 +137,24 @@
                 this.changeWindow(this.isMaximized)
             },
             init(){
+                let localType,localIp = Settings.loadUserData('ip'),localPort,chainName;
+                if(this.fromPath=='/setting'){
+                    let query = this.$route.query;
+                    localType = query.type;
+                    localPort = query.type=='custom'?query.chainPort:Settings.loadUserData('port');
+                    chainName = query.type=='custom'?query.chainName:Settings.loadUserData('chainName');
+                }else{
+                    localType = Settings.loadUserData('type');
+                    localPort = Settings.loadUserData('port');
+                    chainName = Settings.loadUserData('chainName');
+                }
                 this.loadCompolete = false;
-                let localType = Settings.loadUserData('type');
-                let localIp = Settings.loadUserData('ip');
-                let localPort = Settings.loadUserData('port');
-                let chainName = Settings.loadUserData('chainName');
                 console.warn('created-----init---port-type',localPort,localType);
                 if(localType=='custom' && localPort && chainName){
                     nodeManager.startNode(chainName,localPort).then(()=>{
+                        if(this.fromPath=='/setting'){
+                            this.$message.success(this.$t('settings.netSet')+chainName+this.$t('settings.networkSet'));
+                        }
                         this.loadCompolete = true;
                     }).catch(()=>{
                         this.loadCompolete = true;
@@ -160,6 +182,9 @@
 
                     nodeManager.conncetNet(localType).then(()=>{
                         this.loadCompolete = true;
+                        if(this.fromPath=='/setting'){
+                            this.$message.success(this.$t('settings.netSet')+localType+this.$t('settings.networkSet'));
+                        }
                         console.log('index 连接测试网络成功');
                     }).catch((e)=>{
                         this.loadCompolete = true;
@@ -248,7 +273,7 @@
         background-size: 12px;
     }
     .loading{
-        padding-top:300px;
+        padding-top:200px;
         text-align: center;
     }
     .txt-bg{
@@ -392,8 +417,6 @@
         }
     }
     .welcome-page{
-        // position:relative;
-        // height:100%;
         height: 400px;
         padding: 112px 0 100px 0;
         margin: 58px 0 0 0;
@@ -433,11 +456,51 @@
         height: 10px;
         background: url("./images/close_white.svg") no-repeat center bottom
     }
-    // .enter-button{
-    //     margin:105px 0 0 0;
-    // }
     .welcomeP{
         padding-top: 24px;
         height: 10px;
+    }
+    .loading-icon{
+        width: 80px;
+        height: 40px;
+        margin: 0 auto;
+        margin-top:100px;
+        span{
+            display: inline-block;
+            width: 8px;
+            height: 100%;
+            border-radius: 4px;
+            background: #FFFFFF;
+            -webkit-animation: load 1s ease infinite;
+        }
+    }
+    @-webkit-keyframes load{
+        0% {
+            transform: scaley(1.0);
+        }
+        80% {
+            transform: scaley(0.3);
+        }
+        90% {
+            transform: scaley(1.0);
+        }
+    }
+    .loading-icon span:nth-child(1){
+        -webkit-animation-delay:0.5s;
+    }
+    .loading-icon span:nth-child(2){
+        -webkit-animation-delay:0.25s;
+    }
+    .loading-icon span:nth-child(3){
+        -webkit-animation-delay:0.9s;
+    }
+    .loading-icon span:nth-child(4){
+        -webkit-animation-delay:0.25s;
+    }
+    .loading-icon span:nth-child(5){
+        -webkit-animation-delay:0.5s;
+    }
+    .el-button.is-loading:before{
+        background-color:transparent;
     }
 </style>

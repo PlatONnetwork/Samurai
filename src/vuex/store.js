@@ -4,6 +4,7 @@ import setting from './modules/setting/module.js'
 import wallet from './modules/wallet/module.js'
 import trade from './modules/trade/module.js'
 import contract from './modules/contract/module.js'
+import application from './modules/application/module.js'
 
 Vue.use(Vuex);
 
@@ -23,7 +24,8 @@ export default new Vuex.Store({
         setting,
 		wallet,
         trade,
-        contract
+        contract,
+        application
 	},
 	state
 })
