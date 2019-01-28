@@ -61,6 +61,15 @@ export default Vue.filter('PathName', function(value) {
         case '减持质押':
             return window.vueVm.$i18n.t('application.reduce');
             break;
+        case '投票确认':
+            return window.vueVm.$i18n.t('vote.vote');
+            break;
+        case '我的投票':
+            return window.vueVm.$i18n.t('vote.myVote');
+            break;
+        case '投票详情':
+            return window.vueVm.$i18n.t('vote.voteDetail');
+            break;
         default:
             return value;
     }

@@ -194,6 +194,15 @@
                         clearInterval(window.balanceInterval);
                         window.balanceInterval = setInterval(_this.refresh,5*1000);
                     }
+                    // document.addEventListener('copy',(e)=> {
+                    //     e.preventDefault();
+                    //     e.stopPropagation();
+                    //     let text = window.getSelection().getRangeAt(0).commonAncestorContainer.data;
+                    //     console.log('触发复制事件---',text);
+                    //     if(text==this.wallet.address){
+                    //         this.doCopy();
+                    //     }
+                    // })
                 }
             },
             refresh(){

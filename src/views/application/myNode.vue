@@ -62,8 +62,12 @@
                                     </p>
                                 </li>
                                 <li class="perc-li">
-                                    <p>{{$t('application.ranking')}}</p>
-                                    <p><span class="txt">{{((nodeState==1&&!quitPending) || nodeState==2)?'一':node.ranking}}</span></p>
+                                    <p>{{$t('vote.currentTickets')}}</p>
+                                    <p><span class="txt">{{ticketsCount}}</span></p>
+                                </li>
+                                <li class="perc-li">
+                                    <p>{{$t('vote.ticketAge')}}</p>
+                                    <p><span class="txt">{{epoch}}</span></p>
                                 </li>
                                 <li class="atp-li">
                                     <p>
@@ -242,7 +246,9 @@
                 quitPending:false,
                 depositApplyProcess:0,
                 city:null,
-                pendingRedeemStake:0
+                pendingRedeemStake:0,
+                ticketsCount:0,
+                epoch:0
             }
         },
         computed: {
@@ -267,6 +273,7 @@
                             this.node = curNodeApply;
                             this.pendingStake = 0;
                             this.unboundStake = 0;
+                            this.getTicketInfo();
                             clearInterval(this.pendingTradeTimer);
                             this.pendingTradeTimer = setInterval(()=>{
                                 this.getLastDeposit().then((lastDeposit)=>{
@@ -305,13 +312,14 @@
                                     this.nodeState = 2;
                                     console.log('this.node--2-->',this.node);
                                     this.candidateWithdrawInfos();
+                                    this.getTicketInfo();
                                     this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                                         this.keyObj  = keyObj
                                     })
                                 }else{   //节点正常
                                    clearInterval(this.getMyNodeTimer);
                                    curNodeApply = n;
-                                   this.node = curNodeApply;
+                                    this.node = curNodeApply;
                                     this.getMyNodeDetail(curNodeApply);
                                     this.getRecuceDetail();
                                     if(this.pendingTradeTimer){
@@ -335,6 +343,17 @@
                             }
                         });
                     }
+                })
+            },
+            getTicketInfo(){
+                //获取得票信息
+                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateTicketIds',this.node.Owner,[this.node.CandidateId]).then((ticketIds)=>{
+                    console.log('ticketIds---->',ticketIds);
+                    this.ticketsCount = JSON.parse(ticketIds).length;
+                })
+                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateEpoch',this.node.Owner,[this.node.CandidateId]).then((epoch)=>{
+                    console.log('epoch----',epoch);
+                    this.epoch = epoch;
                 })
             },
             getRecuceDetail(){
@@ -387,6 +406,7 @@
                     if(!obj || obj=='0x'){
                         this.nodeLoading = true;
                         this.node = curNodeApply;
+                        this.getTicketInfo();
                         this.getCity();
                     }else{
                         this.nodeLoading = false;
@@ -400,6 +420,7 @@
                                 this.nodeState = state;
                                 this.node = obj;
                                 this.node.CandidateId = '0x'+this.node.CandidateId;
+                                this.getTicketInfo();
                                 this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                                     this.keyObj  = keyObj
                                 })

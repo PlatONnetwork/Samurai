@@ -4,6 +4,9 @@ const nodeApply= resolve => require(['@/views/application/nodeApply'], resolve)
 const increaseStake= resolve => require(['@/views/application/increaseStake'], resolve)
 const reduceStake= resolve => require(['@/views/application/reduceStake'], resolve)
 const nodeDetail= resolve => require(['@/views/application/nodeDetail'], resolve)
+const vote= resolve => require(['@/views/application/vote'], resolve)
+const myVote= resolve => require(['@/views/application/myVote'], resolve)
+const voteDetail= resolve => require(['@/views/application/voteDetail'], resolve)
 
 
 import store from '@/vuex/store';
@@ -52,6 +55,30 @@ const application= {
         name: '减持质押',
         path: '/reduce-stake',
         component: reduceStake,
+        meta: {
+            flag: 'child'
+        }
+    },
+    vote: {
+        name: '投票确认',
+        path: '/vote',
+        component: vote,
+        meta: {
+            flag: 'child'
+        }
+    },
+    myVote: {
+        name: '我的投票',
+        path: '/my-vote',
+        component: myVote,
+        meta: {
+            flag: 'child'
+        }
+    },
+    voteDetail: {
+        name: '投票详情',
+        path: '/vote-detail',
+        component: voteDetail,
         meta: {
             flag: 'child'
         }

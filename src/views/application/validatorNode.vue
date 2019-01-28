@@ -8,23 +8,41 @@
                 <el-input :class="[keyword&&!/^\s*$/g.test(keyword)?'input1':'input2',lang=='en'?'width278':'']" v-model="keyword" v-if="showKeyInput" @change="search" @keyup.enter.native="search" :placeholder="$t('application.enterAccount')"></el-input>
                 <i v-if="!showKeyInput" @click="showKeyInput=!showKeyInput"></i>
             </span>
+            <el-button class="my-node" @click="gotoMyNote">{{$t('vote.myVote')}}</el-button>
             <el-button class="my-node" @click="gotoMyNode">{{$t('application.myNode')}}</el-button>
         </div>
         <div class="card content">
+            <div class="note">
+                <span class="border"><span class="icon ticket-price"></span>{{$t('vote.ticketPrice')}} <span class="bold">{{ticketPrice}}</span><span class="font10"> Energon</span></span>
+                <span class="border"><span class="icon ticket-pool"></span>{{$t('vote.ticketPool')}} <span class="bold">{{remainder}}</span><span class="font10"> %</span></span>
+                <span>
+                    <span class="icon round-left"></span>
+                    {{$t('vote.roundLeft')}}
+                    <span class="block" v-for="(b,index) in remainderBlock" :key="index">
+                        {{b}}
+                    </span>
+                    {{$t('vote.blocks')}}
+                </span>
+            </div>
             <div class="candidate-list" v-if="nodeList && nodeList.length>0">
                 <table class="table" cellspacing="0">
                     <thead>
                         <tr>
+                           <td width="1"></td>
                            <td width="18%">{{$t('application.nodeName')}}</td>
-                           <td width="18%">{{$t('application.status')}}</td>
-                           <td width="18%">{{$t('application.position')}}</td>
-                           <td width="18%">{{$t('application.staked')}}</td>
-                           <td width="14%">{{$t('application.ranking')}}</td>
-                           <td width="14%">{{$t('application.fee')}}</td>
+                           <td width="13%">{{$t('application.status')}}</td>
+                           <td width="13%">{{$t('application.position')}}</td>
+                           <td width="16%">{{$t('application.staked')}}</td>
+                           <td width="13%">{{$t('application.ranking')}}</td>
+                           <td width="13%">{{$t('application.fee')}}</td>
+                           <td width="10%">{{$t('vote.tickets')}}</td>
+                           <td width="2%"></td>
+                           <td width="1"></td>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="node in nodeList" @click="gotoDetail(node.CandidateId,node.Owner,node.Extra.nodePortrait,node.ranking,node.city)">
+                            <td width="1"></td>
                             <td class="bold">
                                 <img :src="'./static/images/characters/characters-'+node.Extra.nodePortrait+'.jpg'" alt="" v-if="node.Extra">
                                 <span class="node-name">{{node.Extra ? node.Extra.nodeName:''}}</span>
@@ -37,6 +55,9 @@
                             <td>{{node.Deposit}}</td>
                             <td>{{node.ranking}}</td>
                             <td>{{node.Fee | perc}}</td>
+                            <td>{{node.ticketsCount}}</td>
+                            <td> <span @click.stop="gotoVote(node)" class="vote"></span></td>
+                            <td width="1"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -63,7 +84,10 @@
                 showKeyInput:false,
                 nodeList:[],
                 verList:[],
-                nodeListCopy:[]
+                nodeListCopy:[],
+                ticketPrice:0,
+                remainder:100,
+                remainderBlock:'000'
             }
         },
         computed: {
@@ -82,38 +106,104 @@
                     code:'4',
                     label:this.$t('application.sortBy4')
                 }]
+            },
+            APIConfig:function(){
+                var APIConfig = require('@/config/API-config');
+                return APIConfig.default;
             }
         },
         mounted(){
             this.init();
         },
         methods: {
-            ...mapActions(['candidateList','verifiersList','getCityByIp','isMyNode','getDepositList']),
+            ...mapActions(['candidateList','verifiersList','getCityByIp','isMyNode','getOrd','getBalOrd','getDepositList','GetBatchCandidateTicketIds']),
             init(){
                 let _this = this;
-                this.verifiersList().then((verList)=>{
-                    this.candidateList().then((list)=>{
-                        console.log('candidateList---000--',list);
+                this.getTicketPrice();
+                this.getPoolRemainder();
+                this.getBlockNumber();
+                this.verifiersList().then((verList)=> {
+                    this.candidateList().then((list) => {
+                        this.getTicketInfo(list);
+                        console.log('candidateList---000--', list);
                         this.nodeList = list;
-                        this.nodeList.forEach((item,index)=>{
-                            item.verNode = (verList.indexOf(item.CandidateId)!==-1);
-                            let ip = item.Host.replace(/^http\:\/\//g,''),
-                                ipStorage = window.localStorage.getItem('ipCitys')?JSON.parse(window.localStorage.getItem('ipCitys')):{};
-                            if(ipStorage[ip]){
+                        this.nodeList.forEach((item, index) => {
+                            item.verNode = (verList.indexOf(item.CandidateId) !== -1);
+                            let ip = item.Host.replace(/^http\:\/\//g, ''),
+                                ipStorage = window.localStorage.getItem('ipCitys') ? JSON.parse(window.localStorage.getItem('ipCitys')) : {};
+                            if (ipStorage[ip]) {
                                 item.city = ipStorage[ip];
-                            }else{
-                                _this.getCityByIp(ip).then((city)=>{
+                            } else {
+                                _this.getCityByIp(ip).then((city) => {
+                                    //获取ip的接口是外部网站的接口，不能保证一定会有返回
                                     ipStorage[ip] = city;
-                                    window.localStorage.setItem('ipCitys',JSON.stringify(ipStorage));
+                                    window.localStorage.setItem('ipCitys', JSON.stringify(ipStorage));
                                     item.city = city;
-                                    this.$set(this.nodeList,index,item);
+                                    this.$set(this.nodeList, index, item);
                                     this.nodeListCopy = JSON.parse(JSON.stringify(this.nodeList));
                                 });
                             }
                         });
                         this.nodeListCopy = JSON.parse(JSON.stringify(this.nodeList));
                     });
+                });
+                window.getTicketInfoTimer = setInterval(()=>{
+                    this.getTicketInfo(this.nodeList);
+                },5000);
+            },
+            //获取节点所得选票数
+            getTicketInfo(list){
+                console.log('获取节点所得选票数----',list);
+                if(list && list.length>0){
+                    let nodeIds = list.map((item)=>{
+                        return item.CandidateId
+                    });
+                    this.GetBatchCandidateTicketIds(nodeIds).then((ticketsList)=>{
+                        console.log('ticketsList---->',ticketsList);
+                        if(ticketsList){
+                            this.nodeList.forEach((node,index)=>{
+                                if(ticketsList[node.CandidateId]){
+                                    node.ticketsCount = ticketsList[node.CandidateId].length;
+                                }else{
+                                    node.ticketsCount = 0;
+                                }
+                                this.$set(this.nodeList,node,index);
+                                this.nodeListCopy = JSON.parse(JSON.stringify(this.nodeList));
+                            })
+                        }
+
+                    });
+                }
+            },
+            //获取当前票价
+            getTicketPrice(){
+                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetTicketPrice',contractService.voteContractAddress).then((ticketPrice)=>{
+                    this.ticketPrice = contractService.web3.fromWei(ticketPrice,"ether");
                 })
+            },
+            //获取票池剩余票数量
+            getPoolRemainder(){
+                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetPoolRemainder',contractService.voteContractAddress).then((remainder)=>{
+                    this.remainder = (remainder/51200)*100;
+                })
+            },
+            getBlockNumber(){
+                window.blockNumberTimer = setInterval(()=>{
+                    contractService.web3.eth.getBlockNumber((err,block)=>{
+                        if(err){
+                            console.log('获取当前区块失败');
+                            clearInterval(window.blockNumberTimer);
+                        }
+                        let remainderBlock = 250 - block%250;
+                        if(remainderBlock<10){
+                            this.remainderBlock = '00'+remainderBlock;
+                        }else if(remainderBlock<100){
+                            this.remainderBlock = '0'+remainderBlock;
+                        }else{
+                            this.remainderBlock = remainderBlock+'';
+                        }
+                    })
+                },1000)
             },
             search(){
                 let arr = JSON.parse(JSON.stringify(this.nodeListCopy));
@@ -159,6 +249,9 @@
             gotoMyNode(){
                 this.$router.push('/my-node')
             },
+            gotoMyNote(){
+                this.$router.push('/my-vote')
+            },
             gotoDetail(id,owner,nodePortrait,ranking,city){
                 //由于SetCandidateExtra接口会暴露出去 用户logo可能会不按照格式传参，获取列表若nodePortrait不是合法的，则随机设置，带过去详情页
                 this.isMyNode(id).then((bool)=>{
@@ -170,33 +263,145 @@
                             query:{
                                 nodeId:id,
                                 owner:owner,
-                                nodePortrait:nodePortrait,
+				                nodePortrait:nodePortrait,
                                 ranking:ranking,
                                 city:city
                             }
                         });
                     }
                 });
-            }
+            },
+            gotoVote(node){
+                this.getOrd().then((arr)=>{
+                    if(arr.length==0){
+                        this.$message.warning(this.$t('application.noWallet'));
+                        return;
+                    }else{
+                        this.getBalOrd().then((arr)=>{
+                            if(arr.length==0){
+                                this.$message.warning(this.$t('application.noBalance'));
+                                return;
+                            }else{
+                                this.$router.push({
+                                    path:'/vote',
+                                    query:{
+                                        nodeId:node.CandidateId,
+                                        nodeName:node.Extra ? node.Extra.nodeName:'',
+                                        icon:node.Extra ? node.Extra.nodePortrait:''
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            },
         },
         filters:{
             'perc':function(num){
                 return 100 - MathService.div(num,100) +'%'
             }
         },
+        beforeDestroy() {
+            clearInterval(window.blockNumberTimer);
+            window.blockNumberTimer = null;
+            clearInterval(window.getTicketInfoTimer);
+            window.getTicketInfoTimer = null;
+        },
+        destroyed() {
+            clearInterval(window.blockNumberTimer);
+            window.blockNumberTimer = null;
+            clearInterval(window.getTicketInfoTimer);
+            window.getTicketInfoTimer = null;
+        },
     }
 </script>
 
 <style lang="less" scoped>
     .validator-node{
+        margin-top:-70px;
         .card{
-            height:calc(~"100% - 47px");
+            height:calc(~"100% - 42px");
+            background: #f8fafd;
+        }
+        .vote{
+            position:relative;
+            top:3px;
+            display:inline-block;
+            width:20px;
+            height:20px;
+            background: url("./images/icon_vote.svg") no-repeat center center;
+            background-size: contain;
         }
         .header{
             margin-bottom:12px;
             display:flex;
+            width:100%;
             height:32px;
             line-height:32px;
+        }
+        .note{
+            margin-bottom:14px;
+            display:flex;
+            width:100%;
+            height:60px;
+            line-height:60px;
+            background: #FFFFFF;
+            box-shadow: 0 3px 6px 0 rgba(148,148,197,0.10);
+            border-radius: 4px;
+            >span{
+                flex-grow: 1;
+                position: relative;
+                text-align: center;
+                font-size: 12px;
+                color: #525768;
+            }
+            .border:after{
+                content:'';
+                position:absolute;
+                right:0;
+                top:20px;
+                width:1px;
+                height:20px;
+                border-right:solid 1px #ECEFF6;
+            }
+            .icon{
+                display:inline-block;
+                width:25px;
+                height:15px;
+                vertical-align: -3px;
+            }
+            .ticket-price{
+                background: url("./images/icon_fare.svg") no-repeat center center;
+                background-size: contain;
+            }
+            .ticket-pool{
+                background: url("./images/icon_tickets.svg") no-repeat center center;
+                background-size: contain;
+            }
+            .round-left{
+                background: url("./images/icon_Sandtimer.svg") no-repeat center center;
+                background-size: contain;
+            }
+            .block{
+                margin:0 4px;
+                display:inline-block;
+                width:24px;
+                height:24px;
+                line-height: 24px;
+                background: #ECF1F8;
+                border: 1px solid #18C2E9;
+                border-radius: 4px;
+                font-style: normal;
+                font-weight: 600;
+            }
+            .font10{
+                font-size: 10px;
+                color: #120000;
+            }
+            .bold{
+                font-size: 14px;
+                color: #24272B;
+            }
         }
         .node-name{
             display: inline-block;
@@ -206,9 +411,10 @@
             white-space: nowrap;
         }
         .candidate-list{
-            height:100%;
+            height:calc(~"100% - 70px");
             font-size: 12px;
             overflow:auto;
+            background:#FFF;
             table{
                 width:100%;
                 tr{
@@ -219,9 +425,6 @@
                     color: #525768;
                     text-align: left;
                     border-bottom:solid 1px #D3D8E1;
-                    &:first-of-type{
-                        padding-left:20px;
-                     }
                 }
                 tbody tr td{
                     text-align: left;
@@ -233,9 +436,15 @@
                     background: #ECF1F8;
                     cursor: pointer;
                 }
+                tr td{
+                    white-space:nowrap;
+                    &:first-of-type,&:last-of-type{
+                         padding-left:19px;
+                         border:none;
+                    }
+                }
             }
             .bold{
-                padding-left:20px;
                 height:48px;
                 display: flex;
                 justify-content: left;
@@ -272,7 +481,7 @@
     }
     .no-data-bg{
         padding-top:310px;
-        height:100%;
+        height:calc(~"100% - 60px");
         text-align: center;
         font-size: 12px;
         color: #24272B;
@@ -294,6 +503,7 @@
                 color: #24272B;
             }
             .el-input__inner{
+                padding-left:2px;
                 height:32px;
                 line-height:32px;
                 font-size: 16px;

@@ -453,7 +453,7 @@
             saveJson(jsonData){
                 let type = 'custom';
                 return new Promise((resolve, reject)=>{
-                    console.log('path',`${Settings.userDataPath}net_custom/cbft.json`,fs.existsSync(`${Settings.userDataPath}net_custom/cbft.json`));
+                    // console.log('path',`${Settings.userDataPath}net_custom/cbft.json`,fs.existsSync(`${Settings.userDataPath}net_custom/cbft.json`));
                     let filePath = path.join(`${Settings.userDataPath}net_${type}`,`${this.net.name}.json`);
                     console.log('filePath---',Settings.userDataPath,filePath);
                     fs.writeFile(filePath, JSON.stringify(jsonData), (err) => {
