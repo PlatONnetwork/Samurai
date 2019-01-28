@@ -133,7 +133,7 @@ export default {
         tip1:'所有普通钱包余额为0，无法创建联名钱包！',
         tip2:'请先创建普通钱包，并转入相应资产',
         incorrectAddress:'接收地址不正确',
-        insufficientBalance:'余额不足',
+        insufficientBalance:'钱包余额不足！',
         incorrectValue:'发送数量输入格式有误，请重新输入',
         transactionFailed:'交易发送失败',
         invalidSignatures:'个人签名不可用或钱包不存在',

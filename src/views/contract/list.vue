@@ -111,7 +111,9 @@
             newContract(){
                 this.getOrd().then((data)=>{
                     if(data.length == 0){
-                        this.$message.error(this.$t('contracts.walletEmpty'))
+                        this.$message.warning({
+                            message:this.$t('contracts.walletEmpty'),customClass:'warn'
+                        })
                     }else if(this.nortotalBalance == 0){
                         this.$message.error(this.$t('contracts.balanceEmpty'))
                     }else{
