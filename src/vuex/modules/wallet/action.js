@@ -39,7 +39,7 @@ export const WalletAction = {
             return [];
         }
     },
-    getWalletsA({state,commit,rootState},walletType){
+    getWalletsA({state,commit,rootState,dispatch},walletType){
         return new Promise((resolve, reject)=>{
             let type = rootState.setting.network.type,
                 fileName_s = walletType==1?fileName:fileNameS;
@@ -49,16 +49,19 @@ export const WalletAction = {
                     if(type=='custom'){
                         walletCate = 'custom_'+rootState.setting.chainName;
                     }
-                    let arr = retData[walletCate],unknownNum=1;
+                    let arr = retData[walletCate];
                     if(walletType==1){
-                        arr.forEach((item)=>{
-                            if(!item.account){
-                                item.account='Unknown'+(unknownNum<10?'0':'')+unknownNum;
-                                unknownNum++;
-                            }
-                        });
-                        retData[walletCate] = arr;
-                        fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(retData))
+                       dispatch('getUnknownNum',(b)=>{
+                           let unknownNum = b;
+                           arr.forEach((item)=>{
+                               if(!item.account){
+                                   item.account='Unknown'+(unknownNum<10?'0':'')+unknownNum;
+                                   unknownNum++;
+                               }
+                           });
+                           retData[walletCate] = arr;
+                           fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(retData))
+                       });
                     }
                     if(arr && arr.length>0){
                         arr.sort(function(a,b){
@@ -74,16 +77,30 @@ export const WalletAction = {
             })
         })
     },
+    getUnknownNum({state,commit,rootState},cb){
+        let type = rootState.setting.network.type,walletCate=type,unknownNum=0;
+        if(type=='custom'){
+            walletCate = 'custom_'+rootState.setting.chainName;
+        }
+        let data = fs.readFileSync(`${Settings.userDataPath}${fileName}`,'utf8');
+        if(data && data!=="{}"){
+            let retData = JSON.parse(data)[walletCate];
+            retData.forEach((item,index)=>{
+                if(/^Unknown[0-9]+$/.test(item.account)){
+                    let a = item.account.replace(/Unknown0/,'');
+                    unknownNum = Math.max(unknownNum,a);
+                }
+            });
+            console.log('unknownNum',unknownNum);
+            cb(unknownNum+1);
+        }else{
+            cb(1);
+        }
+
+    },
     //获取普通钱包列表
     async getOrd({state,commit,rootState,dispatch}){
         return await dispatch('getWallets',1);
-        // return new Promise((resolve, reject)=>{
-        //     dispatch('getWallets',1).then((data)=>{
-        //         resolve(data);
-        //     }).catch((e)=>{
-        //         reject();
-        //     });
-        // })
     },
     getOrdA({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
@@ -165,20 +182,6 @@ export const WalletAction = {
                 resolve(false)
             }
         })
-
-
-        // return new Promise((resolve, reject)=>{
-        //     dispatch('getOrd').then((data)=>{
-        //         let arr = data.filter((item)=>{
-        //             return item.address==address;
-        //         });
-        //         if(arr.length>0){
-        //             resolve(true)
-        //         }else{
-        //             resolve(false)
-        //         }
-        //     })
-        // })
     },
     //根据钱包地址返回该钱包是否是一个共享钱包
     async isSharedWallet({state,commit,dispatch,rootState},address){
@@ -207,18 +210,6 @@ export const WalletAction = {
         }else{
             return null
         }
-        // return new Promise((resolve, reject)=>{
-        //     dispatch('getOrd').then((data)=>{
-        //         let arr = data.filter((item)=>{
-        //             return item.address==address;
-        //         });
-        //         if(arr.length>0){
-        //             resolve(arr[0]);
-        //         }else{
-        //             resolve(null)
-        //         }
-        //     });
-        // })
     },
     //根据钱包地址返回共享钱包
     getShareByAddress({state,commit,dispatch,rootState},address){
@@ -304,6 +295,9 @@ export const WalletAction = {
 
             })
         });
+    },
+    clearTotalBalance({state}){
+        state.totalBalance = null;
     },
     //获取普通钱包的总余额
     getNormalTotalBalance({state,commit,dispatch}){

@@ -27,8 +27,8 @@
                 <p class="btn-box">
                     <span>{{$t('application.pay')}}：{{total}} Energon</span>
                     <span class="btns">
-                       <el-button class="cancel" @click="back">{{$t('form.cancel')}}</el-button>
-                        <el-button type="primary" @click="submit" :disabled="!payForm.value">{{$t('form.submit')}}</el-button>
+                       <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']"@click="back">{{$t('form.cancel')}}</el-button>
+                        <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="submit" :disabled="!payForm.value">{{$t('form.submit')}}</el-button>
                     </span>
                 </p>
             </el-form>
@@ -52,8 +52,8 @@
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showConfirm=false" :disabled="handleLoading">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="send" type="primary" :loading="handleLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showConfirm=false" :disabled="handleLoading">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :loading="handleLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>

@@ -5,7 +5,7 @@
                 <el-option v-for="option in options" :label="option.label" :value="option.code"></el-option>
             </el-select>
             <span class="icon-search">
-                <el-input :class="[keyword&&!/^\s*$/g.test(keyword)?'input1':'input2']" v-model="keyword" v-if="showKeyInput" @change="search" @keyup.enter.native="search" :placeholder="$t('application.enterAccount')"></el-input>
+                <el-input :class="[keyword&&!/^\s*$/g.test(keyword)?'input1':'input2',lang=='en'?'width278':'']" v-model="keyword" v-if="showKeyInput" @change="search" @keyup.enter.native="search" :placeholder="$t('application.enterAccount')"></el-input>
                 <i v-if="!showKeyInput" @click="showKeyInput=!showKeyInput"></i>
             </span>
             <el-button class="my-node" @click="gotoMyNode">{{$t('application.myNode')}}</el-button>
@@ -15,7 +15,7 @@
                 <table class="table" cellspacing="0">
                     <thead>
                         <tr>
-                           <td width="18%">{{$t('nodeSync.Peers')}}</td>
+                           <td width="18%">{{$t('application.nodeName')}}</td>
                            <td width="18%">{{$t('application.status')}}</td>
                            <td width="18%">{{$t('application.position')}}</td>
                            <td width="18%">{{$t('application.staked')}}</td>
@@ -318,6 +318,9 @@
                     border: 1px solid #9EABBE;
                     border-radius: 12px;
                 }
+            }
+            .width278{
+                width: 278px;
             }
             .input1{
                 .el-input__inner{

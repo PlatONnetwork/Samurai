@@ -9,7 +9,7 @@
         </div>
         <div class="padd compolete" v-if="compolete">
             <p class="title">
-                {{$t('settings.priNet')}}--{{net.name}}{{$t('settings.customNet.successfully')}}
+                {{$t('settings.priNet')}}--{{net.name}} {{$t('settings.customNet.successfully')}}
             </p>
             <div class="content">
                 <p>
@@ -25,15 +25,15 @@
                     {{nodeList[0].ip}}
                 </p>
                 <p>
-                    <span class="label">RPC{{$t('settings.customNet.port')}}:</span>
+                    <span class="label">RPC {{$t('settings.customNet.port')}}:</span>
                     {{nodeList[0].port}}
                 </p>
                 <p>
-                    <span class="label">P2P{{$t('settings.customNet.port')}}:</span>
+                    <span class="label">P2P {{$t('settings.customNet.port')}}:</span>
                     26793
                 </p>
                 <p>
-                    <span class="label">Coinbase{{$t('sideBar.wallet')}}:</span>
+                    <span class="label">Coinbase {{$t('sideBar.wallet')}}:</span>
                     {{keystore?keystore.address:''}}
                     <el-button type="primary" @click="backup">{{$t('settings.customNet.backUpKey')}}</el-button>
                 </p>
@@ -43,7 +43,7 @@
                 </p>
             </div>
             <p>
-                <el-button type="primary" :class="lang=='zh-cn'?'letter-space':''" @click="finish">{{$t('wallet.finish')}}</el-button>
+                <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']" @click="finish">{{$t('wallet.finish')}}</el-button>
             </p>
         </div>
         <div class="padd" v-else>
@@ -112,7 +112,7 @@
                     </ul>
                 </div>
                 <p :class="[step==3?'btn-box-1':'','btn-tab1']">
-                    <el-button class="back" @click="back" :disabled="createLoading">{{$t("settings.customNet.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','back']" @click="back" :disabled="createLoading">{{$t("settings.customNet.cancel")}}</el-button>
                     <el-button class="init" @click="initBtn" v-if="step==1">{{$t("settings.customNet.create")}}</el-button>
                     <el-button class="init" @click="initAccount" v-if="step==2">{{$t("settings.customNet.createAndWrite")}}</el-button>
                     <el-button class="init" @click="create" v-if="step==3" :loading="createLoading">{{$t("settings.customNet.startNode")}}</el-button>
@@ -475,8 +475,8 @@
                 if(!fs.existsSync(path.join(basePath, `chain/${this.net.name}`))){
                     //创建链目录
                     fs.mkdirSync(path.join(basePath, `chain/${this.net.name}`));
-                    let cbftJSON = require("../../../static/json/cbft.json");
-                    fs.writeFileSync(`${basePath}/chain/${this.net.name}/cbft.json`,JSON.stringify(cbftJSON))
+                    // let cbftJSON = require("../../../static/json/cbft.json");
+                    // fs.writeFileSync(`${basePath}/chain/${this.net.name}/cbft.json`,JSON.stringify(cbftJSON))
                 }
                 if(!fs.existsSync(path.join(basePath, `chain/${this.net.name}/keystore`))){
                     //创建钱包存储目录并保存钱包
@@ -591,7 +591,7 @@
                     platform=os.platform();
                 console.log('interfaces---',interfaces);
                 for(var devName in interfaces){
-                    if((platform!='linux' && devName=='以太网') || (platform=='linux' && devName!='lo')){
+                    if((platform!='linux' && (devName=='以太网' || devName=='WLAN')) || (platform=='linux' && devName!='lo')){
                         var iface = interfaces[devName];
                         console.log('iface---',iface);
                         for(var i=0;i<iface.length;i++){

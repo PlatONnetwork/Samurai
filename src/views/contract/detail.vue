@@ -40,7 +40,7 @@
                         </el-select>
                     </div>
                     <p class="btn-box">
-                        <el-button v-if="funBody" @click="confirm">{{$t("contracts.execute")}}</el-button>
+                        <el-button v-if="funBody" @click="confirm" :class="[lang=='en'?'':'letterSpace']">{{$t("contracts.execute")}}</el-button>
                     </p>
                 </div>
                 <div class="rSide" v-if="abiInfo.length>0">
@@ -72,8 +72,8 @@
                     <!-- <textarea class="abiView" :value="contract.abi" readonly></textarea> -->
                 </div>
                 <div class="modal-btn">
-                    <el-button type="primary" @click="copyContract">{{$t('contracts.copyContract')}}</el-button>
-                    <el-button type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
+                    <el-button type="primary" @click="copyContract" :class="[lang=='en'?'':'letterSpace']">{{$t('contracts.copyContract')}}</el-button>
+                    <el-button type="primary" @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -90,8 +90,8 @@
                     <p class="mb-10 danger">{{$t('wallet.warningContTxt')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button @click="copyConfirm"  type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.cancel')}}</el-button>
+                    <el-button @click="copyConfirm"  :class="[lang=='en'?'':'letterSpace']" type="primary">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -157,7 +157,7 @@
             }
         },
         computed: {
-            ...mapGetters(['network'])
+            ...mapGetters(['network','lang'])
         },
         mounted(){
             this.contract = this.$route.query?this.$route.query:null;

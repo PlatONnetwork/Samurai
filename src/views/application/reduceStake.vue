@@ -8,8 +8,8 @@
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.remainingStake')}}</span><span class="value-txt">{{remaining}}{{remaining>0?' Energon':''}}</span></p>
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.expectedRanking')}}</span><span class="value-txt">{{ranking}}</span></p>
             <p class="btn-box">
-                <el-button class="cancel" @click="back">{{$t('form.cancel')}}</el-button>
-                <el-button type="primary" @click="confirm" :disabled="!value">{{$t('form.submit')}}</el-button>
+                <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="back">{{$t('form.cancel')}}</el-button>
+                <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="confirm" :disabled="!value">{{$t('form.submit')}}</el-button>
             </p>
 
         </div>
@@ -22,8 +22,8 @@
                     {{$t('application.after200Tip')}}
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showRankingTip=false">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="confirmRanking" type="primary">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showRankingTip=false">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="confirmRanking" type="primary">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -46,8 +46,8 @@
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="send" type="primary" :loading="handleLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :loading="handleLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>

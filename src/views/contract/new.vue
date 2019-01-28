@@ -72,7 +72,7 @@
             </el-form>
             <p class="total">
                 <span class="EnergonCount">{{$t("contracts.total")}} ：{{add(newContract.value-0,sendTranscation.gas-0)}}&nbsp;Energon</span>
-                <el-button type="primary" @click="confirm">{{$t("contracts.deploy")}}</el-button>
+                <el-button type="primary" @click="confirm" :class="[lang=='en'?'':'letterSpace']">{{$t("contracts.deploy")}}</el-button>
                 <!-- <el-button type="primary" @click="confirm" :disabled="!newContract.value">{{$t("contracts.deploy")}}</el-button> -->
             </p>
         </div>
@@ -151,7 +151,7 @@
             }
         },
         computed: {
-            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName']),
+            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','lang']),
              rules(){
                 return{
                     name:
@@ -391,26 +391,6 @@
                         // this.calcContract = contractService.web3.eth.contract(this.newContract.abi);
                         contractService.platONDeploy(JSON.parse(this.newContract.abi),this.newContract.bin,transParam.from,priKey,parseInt(_this.gas*1.1),_this.gasPrice*10).then(deployResult=>{
                             console.log(deployResult,'platONDeploy开始')
-                            // console.log(Number(transParam.value),'发送数量')
-                            // if(deployResult.address){
-                            //     contractService.sendTransaction(transParam.from,deployResult.address,Number(transParam.value),priKey,"input",_this.gas,_this.gasPrice,(errCode,result)=>{
-                            //         console.log('result txhash--->',errCode,!!errCode,result);
-                            //         if(!!errCode && errCode==2){
-                            //             return;
-                            //         }else if(!!errCode){
-                            //             _this.$message.error(this.$t('wallet.transactionFailed'));
-                            //             return;
-                            //         }
-                            //     })
-                            // }
-                            // let id = '',data = {},wrapCount=100;
-                            // contractService.web3.eth.getTransactionReceipt(deployResult.hash,(err,result)=>{
-                            //     if(err) throw err;
-                            //     console.log(`deployResult.hash:`, deployResult.hash);
-                            //     console.log(`result:`, result);
-
-                            // })
-
                             _this.saveContract(deployResult).then(()=>{
                                 let trxobj={
                                     tradeTime:new Date().getTime(),

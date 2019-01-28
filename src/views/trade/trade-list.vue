@@ -69,7 +69,7 @@
             this.getAllWallets().then((allWallets)=>{
                 this.wallets = [{
                     address:'',
-                    account:this.$t('')
+                    account:this.$t('wallet.allWallet')
                 }].concat(allWallets);
             });
         },

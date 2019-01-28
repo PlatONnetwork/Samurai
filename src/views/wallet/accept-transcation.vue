@@ -78,6 +78,7 @@
             margin-bottom: 8px;
         }
         .qr{
+            margin-bottom:16px;
             margin-left: 20px;
         }
         .pub{

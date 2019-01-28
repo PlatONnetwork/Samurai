@@ -23,7 +23,6 @@
             </v-header>
             <router-view></router-view>
         </div>
-        <page-loading></page-loading>
     </div>
 </template>
 
@@ -35,7 +34,6 @@
     import nodeManager from '@/services/node-manager';
     import Settings from '@/services/setting'
     import selSelf from '@/components/select';
-    import pageLoading from '@/components/loading/pageLoading';
     import contractService from '@/services/contract-servies';
 
     export default {
@@ -44,8 +42,7 @@
            sideBar,
             vHeader,
             nodeSync,
-            selSelf,
-            pageLoading
+            selSelf
         },
         data() {
             return {
@@ -191,6 +188,7 @@
                 line-height:36px;
             }
             .icon-back{
+                margin-left:5px;
                 margin-right: 6px;
                 height:36px;
                 line-height:36px;
@@ -201,7 +199,7 @@
     }
     .felx-box{
         display: flex;
-        padding-left:6px;
+        padding-left:1px;
     }
     .accept{
         position:relative;

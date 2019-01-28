@@ -63,8 +63,8 @@
                     <p class="abiView">{{ABIFile}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="primary" @click="copyConfirm(2)">{{$t('wallet.copy')}}</el-button>
-                    <el-button type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace']" type="primary" @click="copyConfirm(2)">{{$t('wallet.copy')}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace']" type="primary" @click="handleCancel">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -81,8 +81,8 @@
                     <p class="mb-10 dan">{{$t('wallet.warningTxt')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button @click="copyConfirm(1)"  type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace']" @click="handleCancel">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace']" @click="copyConfirm(1)"  type="primary">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -113,7 +113,7 @@
             }
         },
         computed: {
-            ...mapGetters(['WalletListGetter', 'network','curWallet','chainName'])
+            ...mapGetters(['WalletListGetter', 'network','curWallet','chainName','lang'])
         },
         created(){
             this.WalletListAction(this.network.type);
@@ -447,12 +447,6 @@
                 margin-bottom:11px;
             }
         }
-    }
-    .pop{
-        cursor: pointer;
-        height: 20px;
-        line-height: 20px;
-        margin-bottom: 5px;
     }
     .mb-10{
         margin-bottom: 10px;

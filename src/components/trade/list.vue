@@ -1,39 +1,43 @@
 <template>
-    <div :class="[total>pageNum*numIndex?'paddB30':'','trade-list']">
-        <p class="trade-rec-title" v-if="pageFrom=='shareDetail'">{{pageFrom=='shareDetail'?$t('trade.pendingTrade'):$t('trade.record')}}</p>
-        <ul>
-            <li v-for="(item,index) in pendingTradeList" :key="index" @click="checkDetail(item)">
-                <div class="lt">
-                    <p class="month" v-if="item">{{item.tradeTime | month}}</p>
-                    <p class="date" v-if="item">{{item.tradeTime | date}}</p>
-                </div>
-                <div class="mid">
-                    <div>
-                        <div class="type bold">
-                            {{item.type | tradeType}}
-                            <ul v-if="item.ownersList && item.pending==1" class="owners">
-                                <li v-for="(owner,index) in item.ownersList"
-                                    :key = owner
-                                    :class="(item.confirmList&&item.confirmList.indexOf(owner)!==-1)?'success':
-                                            (item.rejectList&&item.rejectList.indexOf(owner)!==-1)?'reject':''">
-                                    {{index+1}}
-                                </li>
-                            </ul>
-                        </div>
+    <div>
+        <div v-if="!loadCompolete">
+            <page-loading :loadTxt="$t('form.loading')"></page-loading>
+        </div>
+        <div v-else :class="[total>pageNum*numIndex?'paddB30':'','trade-list']">
+            <p class="trade-rec-title" v-if="pageFrom=='shareDetail'">{{pageFrom=='shareDetail'?$t('trade.pendingTrade'):$t('trade.record')}}</p>
+            <ul>
+                <li v-for="(item,index) in pendingTradeList" :key="index" @click="checkDetail(item)">
+                    <div class="lt">
+                        <p class="month" v-if="item">{{item.tradeTime | month}}</p>
+                        <p class="date" v-if="item">{{item.tradeTime | date}}</p>
+                    </div>
+                    <div class="mid">
                         <div>
-                            <span :class="[isMaximized?'':'addr-length','addr','icon-type']" :title="item.from">{{item.from}}</span>
-                            <span class="transfer"></span>
-                            <span v-if="item.type=='contractCreate' || item.type=='createJointWallet'" :class="[isMaximized?'':'cont-length','icon-type','contract-addr']" :title="item.contractAddress">{{item.type=='contractCreate'?$t('trade.contractCreation2'):$t('wallet.createSharedWallet')}}&nbsp;{{item.contractAddress}}</span>
-                            <span v-else :class="['icon-type',item.type=='transfer'?'addr':'contract-addr',isMaximized?'':'cont-length']" :title="item.to">{{item.to}}</span>
+                            <div class="type bold">
+                                {{item.type | tradeType}}
+                                <ul v-if="item.ownersList && item.pending==1" class="owners">
+                                    <li v-for="(owner,index) in item.ownersList"
+                                        :key = owner
+                                        :class="(item.confirmList&&item.confirmList.indexOf(owner)!==-1)?'success':
+                                            (item.rejectList&&item.rejectList.indexOf(owner)!==-1)?'reject':''">
+                                        {{index+1}}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <span :class="[isMaximized?'':'addr-length','addr','icon-type']" :title="item.from">{{item.from}}</span>
+                                <span class="transfer"></span>
+                                <span v-if="item.type=='contractCreate' || item.type=='createJointWallet'" :class="[isMaximized?'':'cont-length','icon-type','contract-addr']" :title="item.contractAddress">{{item.type=='contractCreate'?$t('trade.contractCreation2'):$t('wallet.createSharedWallet')}}&nbsp;{{item.contractAddress}}</span>
+                                <span v-else :class="['icon-type',item.type=='transfer'?'addr':'contract-addr',isMaximized?'':'cont-length']" :title="item.to">{{item.to}}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="rt">
-                    <p class="value">
-                        <span v-if="item.hash">{{(item.type!='reduceStake' && item.type!='redeemStake' && item.type!='quitStake')?'-':''}}{{item.value}}&nbsp;Energon</span>
-                        <span v-else>-{{trans(item.value-0)}}&nbsp;Energon</span>
-                    </p>
-                    <p class="state">
+                    <div class="rt">
+                        <p class="value">
+                            <span v-if="item.hash">{{item.type=='redeemStake'?'+':(item.type!='reduceStake' && item.type!='quitStake')?'-':''}}{{item.value}}&nbsp;Energon</span>
+                            <span v-else>-{{trans(item.value-0)}}&nbsp;Energon</span>
+                        </p>
+                        <p class="state">
                         <span v-if="item.hash" class="tc">
                             <span v-if="item.isCompolete">
                                 {{$t('trade.finished')}}
@@ -43,11 +47,11 @@
                             </span>
                             <span v-else class="state-pending">{{$t('trade.pending')}}</span>
                         </span>
-                        <span v-else>
+                            <span v-else>
                             <span v-if="item.pending==1">
                                 <span v-if="item.availOwners&&item.availOwners.length>0">
-                                    <el-button type="primary" @click="confirm(item,1)">{{$t('trade.confirm')}}</el-button>
-                                    <el-button @click="confirm(item,2)">{{$t('trade.reject')}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="confirm(item,1)">{{$t('trade.confirm')}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="confirm(item,2)">{{$t('trade.reject')}}</el-button>
                                 </span>
                                 <span v-else  class="tc">
                                     {{$t('trade.toBeSigned')}}
@@ -55,49 +59,49 @@
                             </span>
                             <span v-else :class="[item.executed=='0'?'danger':'','tc']">{{item.executed==1?$t('trade.finished'):$t('trade.failed')}}</span>
                         </span>
+                        </p>
+                    </div>
+                    <p class="process" v-if="item.hash && !item.isCompolete && item.state!==2">
+                        <span :style="{width:item.processWidth+'%'}"></span>
                     </p>
-                </div>
-                <p class="process" v-if="item.hash && !item.isCompolete && item.state!==2">
-                    <span :style="{width:item.processWidth+'%'}"></span>
-                </p>
-            </li>
-        </ul>
-        <p v-if="pageFrom=='shareDetail' && pendingTradeList.length==0" :class="[pageFrom=='tradeList'?'marginT30':'marginT0','no-data']">{{$t('trade.noRecord')}}</p>
+                </li>
+            </ul>
+            <p v-if="pageFrom=='shareDetail' && pendingTradeList.length==0" :class="[pageFrom=='tradeList'?'marginT30':'marginT0','no-data']">{{$t('trade.noRecord')}}</p>
 
-        <p class="trade-rec-title" v-if="pageFrom!='tradeList'">{{$t('trade.record')}}</p>
-        <ul>
-            <li v-for="(item,index) in tradeList" :key="index" @click="checkDetail(item)">
-                <div class="lt">
-                    <p class="month" v-if="item">{{item.tradeTime | month}}</p>
-                    <p class="date"  v-if="item">{{item.tradeTime | date}}</p>
-                </div>
-                <div class="mid">
-                    <div>
-                        <div class="type bold">
-                            {{item.type | tradeType}}
-                            <ul v-if="item.ownersList && item.pending==1" class="owners">
-                                <li v-for="(owner,index) in item.ownersList"
-                                    :key="owner"
-                                    :class="(item.confirmList&&item.confirmList.indexOf(owner)!==-1)?'success':
-                                    (item.rejectList&&item.rejectList.indexOf(owner)!==-1)?'reject':''">
-                                    {{index+1}}
-                                </li>
-                            </ul>
-                        </div>
+            <p class="trade-rec-title" v-if="pageFrom!='tradeList'">{{$t('trade.record')}}</p>
+            <ul>
+                <li v-for="(item,index) in tradeList" :key="index" @click="checkDetail(item)">
+                    <div class="lt">
+                        <p class="month" v-if="item">{{item.tradeTime | month}}</p>
+                        <p class="date"  v-if="item">{{item.tradeTime | date}}</p>
+                    </div>
+                    <div class="mid">
                         <div>
-                            <span :class="[isMaximized?'':'addr-length','addr','icon-type']" :title="item.from">{{item.from}}</span>
-                            <span class="transfer"></span>
-                            <span v-if="item.type=='contractCreate' || item.type=='createJointWallet'" :class="[isMaximized?'':'cont-length','icon-type','contract-addr']" :title="item.contractAddress">{{item.type=='contractCreate'?$t('trade.contractCreation2'):$t('wallet.createSharedWallet')}}&nbsp;{{item.contractAddress}}</span>
-                            <span v-else :class="['icon-type',item.type=='transfer'?'addr':'contract-addr',isMaximized?'':'cont-length']" :title="item.to">{{item.to}}</span>
+                            <div class="type bold">
+                                {{item.type | tradeType}}
+                                <ul v-if="item.ownersList && item.pending==1" class="owners">
+                                    <li v-for="(owner,index) in item.ownersList"
+                                        :key="owner"
+                                        :class="(item.confirmList&&item.confirmList.indexOf(owner)!==-1)?'success':
+                                    (item.rejectList&&item.rejectList.indexOf(owner)!==-1)?'reject':''">
+                                        {{index+1}}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <span :class="[isMaximized?'':'addr-length','addr','icon-type']" :title="item.from">{{item.from}}</span>
+                                <span class="transfer"></span>
+                                <span v-if="item.type=='contractCreate' || item.type=='createJointWallet'" :class="[isMaximized?'':'cont-length','icon-type','contract-addr']" :title="item.contractAddress">{{item.type=='contractCreate'?$t('trade.contractCreation2'):$t('wallet.createSharedWallet')}}&nbsp;{{item.contractAddress}}</span>
+                                <span v-else :class="['icon-type',item.type=='transfer'?'addr':'contract-addr',isMaximized?'':'cont-length']" :title="item.to">{{item.to}}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="rt">
-                    <p class="value">
-                        <span v-if="item.hash">{{(item.type!='reduceStake' && item.type!='redeemStake' && item.type!='quitStake')?'-':''}}{{item.value}}&nbsp;Energon</span>
-                        <span v-else>-{{trans(item.value-0)}}&nbsp;Energon</span>
-                    </p>
-                    <p class="state">
+                    <div class="rt">
+                        <p class="value">
+                            <span v-if="item.hash">{{item.type=='redeemStake'?'+':(item.type!='reduceStake' && item.type!='quitStake')?'-':''}}{{item.value}}&nbsp;Energon</span>
+                            <span v-else>-{{trans(item.value-0)}}&nbsp;Energon</span>
+                        </p>
+                        <p class="state">
                         <span v-if="item.hash" class="tc">
                             <span v-if="item.isCompolete">
                                 {{$t('trade.finished')}}
@@ -107,11 +111,11 @@
                             </span>
                             <span v-else class="state-pending">{{$t('trade.pending')}}</span>
                         </span>
-                        <span v-else>
+                            <span v-else>
                             <span v-if="item.pending==1">
                                 <span v-if="item.availOwners&&item.availOwners.length>0">
-                                    <el-button type="primary" @click="confirm(item,1)">{{$t('trade.confirm')}}</el-button>
-                                    <el-button @click="confirm(item,2)">{{$t('trade.reject')}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="confirm(item,1)">{{$t('trade.confirm')}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="confirm(item,2)">{{$t('trade.reject')}}</el-button>
                                 </span>
                                 <span v-else class="tc">
                                     {{$t('trade.toBeSigned')}}
@@ -119,15 +123,16 @@
                             </span>
                             <span v-else :class="[item.executed=='0'?'danger':'','tc']">{{item.executed==1?$t('trade.finished'):$t('trade.failed')}}</span>
                         </span>
+                        </p>
+                    </div>
+                    <p class="process" v-if="item.hash && !item.isCompolete && item.state!==2">
+                        <span :style="{width:item.processWidth+'%'}"></span>
                     </p>
-                </div>
-                <p class="process" v-if="item.hash && !item.isCompolete && item.state!==2">
-                    <span :style="{width:item.processWidth+'%'}"></span>
-                </p>
-            </li>
-        </ul>
-        <p v-if="tradeList.length==0" :class="[pageFrom=='tradeList'?'marginT30':'marginT0','no-data']">{{$t('trade.noRecord')}}</p>
-        <p v-if="total>pageNum*numIndex" class="load-more" @click="loadMore">{{$t('trade.loadMore')}}</p>
+                </li>
+            </ul>
+            <p v-if="tradeList.length==0" :class="[pageFrom=='tradeList'?'marginT30':'marginT0','no-data']">{{$t('trade.noRecord')}}</p>
+            <p v-if="total>pageNum*numIndex" class="load-more" @click="loadMore">{{$t('trade.loadMore')}}</p>
+        </div>
 
         <div class="modal sel-owner" v-if="showSelOwners">
             <div class="modal-main">
@@ -170,9 +175,9 @@
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showConfirmModal=false" :disabled="submitting">{{$t("form.cancel")}}</el-button>
-                    <el-button v-if="handle==1" @click="confirmTransaction" type="primary" :loading="submitting && handle==1">{{$t("form.submit")}}</el-button>
-                    <el-button v-if="handle==2" @click="rejectTransaction" type="primary" :loading="submitting && handle==2">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showConfirmModal=false" :disabled="submitting">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" v-if="handle==1" @click="confirmTransaction" type="primary" :loading="submitting && handle==1">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" v-if="handle==2" @click="rejectTransaction" type="primary" :loading="submitting && handle==2">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -184,6 +189,7 @@
     import {mapGetters, mapActions} from 'vuex';
     import mathService from '@/services/math';
     import keyManager from '@/services/key-manager';
+    import pageLoading from '@/components/loading/pageLoading';
 
     export default {
         name: "trade",
@@ -205,12 +211,13 @@
                 tradeListTimer:null,
                 showSelOwners:false,
                 availOwners:[],
-                owner:null
+                owner:null,
+                loadCompolete:false
             }
         },
         props:(['pageNum','type','pageFrom','isOwner']),
         computed:{
-            ...mapGetters(['curWallet','walletType','isMaximized'])
+            ...mapGetters(['curWallet','walletType','isMaximized','lang'])
         },
         mounted(){
             if(this.tradeListTimer){
@@ -219,12 +226,15 @@
             this.init();
         },
         methods:{
-            ...mapActions(['getShareByAddress','isAtLocal','getOrdByAddress','getCurTradeList','getSharedOwner','getOwnerAccountByAddress','updatetradeProcess','getAvailOwner','saveTractRecord']),
+            ...mapActions(['getShareByAddress','isAtLocal','getOrdByAddress','getCurTradeList','getSharedOwner','getOwnerAccountByAddress','updatetradeProcess','getAvailOwner','saveTractRecord','updatePageLoading']),
             init(){
+                this.updatePageLoading(true);
                 this.getCurTradeList({
-                        size:this.pageNum*this.numIndex,
-                        type:this.type
-                    }).then((dataObj)=>{
+                    size:this.pageNum*this.numIndex,
+                    type:this.type
+                }).then((dataObj)=>{
+                    this.updatePageLoading(false);
+                    this.loadCompolete = true;
                     let list = dataObj.list;
                     //如果是共享钱包详情页，需要分类展示
                     if(this.pageFrom=='shareDetail'){
@@ -275,11 +285,12 @@
                                 if(data){
                                     if(data.status && data.status=='0x0'){
                                         item.state=2;
+                                        item.isCompolete = false;
                                     }else{
                                         item.state = 1;
+                                        item.isCompolete = true;
                                     }
                                     item.processWidth=100;
-                                    item.isCompolete = true;
                                     if(item.type=='contractCreate' || item.type=='createJointWallet'){
                                        item.to = data.contractAddress
                                     }
@@ -462,31 +473,6 @@
                     this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
                     cb();
                 });
-
-                // this.gasLoading = true;
-                // const MyContract = contractService.web3.eth.contract(contractService.getABI(1));
-                // const myContractInstance = MyContract.at(trade.from);
-                // let params=[trade.id-0],funN = num==1?'confirmTransaction':'revokeConfirmation';
-                // const platOnData = myContractInstance[funN].getPlatONData(...params);
-                // await contractService.web3.eth.estimateGas({
-                //     "from":this.curOwner.address,
-                //     "to":trade.from,
-                //     "data":platOnData
-                // },(err,data)=>{
-                //     this.gasLoading = false;
-                //     console.log('估算gas-->',err,data);
-                //     if(err){
-                //         this.$message.error(this.$t('wallet.estimateFailed'));
-                //         throw err;
-                //     }
-                //     this.gas = data;
-                //     contractService.web3.eth.getGasPrice((error,result)=>{
-                //         if(error) throw err;
-                //         this.gasPrice = result;
-                //         this.price = mathService.mul(this.gas,mathService.toNonExponential(contractService.web3.fromWei(result,"ether")));
-                //         cb();
-                //     });
-                // })
             },
             closeShowConfirmModal(){
                 if(this.submitting) return;
@@ -591,6 +577,9 @@
                 clearInterval(this.tradeListTimer);
             }
         },
+        components:{
+            pageLoading
+        }
     }
 </script>
 
@@ -623,6 +612,7 @@
                 box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
                 background: #fff;
                 cursor:pointer;
+                border-radius:4px;
                 .lt{
                     padding-top:9px;
                     width:40px;
@@ -691,7 +681,7 @@
                     .state{
                         width:130px;
                         .el-button{
-                            width:50px;
+                            width:56px;
                             height:28px;
                             line-height:28px;
                         }

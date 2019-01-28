@@ -2,25 +2,25 @@
     <div class="node-apply format-style">
         <div class="card node-apply-content">
             <div v-show="step==1">
-                <el-form :model="nodeForm" ref="nodeForm" :rules="nodeFormRules" class="step" >
+                <el-form :model="nodeForm" ref="nodeForm" :rules="nodeFormRules" class="step form-container" >
                     <p style="display: flex">
                         <span class="label-txt-line" style="line-height:40px">{{$t('application.account')}}</span>
                         <el-form-item prop="name" class="label-item">
                             <el-input class="large-size" v-model.trim="nodeForm.name" :placeholder="$t('application.accountRule')"></el-input>
                         </el-form-item>
                     </p>
-                    <p class="title marT10">{{$t('application.nodeInfo')}}</p>
+                    <p class="title">{{$t('application.nodeInfo')}}</p>
                     <div class="columns">
                         <div>
                             <span class="label-txt-block">{{$t('application.nodeUrl2')}}</span>
                             <el-form-item prop="host">
-                                <el-input class="marT10" v-model.trim="nodeForm.host"></el-input>
+                                <el-input class="" v-model.trim="nodeForm.host"></el-input>
                             </el-form-item>
                         </div>
                         <div>
                             <span class="label-txt-block">{{$t('application.nodePublicKeyID')}}</span>
                             <el-form-item prop="publicKey">
-                                <el-input class="marT10" v-model.trim="nodeForm.publicKey"></el-input>
+                                <el-input class="" v-model.trim="nodeForm.publicKey"></el-input>
                             </el-form-item>
                         </div>
                     </div>
@@ -34,7 +34,7 @@
                     <p class="title">{{$t('application.profitPlan')}}</p>
                     <div class="columns">
                         <div>
-                            <span class="label-txt-block">{{$t('application.nodeWallet2')}}</span>
+                            <span class="label-txt-block">{{$t('application.nodeWallet2')}}<span class="font10" :style="{letterSpacing:lang=='en'?'0px':'0.43px'}">{{$t('application.nodeWallet2Txt')}}</span></span>
                             <el-form-item prop="admin">
                                 <el-select v-model="nodeForm.Owner">
                                     <el-option v-for="wallet in allWallets"
@@ -44,7 +44,7 @@
                             </el-form-item>
                         </div>
                         <div>
-                            <span :class="[lang=='en'?'label-txt-en':'','label-txt-block']">{{$t('application.ratio2')}}</span>
+                            <span class="label-txt-block">{{$t('application.ratio2')}}<span class="font10" :style="{letterSpacing:lang=='en'?'0px':'0.43px'}">{{$t('application.ratio2Txt')}}</span></span>
                             <el-form-item prop="bonus" class="bonus-input">
                                 <el-input v-model.trim="nodeForm.bonus" type="number" @input.native="checkPerc($event)" class="bonus-input"></el-input>
                                 <span>%</span>
@@ -67,8 +67,8 @@
                         </div>
                     </div>
                 </el-form>
-                <p class="btn-box-1" v-if="step==1">
-                    <el-button class="cancel" @click="back">{{$t('form.cancel')}}</el-button>
+                <p class="btn-box-1 pos" v-if="step==1">
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="back">{{$t('form.cancel')}}</el-button>
                     <el-button type="primary" @click="next">{{$t('form.next')}}</el-button>
                 </p>
             </div>
@@ -87,7 +87,7 @@
                         </el-input>
                         <span class="send-txt">{{$t("wallet.wantTo")}} <span class="send-val"><span class="bold">{{payForm.value || 0}}</span>&nbsp;Energon</span></span>
                         <p class="danger" v-if="belowMinimum">{{$t('application.notBeBelow')}}{{min}} Energon</p>
-                        <p class="gray">{{$t('application.numberTip')}}</p>
+                        <p class="gray">{{$t('application.numberTip1')}}{{min}} Energon{{$t('application.numberTip2')}}</p>
                         <p class="d-p"><span class="label-txt" :style="{width:lang=='en'?'153px':'88px'}">{{$t('application.maximumAmount')}}</span><span class="value-txt"><span class="bold">{{depositList.length>0?depositList[0]:(payForm.value || 0)}}</span>&nbsp;Energon</span></p>
                         <p class="d-p"><span class="label-txt" :style="{width:lang=='en'?'153px':'88px'}">{{$t('application.minimumAmount')}}</span><span class="value-txt"><span class="bold">{{depositList.length>0?depositList[depositList.length-1]:(payForm.value || 0)}}</span>&nbsp;Energon</span></p>
                         <p class="d-p"><span class="label-txt" :style="{width:lang=='en'?'153px':'88px'}">{{$t('application.expectedRanking')}}</span><span class="value-txt">{{(ranking!=='-'&&ranking<200)?ranking:$t('application.after200')}}</span></p>
@@ -97,10 +97,10 @@
                             <fee-slider @sel="selFee" :estimateGas="gas"></fee-slider>
                         </span>
                     </el-form-item>
-                    <p class="btn-box">
+                    <p class="btn-box pos">
                         <span>支付：{{add(payForm.value-0,payForm.fee-0)}} Energon</span>
                         <span class="btns">
-                            <el-button class="cancel" @click="back">{{$t('form.cancel')}}</el-button>
+                            <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="back">{{$t('form.cancel')}}</el-button>
                             <el-button type="primary" @click="prev">{{$t('form.back')}}</el-button>
                             <el-button type="primary" :disabled="!payForm.value" @click="submit">{{$t('application.submitApply')}}</el-button>
                         </span>
@@ -124,8 +124,8 @@
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="send" type="primary" :disabled="handleLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :disabled="handleLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -456,7 +456,8 @@
                     this.$message.warning(this.$t('application.cannotSubmit'));
                 }else if(this.payForm.value<this.min){
                     this.belowMinimum = true;
-                }else if(this.depositList.length>0 && (this.payForm.value<this.depositList[this.depositList.length-1]*1.1)){
+                }else if(this.depositList.length>199 && (this.payForm.value<this.depositList[this.depositList.length-1]*1.1)){
+				    //不能低于第200名（即候选池最后一名）的质押金的110%
                     this.$message.warning(this.$t('application.ApCannotBeLess'))
                 }else{
                     contractService.web3.eth.getBalance(this.fromWallet.address,(err,data)=>{
@@ -581,6 +582,13 @@
 </script>
 
 <style lang="less" scoped>
+    .form-container{
+        width:740px;
+    }
+    .font10{
+        font-size:10px;
+        color: #120000;
+    }
     .marT10{
         margin-top:10px;
     }
@@ -625,7 +633,7 @@
             span{
                 position:absolute;
                 right:10px;
-                top:0;
+                top:3px;
                 color: #9EABBE;
             }
             input{
@@ -726,6 +734,11 @@
             vertical-align: middle;
             width:30px;
         }
+    }
+    .pos{
+        position:fixed;
+        bottom:17px;
+        width:calc(~"100% - 240px")
     }
 
 </style>

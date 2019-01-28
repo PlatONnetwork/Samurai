@@ -15,11 +15,11 @@
         <p>
             <span class="label">{{$t("trade.tradeStatus")}}</span>
             <span v-if="trade.hash">
-                <span v-if="trade.isCompolete" class="success">{{$t("trade.finished")}}</span>
-                <span v-else-if="trade.isFail || trade.state==2" class="danger">{{$t("settings.fail")}}</span>
-                <span v-else class="pending">{{$t("trade.pending")}}</span>
+                <span v-if="trade.isCompolete" class="success bold">{{$t("trade.finished")}}</span>
+                <span v-else-if="trade.isFail || trade.state==2" class="danger bold">{{$t("settings.fail")}}</span>
+                <span v-else class="pending bold">{{$t("trade.pending")}}</span>
             </span>
-            <span v-else :class="trade.executed==0?'danger':''">
+            <span v-else :class="[trade.executed==0?'danger':'','bold']">
                 {{trade.executed==1?$t("trade.finished"):$t("settings.fail")}}
             </span>
         </p>
@@ -89,6 +89,15 @@
                             delete data.to;
                         }
                         Object.assign(this.trade,data);
+                        if(data.status && data.status=='0x0'){
+                            this.trade.isCompolete = false;
+                        }
+                        if(data.blockNumber){
+                            contractService.web3.eth.getBlock(data.blockNumber,(err1,blockData)=>{
+                                if(err1 || !blockData) return;
+                                this.trade.tradeTime = blockData.timestamp;
+                            })
+                        }
                         if(this.trade && this.trade.gasUsed){
                             contractService.web3.eth.getTransaction(this.trade.hash,(error,txData)=>{
                                 if(err) return;

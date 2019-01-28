@@ -23,8 +23,8 @@
                 </el-form-item>
             </el-form>
             <p class="btn-box">
-                <el-button class="cancel" @click="goBack">{{$t("form.cancel")}}</el-button>
-                <el-button class="addBtn" type="primary" @click="add()">{{$t("contracts.watchContract.add")}}</el-button>
+                <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="goBack">{{$t("form.cancel")}}</el-button>
+                <el-button :class="[lang=='en'?'':'letterSpace','addBtn']" type="primary" @click="add()">{{$t("contracts.watchContract.add")}}</el-button>
             </p>
         </div>
     </div>
@@ -59,7 +59,7 @@
             }
         },
         computed: {
-            ...mapGetters(['network','contractListGetter']),
+            ...mapGetters(['network','contractListGetter','lang']),
             rules(){
                 return{
                     name:{required: true, message: this.$t('contracts.contNameEmpty'), trigger: 'blur,change'},

@@ -55,6 +55,9 @@ export const appAction = {
                             }else{
                                 item.Extra.nodePortrait = Number(item.Extra.nodePortrait)<10?'0'+Number(item.Extra.nodePortrait):Number(item.Extra.nodePortrait);
                             }
+                        }else{
+                            let rdNumber = Math.floor(Math.random()*(42-1+1)+1);
+                            item.Extra.nodePortrait = rdNumber<10?'0'+rdNumber:rdNumber;
                         }
                         item.ranking = index+1;
                     });

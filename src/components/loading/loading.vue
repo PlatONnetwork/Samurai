@@ -46,7 +46,7 @@
         height: 100%;
         border-radius: 4px;
         background: #FFFFFF;
-        -webkit-animation: load 1s ease infinite;
+        -webkit-animation: load 0.75s ease infinite;
     }
     @-webkit-keyframes load{
         0% {

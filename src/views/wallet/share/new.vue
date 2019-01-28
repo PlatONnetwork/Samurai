@@ -11,7 +11,7 @@
                         </el-form-item>
                         <el-form-item prop="admin" :label="$t('wallet.walletOwner')">
                             <el-select v-model="newWallet.admin" @change="changeAdmin">
-                                <el-option v-for="ord in ordWalletList" :value="ord.address" :label="(ord.account.length>16?(ord.account.slice(0,16)+'...'):ord.account)+'-'+ord.balance+'Energon'"></el-option>
+                                <el-option v-for="ord in ordWalletList" :value="ord.address" :label="(ord.account.length>16?(ord.account.slice(0,16)+'...'):ord.account)+'-'+ord.balance+' Energon'"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item >
@@ -19,8 +19,8 @@
                                 <p class="label">{{$t('wallet.sharedOwners')}}({{newWallet.owners.length}})</p>
                                 <div v-for="(owner,idx) in newWallet.owners">
                                     <p class="flex">
-                                        <span class="account"> <el-input v-model.trim="owner.account" :disabled="idx==0" @change="testOwners"></el-input></span>
-                                        <span class="address"> <el-input v-model.trim="owner.address" :disabled="idx==0" @change="testOwners"></el-input></span>
+                                        <span class="account"> <el-input v-model.trim="owner.account" :disabled="idx==0" @change="testOwners" :placeholder="$t('wallet.ownerAccount')"></el-input></span>
+                                        <span class="address"> <el-input v-model.trim="owner.address" :disabled="idx==0" @change="testOwners" :placeholder="$t('wallet.ownerAddress')"></el-input></span>
                                         <span class="icon-btn del-btn" @click="addOwner(1,idx)" v-if="idx>1"></span>
                                     </p>
                                     <p v-if="tipIndex.indexOf(idx)!==-1" class="tip">{{tipTxt[idx]}}</p>
@@ -31,7 +31,7 @@
                     </el-form>
                 </div>
                 <p class="btn-box">
-                    <el-button class="cancel" @click="goBack">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="goBack">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary" @click="next('newWallet')">{{$t('form.next')}}</el-button>
                 </p>
             </div>
@@ -60,31 +60,31 @@
                 </div>
             </div>
             <p class="btn-box" v-if="active==2">
-                <el-button class="cancel" @click="backStep">{{$t('form.back')}}</el-button>
-                <el-button type="primary" @click="create('newWallet')" class="letter-s">{{$t('form.create')}}</el-button>
+                <el-button @click="backStep" class="cancel">{{$t('form.back')}}</el-button>
+                <el-button :class="[lang=='en'?'':'letterSpace']" type="primary" @click="create('newWallet')">{{$t('form.create')}}</el-button>
             </p>
         </div>
 
         <div class="modal create-confirm" v-if="createConfirm">
             <div class="modal-main">
                 <div class="modal-title">
-                    {{$t('wallet.deployContract')}}
+                    {{$t('wallet.createSharedWallet')}}
                     <span class="modal-close" @click="createConfirm=false"></span>
                 </div>
                 <div class="modal-content">
                     <div class="content">
-                        <p>{{$t('wallet.amount')}}<span class="txt">0Energon</span></p>
+                        <p>{{$t('wallet.amount')}}<span class="txt">0 Energon</span></p>
                         <p>From <span class="txt">{{newWallet.owners[0]?newWallet.owners[0].address:''}}</span></p>
                         <p>To <span class="txt">{{$t('trade.contractCreation2')}}</span></p>
-                        <p>{{$t('wallet.fee')}} <span class="txt">{{price}}Energon</span></p>
+                        <p>{{$t('wallet.fee')}} <span class="txt">{{price}} Energon</span></p>
                     </div>
                     <p class="psw-box">
-                        <el-input v-model.trim="psw" :disabled="createLoading" :placeholder="$t('wallet.input')+newWallet.owners[0].account+$t('wallet.walletPsw')" type="password"></el-input>
+                        <el-input v-model.trim="psw" :disabled="createLoading" :placeholder="$t('wallet.input')+newWallet.owners[0].account+' '+$t('wallet.walletPsw')" type="password"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="createConfirm=false" :disabled="createLoading">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="confirmCreate" type="primary" :loading="createLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="createConfirm=false" :disabled="createLoading">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace']" @click="confirmCreate" type="primary" :loading="createLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -151,7 +151,7 @@
 
         },
         computed: {
-            ...mapGetters(['network']),
+            ...mapGetters(['network','lang']),
             newRules(){
                 return{
                     account: [
@@ -433,9 +433,6 @@
         font-size: 12px;
         color: #24272B;
     }
-    .letter-s{
-        letter-spacing: 3px;
-    }
     .box{
         text-align: center;
     }
@@ -629,12 +626,12 @@
                         margin-bottom:9px;
                         .txt{
                             float:right;
-                            color: #000000;
+                            font-weight:600;
                         }
                     }
                 }
                 .psw-box{
-                    margin:12px 0 75px;
+                    margin:30px 0 82px;
                     padding:0 8px;
                     .el-input{
                         width:100%;
