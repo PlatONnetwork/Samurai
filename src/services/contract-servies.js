@@ -60,11 +60,12 @@ class ContractServies {
 		this.isConnected = false; //连接状态
         this.calcContract = '';
         this.appContractAddress='0x1000000000000000000000000000000000000001';
+        this.voteContractAddress='0x1000000000000000000000000000000000000002';
 	}
 
     /**
      * 根据不同场景获取ABI
-     * @param type  1,共享钱包合约
+     * @param type  1,共享钱包合约;2,候选人合约;3,投票合约
      */
 	getABI(type){
         let filePath=this.getFilePath();
@@ -75,6 +76,9 @@ class ContractServies {
                 break;
             case 2:
                 return JSON.parse(fs.readFileSync(`${filePath}/candidateConstract.json`,'utf8'));
+                break;
+            case 3:
+                return JSON.parse(fs.readFileSync(`${filePath}/ticketContract.json`,'utf8'));
                 break;
         }
     }
@@ -295,6 +299,7 @@ class ContractServies {
             console.log('--platONCall start--', contract);
             if (!contract) throw new Error(`contract 不能为空`);
             const data = contract[funName].getPlatONData(...params);
+            console.log('data--->',data);
             // console.log({
             //     from: _from,
             //     to: contractAddress,
@@ -455,8 +460,6 @@ class ContractServies {
         })
     }
 
-
-
     getTransactionByHash(ABI,contractAddress,hash,fn){
         const MyContract = this.web3.eth.contract(ABI);
         const myContractInstance = MyContract.at(contractAddress);
@@ -481,7 +484,7 @@ class ContractServies {
     getFilePath=() =>{
         // return "C:\\Users\\yann_liang\\AppData\\Local\\Programs\\console\\platon_exe"
         const app = require('electron').remote.app;
-        return process.env.NODE_ENV === 'development' ? 'src/services/demo1' : path.join(app.getPath('exe'), '..', '/demo1');
+        return process.env.NODE_ENV === 'development' ? 'src/services/buildInContract' : path.join(app.getPath('exe'), '..', '/buildInContract');
     }
 
 

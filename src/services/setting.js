@@ -55,8 +55,6 @@ class Settings {
                         fs.writeFileSync(`${this.userDataPath}net_test/init`,dataExit?1:0);
                     }
                     this.mkf(this.userDataPath+'net_test/data',()=>{
-                        // let cbftJSON = require("../../static/json/cbft.json");
-                        // fs.writeFileSync(`${this.userDataPath}net_test/data/cbft.json`,JSON.stringify(cbftJSON));
                         let configJSON = require("../../static/json/platon");
                         fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON));
                         let staticNodesJSON = require("../../static/json/static-nodes.json");
@@ -67,20 +65,30 @@ class Settings {
                     this.mkf(this.userDataPath+'net_custom/chain');
                     this.mkf(this.userDataPath+'net_custom/keystore')
                 });
+
+                //普通钱包
                 if(!fs.existsSync(`${this.userDataPath}walletInfo.json`)){
                     this.saveUserData('walletInfo.json',JSON.stringify({}))
                 }
+                //联名钱包
                 if(!fs.existsSync(`${this.userDataPath}sharedWalletInfo.json`)){
                     this.saveUserData('sharedWalletInfo.json',JSON.stringify({}))
                 }
+                //合约列表
                 if(!fs.existsSync(`${this.userDataPath}contractList.json`)){
                     this.saveUserData('contractList.json',JSON.stringify({}))
                 }
+                //节点竞选申请最近一条记录
                 if(!fs.existsSync(`${this.userDataPath}nodeApplyList.json`)){
                     this.saveUserData('nodeApplyList.json',JSON.stringify({}))
                 }
+                //退出竞选最近一条记录
                 if(!fs.existsSync(`${this.userDataPath}nodeQuitList.json`)){
                     this.saveUserData('nodeQuitList.json',JSON.stringify({}))
+                }
+                //投票记录
+                if(!fs.existsSync(`${this.userDataPath}voteList.json`)){
+                    this.saveUserData('voteList.json',JSON.stringify({}))
                 }
                 resolve();
             }

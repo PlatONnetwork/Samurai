@@ -616,6 +616,7 @@
                 .lt{
                     padding-top:9px;
                     width:40px;
+                    min-width: 40px;//#bug:15645
                     text-align: center;
                     background: #ECEFF6;
                     border-radius: 4px 0 0 4px;

@@ -161,7 +161,7 @@
                     })
                 }else if(localType=='main' || localType=='test'){
                     //todo  后续注释掉
-                    // contractService.setProvider('http://192.168.9.76:6788','http').then(()=>{
+                    // contractService.setProvider('http://10.10.8.209:6789','http').then(()=>{
                     // // contractService.setProvider('http://127.0.0.1:7793','http').then(()=>{
                     //     this.loadCompolete = true;
                     //     this.updateState(2);

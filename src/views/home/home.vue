@@ -12,13 +12,14 @@
         <div class="right">
             <v-header>
                 <span v-if="headR" class="felx-box">
-                    <span class="header icon-back" v-if="flag=== 'child'" style="-webkit-app-region: no-drag;cursor: pointer;" @click="goBack"></span>
+                    <span class="header icon-back" v-if="flag==='child'" style="-webkit-app-region: no-drag;cursor: pointer;" @click="goBack"></span>
                     <span v-if="path=='/o-wallet-accept'" class="accept">{{title | PathName}}-</span>
                     <sel-self :optionVs="WalletListGetter" :defaultSel="curWallet" style="-webkit-app-region: no-drag"  @back="selAWallet"></sel-self>
                 </span>
                 <span v-else>
                     <span class="header icon-back" v-if="flag=== 'child'" style="-webkit-app-region: no-drag;cursor: pointer;" @click="goBack"></span>
                     <span class="header dark-black">{{title | PathName}}</span>
+                    <span v-if="path=='/vote-detail'" class="accept">-{{nodeName}}</span>
                 </span>
             </v-header>
             <router-view></router-view>
@@ -53,7 +54,7 @@
             }
         },
         computed: {
-            ...mapGetters(['network','lang','WalletListGetter','curWallet','chainName','nodeState'])
+            ...mapGetters(['network','lang','WalletListGetter','curWallet','chainName','nodeState','nodeName'])
         },
         watch: {
           $route: function (n, o) {
@@ -87,8 +88,7 @@
                     nodeManager.startNode(chainName,localPort);
                 }else if(localType=='main' || localType=='test'){
                     //todo  后续注释掉
-                    // contractService.setProvider('http://192.168.9.76:6788','http').then(()=>{
-                    // // contractService.setProvider('http://10.10.8.242:6789','http').then(()=>{
+                    // contractService.setProvider('http://10.10.8.209:6789','http').then(()=>{
                     //     this.updateState(2);
                     //     this.updateNetSetting({
                     //         initialUse:false,
