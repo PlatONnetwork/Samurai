@@ -26,8 +26,10 @@
                         <el-button class="append" slot="append" @click="sendAll">ALL</el-button>
                     </el-input>
                     <span class="wantTo">{{$t("wallet.wantTo")}}
-                        <span class="EnergonCount">{{sendTranscation.value || 0}}</span>
-                        Energon
+                        <span class="black">
+                            <span class="EnergonCount">{{sendTranscation.value || 0}}</span>
+                            Energon
+                        </span>
                     </span>
                 </el-form-item>
                 <el-form-item :label="$t('wallet.selectFee')">
@@ -37,8 +39,8 @@
                 </el-form-item>
             </el-form>
             <p class="total">
-                <span class="bold">{{$t("wallet.total")}}：{{add(sendTranscation.value-0,sendTranscation.gas-0)}}&nbsp;Energon</span>
-                <el-button type="primary" @click="confirm()" :disabled="gasLoading || !sendTranscation.to || !sendTranscation.value">{{$t("wallet.send")}}</el-button>
+                <span class="bold">{{$t("wallet.total")}}：<span class="font16">{{add(sendTranscation.value-0,sendTranscation.gas-0)}}</span>&nbsp;Energon</span>
+                <el-button :class="[lang=='en'?'':'letterSpace']" type="primary" @click="confirm()" :disabled="gasLoading || !sendTranscation.to || !sendTranscation.value">{{$t("wallet.send")}}</el-button>
             </p>
         </div>
 
@@ -56,7 +58,7 @@
                            @click="selOwner(wallet)">
                            <div class="lt" :class="wallet.icon"></div>
                            <div class="rt">
-                               <p class="marB">{{wallet.account}}</p>
+                               <p class="marB wallet-name">{{wallet.account}}</p>
                                <p> {{wallet.balance}}<span class="txt"> Energon</span></p>
                            </div>
                        </li>
@@ -79,12 +81,12 @@
                         <p class="fee">{{$t("wallet.fee")}}<span class="txt"><span class="bold">{{sendTranscation.gas}}</span>&nbsp;Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input :disabled="sendLoading" :placeholder="$t('wallet.input')+(walletType==1?fromW.account:(owner.account?owner.account:''))+' '+$t('wallet.walletPsw')" type="password" v-model.trim="sendTranscation.psw"></el-input>
+                        <el-input class="input-psw" :disabled="sendLoading" :placeholder="$t('wallet.input')+(walletType==1?fromW.account:(owner.account?owner.account:''))+' '+$t('wallet.walletPsw')" type="password" v-model.trim="sendTranscation.psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button @click="showConfirm=false" :disabled="sendLoading">{{$t("form.cancel")}}</el-button>
-                    <el-button class="subBtn" @click="send" type="primary" :loading="sendLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace']" @click="showConfirm=false" :disabled="sendLoading">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','subBtn']" @click="send" type="primary" :loading="sendLoading">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -136,7 +138,7 @@
 
         },
         computed:{
-            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','walletType'])
+            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','walletType','lang'])
         },
         created(){
             this.init();
@@ -236,6 +238,7 @@
             sendAll(){
                 contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
                     let balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                    console.log('sendAll',balance,this.walletType,data,balance)
                     if(this.walletType==1){
                         this.sendTranscation.value = mathService.sub(balance,this.sendTranscation.gas);
                     }else{
@@ -418,6 +421,9 @@
 </script>
 
 <style lang="less" scoped>
+    .font16{
+        font-size:16px;
+    }
     .send-transcation{
         height: calc(~"100% - 90px");
     }
@@ -454,15 +460,16 @@
         }
         .total{
             position: absolute;
-            bottom: 50px;
-            width:740px;
+            bottom: 21px;
+            width:calc(~"100% - 240px");
             height: 60px;
             line-height:60px;
             border-top:solid 1px #D3D8E1;
+            color:#24272b;
             .el-button{
                 position:absolute;
                 right:20px;
-                top: 18px;
+                top: 14px;
                 width: 79px;
                 height: 32px;
                 padding: 0;
@@ -537,6 +544,9 @@
     .wantTo{
         line-height: normal;
         padding-left: 10px;
+        .black{
+            color:#22272C;
+        }
     }
 </style>
 <style lang="less">

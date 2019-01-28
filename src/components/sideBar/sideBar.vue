@@ -1,9 +1,11 @@
 <template>
     <div class="side-bar">
        <el-menu class="menu" default-active="1" @select="handleSelect">
-               <el-menu-item v-for="(item, index) in menu" :style="{color: item.icon? 'inherint': '#fff',opacity:item.parent?'1':'0.6'}"
-                        @click.native="changeRoute(item.path)" :index="index + ''" :key='index' disabled >
-                   <i v-if="item.icon" class="iconfont" :class="item.icon"></i> {{item.name}}
+               <el-menu-item v-for="(item, index) in menu"
+                             :key='index'
+                             :style="{color: item.icon? 'inherint': '#fff',opacity:item.parent?'1':'0.6',pointerEvents:item.parent?'none':'auto'}"
+                              @click.native="changeRoute(item.path)" :index="index + ''">
+                              <i v-if="item.icon" class="iconfont" :class="item.icon"></i> {{item.name}}
                </el-menu-item>
        </el-menu>
     </div>

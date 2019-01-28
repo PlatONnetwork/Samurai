@@ -72,7 +72,7 @@
                                     </p>
                                     <p>
                                         <span class="txt">{{unboundStake}}</span> Energon
-                                        <span :class="[!!unboundStake?'':'gray','btn']" @click="handleWidthdraw(1)">{{$t('application.redeem')}}</span>
+                                        <span :class="[!!unboundStake&&!pendingRedeemStake?'':'gray','btn']" @click="handleWidthdraw(1)">{{$t('application.redeem')}}</span>
                                     </p>
                                 </li>
                             </ul>
@@ -153,8 +153,8 @@
                     <p>{{node.Owner}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="cancel" @click="candidateWithdrawModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button type="primary" @click="handleWidthdraw(2)">{{$t('form.sure')}}</el-button>
+                    <el-button type="cancel" :class="[lang=='zh-cn'?'letterSpace':'']" @click="candidateWithdrawModal=false">{{$t('form.cancel')}}</el-button>
+                    <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']"  @click="handleWidthdraw(2)">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -178,8 +178,8 @@
                     <p class="danger" v-if="pswNull">{{$t('form.nonPsw')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="cancel" @click="withdrawPswModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button type="primary" :loading="handleLoading" @click="handleCandidateWithdraw">{{$t('form.sure')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="cancel" @click="withdrawPswModal=false">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" :loading="handleLoading" @click="handleCandidateWithdraw">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -196,8 +196,8 @@
                     <p class="danger">{{$t('application.warnText')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="cancel" @click="quitModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button type="primary" @click="handleWidthdraw(3)">{{$t('form.submit')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="cancel" @click="quitModal=false">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="handleWidthdraw(3)">{{$t('form.submit')}}</el-button>
                 </div>
             </div>
         </div>
@@ -241,11 +241,12 @@
                 getMyNodeTimer:null,
                 quitPending:false,
                 depositApplyProcess:0,
-                city:null
+                city:null,
+                pendingRedeemStake:0
             }
         },
         computed: {
-            ...mapGetters(['contractAddress']),
+            ...mapGetters(['contractAddress','lang']),
             APIConfig:function(){
                 var APIConfig = require('@/config/API-config');
                 return APIConfig.default;
@@ -273,6 +274,7 @@
                                     if(!lastDeposit.quitStake){
                                         this.quitPending = false;
                                         clearInterval(this.pendingTradeTimer);
+                                        console.log('this.node--1-->',this.node);
                                         this.candidateWithdrawInfos();
                                         this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                                             this.keyObj  = keyObj
@@ -301,6 +303,7 @@
                                     this.nodeLoading = false;
                                     this.node = n;
                                     this.nodeState = 2;
+                                    console.log('this.node--2-->',this.node);
                                     this.candidateWithdrawInfos();
                                     this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                                         this.keyObj  = keyObj
@@ -308,6 +311,7 @@
                                 }else{   //节点正常
                                    clearInterval(this.getMyNodeTimer);
                                    curNodeApply = n;
+                                   this.node = curNodeApply;
                                     this.getMyNodeDetail(curNodeApply);
                                     this.getRecuceDetail();
                                     if(this.pendingTradeTimer){
@@ -338,16 +342,19 @@
                 let _this = this;
                 function _getRecuceDetail(){
                     _this.getLastDeposit().then((lastDeposit)=>{
-                        console.log('lastDeposit-----2-',lastDeposit,!lastDeposit.reduceStake);
+                        console.log('lastDeposit-----2-',lastDeposit,!lastDeposit.reduceStake && !lastDeposit.redeemStake);
                         if(!lastDeposit.reduceStake && !lastDeposit.redeemStake){
                             _this.pendingReduce = 0;
+                            _this.pendingRedeemStake = 0;
                             _this.getMyNodeDetail(_this.node);
+                            console.log('this.node--3-->',_this.node);
                             _this.candidateWithdrawInfos();
                             clearInterval(_this.getRecuceDetailTimer);
                             _this.getRecuceDetailTimer = null;
                         }else{
                             _this.pendingReduce = lastDeposit.reduceStake?lastDeposit.reduceStake.value:0;
                             _this.pendingRedeemStake = lastDeposit.redeemStake?lastDeposit.redeemStake.value:0;
+                            console.log('this.node--4-->',_this.node);
                             _this.candidateWithdrawInfos();
                         }
                     })
@@ -504,7 +511,7 @@
                 this.psw='';
                 switch(num){
                     case 1:
-                        if(!this.unboundStake) return;
+                        if(!this.unboundStake || this.pendingRedeemStake) return;
                         //提取质押金确认弹窗
                         this.getGas(1).then(()=>{
                             this.price = contractService.web3.fromWei(this.gasPrice, "ether")*this.gas;

@@ -3,7 +3,7 @@
         <div class="wallet-header">
             <div class="wallet-info">
                 <span>{{$t('wallet.totalBalance')}}</span>
-                <span class="ml-30" v-show="showBalance==1">{{totalBalance}}&nbsp;Energon</span>
+                <span class="ml-30" v-show="showBalance==1"> <span class="bold">{{totalBalance}}</span>&nbsp;Energon</span>
                 <span class="ml-30" v-show="showBalance==0">***&nbsp;Energon</span>
                 <span :class="showBalance==1?'icon-hide':'icon-eye'" @click="toggleIcon"></span>
             </div>
@@ -17,7 +17,7 @@
             </div>
         </div>
         <div class="card wallet-content" :class="walletList.length>0?'':'non-wallet'">
-            <div :class="['wallet-item',curIndex == 2?'wallet-share':'']"
+            <div :class="['wallet-item',curIndex == 2?'wallet-share':'',(!item.address || item.state==0)?'unabled':'']"
                  v-for="(item,index) in walletList"
                  :key="item.address"
                  @click="goToDetail(item)">
@@ -36,10 +36,10 @@
                     <span :style="{width:item.processWidth+'%'}"></span>
                 </p>
             </div>
-            <div :class="[lang=='en'?'font10':'','add-bottom']">
-                <el-button class="f12 w-80" @click="newWallet">{{$t('wallet.createWallet')}}</el-button>
-                <el-button v-if="curIndex==1" class="f12 w-80 ml-40" @click="importWallet" type="primary">{{$t('wallet.importW')}}</el-button>
-                <el-button v-else class="f12 w-80 ml-40" @click="joinWallet" type="primary">{{$t('wallet.addShareWallet')}}</el-button>
+            <div class="add-bottom">
+                <el-button @click="newWallet">{{$t('wallet.createWallet')}}</el-button>
+                <el-button v-if="curIndex==1" class=" ml-40" @click="importWallet" type="primary">{{$t('wallet.importW')}}</el-button>
+                <el-button v-else class=" ml-40" @click="joinWallet" type="primary">{{$t('wallet.addShareWallet')}}</el-button>
             </div>
         </div>
     </div>
@@ -79,8 +79,8 @@
                 this.WalletListAction().then(()=>{
                     this.walletList = this.WalletListGetter;
                     if(this.walletList){
-                        this.getBalance();
                         this.getTotalBalance();
+                        this.getBalance();
                     }
                     clearInterval(this.balanceTasksTimer);
                     this.balanceTasksTimer = setInterval(this.getBalance,5*1000);
@@ -307,7 +307,6 @@
                  }
                 .info{
                     width: 70%;
-                    cursor: pointer;
                     p{
                         width: 94%;
                         margin-top: 14px;
@@ -353,6 +352,11 @@
             }
             .wallet-share{
                 background: url("./images/icon_Shared.svg") no-repeat left top;
+                cursor:pointer;
+            }
+            .unabled{
+                background-color: rgba(235,239,247,0.50);
+                cursor:default;
             }
             .creating{
                 background: url("./images/icon_Shared_creating.svg") no-repeat left top rgba(235,239,247,0.50);
@@ -377,9 +381,6 @@
                 text-indent: 20px;
                 background:url("./images/icon_add.svg") no-repeat left center;
             }
-        }
-        .w-80{
-            width: 77px;
         }
         .ml-30{
             margin-left: 30px;
@@ -445,6 +446,10 @@
          }
         .ml-40{
             margin-left:142px;
+        }
+        .el-button{
+            width:auto;
+            padding:0 15px;
         }
     }
 </style>

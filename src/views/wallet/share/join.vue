@@ -10,8 +10,8 @@
               </el-form-item>
           </el-form>
           <p class="btn-box">
-              <el-button class="cancel" @click="goBack">{{$t("form.cancel")}}</el-button>
-              <el-button class="add" type="primary" @click="add()">{{$t('wallet.addShare')}}</el-button>
+              <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="goBack">{{$t("form.cancel")}}</el-button>
+              <el-button :class="[lang=='en'?'':'letterSpace','add']" type="primary" @click="add()">{{$t('wallet.addShare')}}</el-button>
           </p>
       </div>
     </div>
@@ -43,7 +43,7 @@
 
         },
         computed: {
-            ...mapGetters(['network']),
+            ...mapGetters(['network','lang']),
             rules(){
                 return{
                     account: [

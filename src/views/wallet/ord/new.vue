@@ -18,8 +18,8 @@
                             <el-input type="password" v-model.trim="newWallet.passwordConfirm" :placeholder="$t('wallet.repeatPsw')"></el-input>
                         </el-form-item>
                         <p class="btn-box">
-                            <el-button class="cancel" @click="goBack">{{$t("form.cancel")}}</el-button>
-                            <el-button type="primary" style="float: right;" @click="newOWallet('newWallet')">{{$t("form.create")}}</el-button>
+                            <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="goBack">{{$t("form.cancel")}}</el-button>
+                            <el-button :class="[lang=='en'?'':'letterSpace']" type="primary" style="float: right;" @click="newOWallet('newWallet')">{{$t("form.create")}}</el-button>
                         </p>
                     </el-form>
                 </div>
@@ -47,10 +47,10 @@
                             <span class="label">{{$t("wallet.prikey")}}:</span>
                             <span class="value">{{privatekey}}</span>
                         </p>
-                        <p class="tip">{{$t("wallet.tipSaveJson")}} <el-button @click="backUp" type="primary">{{$t("wallet.downloadJson")}}</el-button> </p>
+                        <p class="tip">{{$t("wallet.tipSaveJson")}} <el-button @click="backUp" type="primary" >{{$t("wallet.downloadJson")}}</el-button> </p>
                     </div>
                     <p class="back">
-                        <el-button @click="goBack"  type="primary">{{$t("wallet.finish")}}</el-button>
+                        <el-button @click="goBack"  type="primary" :class="[lang=='en'?'':'letterSpace']">{{$t("wallet.finish")}}</el-button>
                     </p>
                 </div>
 

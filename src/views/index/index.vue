@@ -91,7 +91,7 @@
         },
         //方法
         methods: {
-            ...mapActions(['updateState','updateNetSetting','changeWindow']),
+            ...mapActions(['updateState','updateNetSetting','changeWindow','clearTotalBalance']),
             selNet(type){
                 // if(type=='main') return;
                 if(this.connectLoading) return;
@@ -224,7 +224,9 @@
         },
         //监视
         watch: {
-
+            network :function(val){
+                this.clearTotalBalance();
+            }
         },
         //组件
         components: {
@@ -437,6 +439,10 @@
             border: 1px solid #EA106E;
             border-radius: 4px;
         }
+        .enter-button{
+            font-weight:normal;
+            font-size:17px;
+        }
     }
     .min{
         display: inline-block;
@@ -471,7 +477,7 @@
             height: 100%;
             border-radius: 4px;
             background: #FFFFFF;
-            -webkit-animation: load 1s ease infinite;
+            -webkit-animation: load 0.75s ease infinite;
         }
     }
     @-webkit-keyframes load{

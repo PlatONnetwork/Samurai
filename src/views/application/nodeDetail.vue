@@ -40,37 +40,37 @@
                     <p class="sub-title">{{$t('application.nodeInfo')}}</p>
                     <p>
                         <span class="label-txt">{{$t('application.nodeUrl')}}</span>
-                        <span>{{node.Host}}:{{node.Port}}</span>
+                        <span class="bold">{{node.Host}}:{{node.Port}}</span>
                     </p>
                     <p class="candidateId-box">
                         <span class="label-txt">{{$t('application.nodePublicKeyID')}}</span>
-                        <span class="candidateId">0x{{node.CandidateId}}</span>
+                        <span class="candidateId bold">0x{{node.CandidateId}}</span>
                     </p>
                     <p>
                         <span class="label-txt">{{$t('application.nodeWallet')}}</span>
-                        <span>{{node.Owner}}</span>
+                        <span class="bold">{{node.Owner}}</span>
                     </p>
                     <p class="nodeIntro">
                         <span class="label-txt">{{$t('application.nodeIntro')}}</span>
-                        <span class="nodeIntroTxt">{{node.Extra?node.Extra.nodeDiscription:''}}</span>
+                        <span class="nodeIntroTxt bold">{{node.Extra?node.Extra.nodeDiscription:''}}</span>
                     </p>
                 </div>
                 <div class="block">
                     <p class="sub-title">{{$t('application.profitPlan')}}</p>
                     <p>
                         <span class="label-txt">{{$t('application.ratio')}}</span>
-                        <span>{{node.Fee | perc}}%</span>
+                        <span class="bold">{{node.Fee | perc}}%</span>
                     </p>
                 </div>
                 <div class="block">
                     <p class="sub-title">{{$t('application.institutionalInfo')}}</p>
                     <p>
                         <span class="label-txt">{{$t('application.orgName')}}</span>
-                        <span>{{node.Extra?node.Extra.nodeDepartment:''}}</span>
+                        <span class="bold">{{node.Extra?node.Extra.nodeDepartment:''}}</span>
                     </p>
                     <p>
                         <span class="label-txt">{{$t('application.orgNet')}}</span>
-                        <span class="net-btn" @click="openNet">{{node.officialWebsite}}</span>
+                        <span class="net-btn bold" @click="openNet">{{node.officialWebsite}}</span>
                     </p>
                 </div>
 
@@ -145,6 +145,9 @@
     .net-btn{
         color: #18C2E9;
         cursor: pointer;
+    }
+    .header{
+        border-radius:4px!important;
     }
 </style>
 

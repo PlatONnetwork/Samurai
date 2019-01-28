@@ -25,7 +25,8 @@
                 <el-form-item prop="priKey">
                     <el-input type="textarea"
                               :placeholder="$t('wallet.inputPKHint')"
-                              :autosize="{minRows: 2,maxRows:6}"
+                              :rows="4"
+                              :autosize="{minRows: 4,maxRows:6}"
                               resize="none"
                               v-model.trim="byPriKey.priKey">
                     </el-input>
@@ -46,9 +47,9 @@
                     </el-input>
                 </el-form-item>
                 <div class="ben">
-                    <el-button @click="cancel">{{$t("form.cancel")}}</el-button>
+                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary"
-                               class="fr"
+                               :class="[lang=='en'?'':'letterSpace','fr']"
                                @click="importByPriKey">{{$t("wallet.import")}}
                     </el-button>
                 </div>
@@ -89,9 +90,9 @@
                     </el-input>
                 </el-form-item>
                 <div class="ben">
-                    <el-button @click="cancel">{{$t("form.cancel")}}</el-button>
+                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary"
-                               class="fr"
+                               :class="[lang=='en'?'':'letterSpace','fr']"
                                @click="importByKeystore">
                         {{$t("wallet.import")}}
                     </el-button>
@@ -111,7 +112,8 @@
                 <el-form-item prop="assitant">
                     <el-input type="textarea"
                               :placeholder="$t('wallet.inputPhraseHint')"
-                              :autosize="{minRows: 2,maxRows:6}"
+                              :rows="4"
+                              :autosize="{minRows: 4,maxRows:6}"
                               resize="none"
                               v-model.trim="byAssitant.assitant">
                     </el-input>
@@ -132,9 +134,9 @@
                     </el-input>
                 </el-form-item>
                 <div class="ben">
-                    <el-button @click="cancel">{{$t("form.cancel")}}</el-button>
+                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary"
-                               class="fr"
+                               :class="[lang=='en'?'':'letterSpace','fr']"
                                @click="importByAssit">{{$t("wallet.import")}}
                     </el-button>
                 </div>
@@ -178,7 +180,7 @@
             }
         },
         computed: {
-            ...mapGetters(['WalletListGetter', 'network']),
+            ...mapGetters(['WalletListGetter', 'network','lang']),
             byPriKeyRule(){
                 return {
                     account:{required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
@@ -486,11 +488,9 @@
         }
         .warn{
             margin:-2px 0 10px;
-            font-size: 10px;
-            // color: #F32E25;
+            font-size: 12px;
             color: #F5A623;
             white-space: nowrap;
-            letter-spacing: 1.5px;
         }
     }
 

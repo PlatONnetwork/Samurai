@@ -53,8 +53,8 @@
                     <p class="el-form-item__error" v-if="pswNull" style="position:static">{{$t('form.nonPsw')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button @click="handleConfirm" type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.cancel')}}</el-button>
+                    <el-button @click="handleConfirm" type="primary" :class="[lang=='en'?'':'letterSpace']">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -68,7 +68,7 @@
                     <p>{{wallet.priKey}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="primary" @click="active = ''">{{$t('form.sure')}}</el-button>
+                    <el-button type="primary" @click="active = ''" :class="[lang=='en'?'':'letterSpace']">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -103,8 +103,8 @@
                     </el-form>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button class="sureBtn" @click="handleUpdate"  type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="handleCancel">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','sureBtn']" @click="handleUpdate"  type="primary">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -119,8 +119,8 @@
                     <p class="mb-10 dan">{{$t('wallet.warningTxt')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button @click="handleCancel">{{$t('form.cancel')}}</el-button>
-                    <el-button @click="copyConfirm"  type="primary">{{$t('form.sure')}}</el-button>
+                    <el-button @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.cancel')}}</el-button>
+                    <el-button @click="copyConfirm"  type="primary" :class="[lang=='en'?'':'letterSpace']">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -170,7 +170,7 @@
             }
         },
         computed: {
-            ...mapGetters(['WalletListGetter', 'network','curWallet','chainName'])
+            ...mapGetters(['WalletListGetter', 'network','curWallet','chainName','lang'])
         },
         created(){
             this.WalletListAction(this.network.type);
@@ -192,10 +192,9 @@
                             this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
                         });
                         clearInterval(window.balanceInterval);
-                        window.balanceInterval = setInterval(_this.refresh,5*1000)
+                        window.balanceInterval = setInterval(_this.refresh,5*1000);
                     }
                 }
-
             },
             refresh(){
                 contractService.web3.eth.getBalance(this.wallet.address,(err,data)=>{
@@ -491,12 +490,6 @@
 
         }
 
-    }
-    .pop{
-        cursor: pointer;
-        height: 20px;
-        line-height: 20px;
-        margin-bottom: 5px;
     }
     .mb-10{
         margin-bottom: 10px;

@@ -9,7 +9,7 @@ const nodeDetail= resolve => require(['@/views/application/nodeDetail'], resolve
 import store from '@/vuex/store';
 const application= {
     validatorNode: {
-        name: '竞选节点',
+        name: '共识节点',
         path: '/validator-node',
         component: validatorNode,
         meta: {
@@ -25,7 +25,7 @@ const application= {
         }
     },
     myNode: {
-        name: '我的竞选节点',
+        name: '我的共识节点',
         path: '/my-node',
         component: myNode,
         meta: {
@@ -33,7 +33,7 @@ const application= {
         }
     },
     nodeApply: {
-        name: '节点竞选申请',
+        name: '共识节点注册',
         path: '/node-apply',
         component: nodeApply,
         meta: {
