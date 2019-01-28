@@ -99,7 +99,9 @@
                                         return item.address==this.newWallet.address
                                     });
                                     if(arr.length>0){
-                                        this.$message.warning(this.$t('wallet.shareAlreadyExits'));
+                                        this.$message.warning({message:this.$t('wallet.shareAlreadyExits'),
+                                        customClass:'warn'
+                                        });
                                     }else{
                                         //执行添加共享钱包逻辑
                                         //查询签名数

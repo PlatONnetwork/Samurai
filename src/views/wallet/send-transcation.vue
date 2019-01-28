@@ -258,12 +258,12 @@
                     this.$message.error(this.$t('wallet.sendToSelf'));
                     return;
                 }
-                if(this.walletType==1){
-                    if(mathService.sub(mathService.add(this.sendTranscation.value-0,this.sendTranscation.gas-0),this.balance)>0){
-                        this.$message.error(this.$t('wallet.insufficientBalance'));
-                        return;
-                    }
+                // if(this.walletType==1){
+                if(mathService.sub(mathService.add(this.sendTranscation.value-0,this.sendTranscation.gas-0),this.balance)>0){
+                    this.$message.warning({message:this.$t('wallet.insufficientBalance'),customClass:'warn'});
+                    return;
                 }
+                // }
                 if(!/(0x)[0-9a-fA-F]{40}$/g.test(this.sendTranscation.to)){
                     this.$message.error(this.$t('wallet.incorrectAddress'));
                     return;

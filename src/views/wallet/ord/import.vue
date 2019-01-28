@@ -311,7 +311,7 @@
                         let dirPath = file.path.replace(name,'');
                         fsObj.ReadFile(dirPath, name, (err, data) => {
                             if(err){
-                                this.$message.error(this.$t('form.wrongPsw'))
+                                this.$message.warning({message:this.$t('form.wrongPsw'),customClass:'warn'})
                             }
                             if(data) {
                                 try{
@@ -328,7 +328,7 @@
                                             }else if(err == -2){
                                                 this.$message.error(this.$t('wallet.invalidFile'))
                                             }else{
-                                                this.$message.error(this.$t('form.wrongPsw'))
+                                                this.$message.warning({message:this.$t('form.wrongPsw'),customClass:'warn'})
                                             }
                                         }
                                     )
@@ -368,7 +368,8 @@
                             flag = false;
                             this.$message({
                                 message: this.$t('wallet.alreadyExits'),
-                                type: 'error'
+                                type: 'warning',
+                                customClass:'warn'
                             });
                             return
                         }
