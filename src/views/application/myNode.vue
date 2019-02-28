@@ -1,13 +1,13 @@
 <template>
     <div class="node-detail format-style">
         <div class="my-node-content">
-            <div class="no-result" v-if="!node || JSON.stringify(node)=='{}'">
+            <div class="no-result" v-if="loadCompolete && (!node || JSON.stringify(node)=='{}')">
                 {{$t('application.noResult')}}
                 <p class="btn-box">
                     <el-button @click="nodeQuery">{{$t('application.apply')}}</el-button>
                 </p>
             </div>
-            <div v-else style="height: 100%">
+            <div v-else-if="loadCompolete" style="height: 100%">
                 <div v-if="nodeLoading" class="no-result">
                     <p class="bold">{{$t('application.applyWaiting')}}</p>
                     <div class="node-apply">
@@ -40,7 +40,7 @@
                                 <span v-if="quitPending" class="node2">{{node.verNode?$t('application.status3'):node.ranking>100?(node.ranking>100?$t('application.status4'):$t('application.status5')):''}}</span>
                                 <span v-else-if="nodeState" :class="nodeState==1?'danger':'node2'">{{nodeState==1?$t('application.status1'):nodeState==2?$t('application.status2'):''}}</span>
                                 <span v-else-if="node.verNode" class="node1">{{$t('application.status3')}}</span>
-                                <span v-else :class="[node.ranking>100?'node3':'node2']">{{node.ranking>100?$t('application.status4'):$t('application.status5')}}</span>
+                                <span v-else :class="[nodeAllowed?'node3':'node2']">{{nodeAllowed?$t('application.status5'):$t('application.status4')}}</span>
                             </p>
                         </div>
                         <div>
@@ -67,7 +67,7 @@
                                 </li>
                                 <li class="perc-li">
                                     <p>{{$t('vote.ticketAge')}}</p>
-                                    <p><span class="txt">{{epoch}}</span></p>
+                                    <p><span class="txt">{{epoch}}</span>Bs</p>
                                 </li>
                                 <li class="atp-li">
                                     <p>
@@ -142,6 +142,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
 
         <!--质押申请确认-->
@@ -158,7 +159,7 @@
                 </div>
                 <div class="modal-btn">
                     <el-button type="cancel" :class="[lang=='zh-cn'?'letterSpace':'']" @click="candidateWithdrawModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']"  @click="handleWidthdraw(2)">{{$t('form.sure')}}</el-button>
+                    <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']"  @click="handleWidthdraw(2)">{{$t('form.comfirm')}}</el-button>
                 </div>
             </div>
         </div>
@@ -183,7 +184,7 @@
                 </div>
                 <div class="modal-btn">
                     <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="cancel" @click="withdrawPswModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" :loading="handleLoading" @click="handleCandidateWithdraw">{{$t('form.sure')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" :loading="handleLoading" @click="handleCandidateWithdraw">{{$t('form.submit')}}</el-button>
                 </div>
             </div>
         </div>
@@ -201,7 +202,7 @@
                 </div>
                 <div class="modal-btn">
                     <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="cancel" @click="quitModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="handleWidthdraw(3)">{{$t('form.submit')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="handleWidthdraw(3)">{{$t('trade.confirm')}}</el-button>
                 </div>
             </div>
         </div>
@@ -214,6 +215,7 @@
     import keyManager from '@/services/key-manager';
     import contractService from '@/services/contract-servies';
     import { setInterval, clearInterval } from 'timers';
+    import Settings from '@/services/setting';
 
     var fs = require("fs");
     export default {
@@ -248,14 +250,35 @@
                 city:null,
                 pendingRedeemStake:0,
                 ticketsCount:0,
-                epoch:0
+                epoch:0,
+                withdrawInfosTimer:null,
+                loadCompolete:false,
+                nodeAllowed:false
             }
         },
         computed: {
-            ...mapGetters(['contractAddress','lang']),
+            ...mapGetters(['contractAddress','lang','network','chainName']),
             APIConfig:function(){
                 var APIConfig = require('@/config/API-config');
                 return APIConfig.default;
+            },
+            allowed:function(){
+                let cate,filePath;
+                if(this.network.type=='custom'){
+                    cate = this.chainName;
+                }
+                if(cate){
+                    filePath = Settings.userDataPath+'net_'+this.network.type+'/chain/'+cate+'/cbft.json';
+                }else{
+                    filePath = Settings.userDataPath+'net_'+this.network.type+'/data/cbft.json';
+                }
+                let cbftJson = fs.readFileSync(`${filePath}`,'utf8');
+                try{
+                    let cbftObj = JSON.parse(cbftJson);
+                    return cbftObj.ppos.candidate.allowed
+                }catch(e){
+                    return 512
+                }
             }
         },
         mounted(){
@@ -271,8 +294,9 @@
                             let curNodeApply = quitList[0];
                             this.nodeState = 1;
                             this.node = curNodeApply;
-                            this.pendingStake = 0;
-                            this.unboundStake = 0;
+                            this.loadCompolete = true;
+                            // this.pendingStake = 0;
+                            // this.unboundStake = 0;
                             this.getTicketInfo();
                             clearInterval(this.pendingTradeTimer);
                             this.pendingTradeTimer = setInterval(()=>{
@@ -293,12 +317,13 @@
                             },1000)
                     }else{
                         this.getApplyNodeList().then((n)=>{
-                            console.log('getApplyNodeList---',n,n.pending);
+                            console.log('getApplyNodeList---',n);
                             let curNodeApply={};
                             if(n){
                                 if(n.pending){   //节点质押申请提交中...
                                     this.nodeLoading = true;
                                     this.node = n;
+                                    this.loadCompolete = true;
                                     this.getLastStake('createValidator').then((o)=>{
                                         this.depositApplyProcess = o?o.processWidth:0;
                                     });
@@ -309,6 +334,7 @@
                                 }else if(n.dieOut){   //节点已被淘汰
                                     this.nodeLoading = false;
                                     this.node = n;
+                                    this.loadCompolete = true;
                                     this.nodeState = 2;
                                     console.log('this.node--2-->',this.node);
                                     this.candidateWithdrawInfos();
@@ -322,6 +348,7 @@
                                     this.node = curNodeApply;
                                     this.getMyNodeDetail(curNodeApply);
                                     this.getRecuceDetail();
+                                    this.loadCompolete = true;
                                     if(this.pendingTradeTimer){
                                         this.pendingTradeTimer = null;
                                     }
@@ -340,6 +367,8 @@
                                         })
                                     },1000)
                                 }
+                            }else{
+                                this.loadCompolete = true;
                             }
                         });
                     }
@@ -350,10 +379,11 @@
                 contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateTicketIds',this.node.Owner,[this.node.CandidateId]).then((ticketIds)=>{
                     console.log('ticketIds---->',ticketIds);
                     this.ticketsCount = JSON.parse(ticketIds).length;
-                })
+                    this.nodeAllowed = this.ticketsCount<this.allowed?false:true;
+                });
                 contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateEpoch',this.node.Owner,[this.node.CandidateId]).then((epoch)=>{
                     console.log('epoch----',epoch);
-                    this.epoch = epoch;
+                    this.epoch = epoch=='0x'?0:epoch;
                 })
             },
             getRecuceDetail(){
@@ -572,8 +602,11 @@
                     tradeType = 1003;
                 }
                 keyManager.recover2(this.keyObj,this.psw,'buf',(err,privateKey)=>{
-                    if(err){
-                        this.$message.warning(this.$t('form.wrongPsw'));
+                    if(err==-100){
+                        this.$message.warning(this.$t('wallet.invalidSignatures'));
+                        return;
+                    }else if(err){
+                        this.$message.error(this.$t('form.wrongPsw'));
                         return;
                     }
                     this.handleLoading = true;
@@ -616,7 +649,7 @@
             candidateWithdraw(cb){
                 keyManager.recover2(this.keyObj,this.psw,'buf',(err,privateKey)=>{
                     if(err){
-                        this.$message.warning(this.$t('form.wrongPsw'));
+                        this.$message.error(this.$t('form.wrongPsw'));
                     }
                     let params=[this.node.CandidateId];
                     contractService.platONSendTransaction(contractService.getABI(2),contractService.appContractAddress,'CandidateWithdraw',JSON.stringify(params),this.node.Owner,privateKey,this.gas,this.gasPrice,false,false,1003).then((result)=>{
@@ -646,6 +679,7 @@
                 })
             },
             candidateWithdrawInfos(){
+                let _this = this;
                 function toObj(str) {
                     if (!str || str == '0x') return []
                     let result
@@ -665,29 +699,39 @@
                         return result
                     }
                 }
-                console.log('CandidateId',this.node.CandidateId);
-                console.log('Owner',this.node.Owner);
-                contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'CandidateWithdrawInfos',this.node.Owner,[this.node.CandidateId]).then((data)=>{
-                    console.log('CandidateWithdrawInfos---',data);
-                    this.withdrawInfos = toObj(data).Infos;
-                    console.log('this.withdrawInfos-------',this.withdrawInfos,this.pendingReduce);
-                    contractService.web3.eth.getBlockNumber((err,blockNumber)=>{
-                        console.log('blockNumber-------',blockNumber);
-                        if(err) return;
-                        this.pendingStake = this.pendingReduce;
-                        this.unboundStake = 0;
-                        this.withdrawInfos.forEach((item)=>{
-                            item.Balance = contractService.web3.fromWei(item.Balance,"ether");
-                            if(blockNumber - item.LockNumber > item.LockBlockCycle){
-                                this.unboundStake+=(item.Balance-0);
-                            }else{
-                                this.pendingStake+=(item.Balance-0);
+                function getData(){
+                    contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'CandidateWithdrawInfos',_this.node.Owner,[_this.node.CandidateId]).then((data)=>{
+                        _this.withdrawInfos = toObj(data).Infos;
+                        console.log('_this.withdrawInfos-------',_this.withdrawInfos,_this.pendingReduce);
+                        if(_this.nodeState==1 || _this.nodeState==2){
+                            if(_this.withdrawInfos.length==0){
+                                clearInterval(_this.withdrawInfosTimer);
                             }
-                        })
-                    });
+                        }
+                        contractService.web3.eth.getBlockNumber((err,blockNumber)=>{
+                            if(err) return;
+                            _this.pendingStake = _this.pendingReduce;
+                            _this.unboundStake = 0;
+                            _this.withdrawInfos.forEach((item)=>{
+                                item.Balance = contractService.web3.fromWei(item.Balance,"ether");
+                                if(blockNumber - item.LockNumber > item.LockBlockCycle){
+                                    _this.unboundStake+=(item.Balance-0);
+                                }else{
+                                    _this.pendingStake+=(item.Balance-0);
+                                }
+                            })
+                        });
 
-                })
-
+                    })
+                }
+                if(this.nodeState==1 || this.nodeState==2){
+                    clearInterval(this.withdrawInfosTimer);
+                    this.withdrawInfosTimer = setInterval(function(){
+                        getData();
+                    },1000)
+                }else{
+                    getData();
+                }
             },
             openNet(){
                 const shell = require('electron').shell;
@@ -712,7 +756,11 @@
             if(this.getMyNodeTimer){
                 clearInterval(this.getMyNodeTimer);
                 this.getMyNodeTimer = null;
-            }
+            };
+             if(this.withdrawInfosTimer){
+                 clearInterval(this.withdrawInfosTimer);
+                 this.withdrawInfosTimer = null;
+             }
         },
     }
 </script>

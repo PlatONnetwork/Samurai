@@ -113,7 +113,11 @@
         methods: {
             ...mapActions(['WalletListAction','changeLang','updateCurWallet','updateState','updateNetSetting']),
             goBack(){
-                this.$router.back()
+                if(this.path=='/my-node'){
+                    this.$router.push('/validator-node');
+                }else{
+                    this.$router.back()
+                }
             },
             changeL(){
                 let destLang = this.lang=='zh-cn'?'en':'zh-cn';

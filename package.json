@@ -1,6 +1,6 @@
 {
     "name": "Samurai",
-    "version": "0.4.1",
+    "version": "0.3.9",
     "author": "www.platon.network<support@platon.network>",
     "description": "Samurai钱包客户端",
     "license": null,
@@ -22,7 +22,7 @@
     },
     "build": {
         "productName": "Samurai",
-        "buildVersion": "0.4.0.1",
+        "buildVersion": "0.3.0.9",
         "appId": "org.simulatedgreg.electron-vue",
         "directories": {
             "output": "dist"
@@ -106,12 +106,9 @@
         "bignumber": "^1.1.0",
         "bignumber.js": "^8.0.1",
         "console-utility": "git+ssh://http://luchenqun:fendoubuxi@192.168.9.66/Juzix-ethereum/console-utility.git#develop",
-        "crypto": "^1.0.1",
-        "crypto-js": "^3.1.9-1",
         "decimal.js": "^10.0.1",
         "element-ui": "^1.4.3",
         "ethereumjs-tx": "^1.3.7",
-        "jssha": "^2.3.1",
         "keythereum": "^1.0.4",
         "less": "^2.7.2",
         "less-loader": "^4.0.5",
@@ -153,7 +150,6 @@
         "less": "^2.7.2",
         "less-loader": "^4.0.5",
         "multispinner": "^0.2.1",
-        "sha3": "^2.0.0",
         "style-loader": "^0.18.1",
         "url-loader": "^0.5.7",
         "vue-html-loader": "^1.2.2",

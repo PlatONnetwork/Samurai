@@ -11,7 +11,7 @@
                         </el-form-item>
                         <el-form-item prop="admin" :label="$t('wallet.walletOwner')">
                             <el-select v-model="newWallet.admin" @change="changeAdmin">
-                                <el-option v-for="ord in ordWalletList" :value="ord.address" :label="(ord.account.length>16?(ord.account.slice(0,16)+'...'):ord.account)+'-'+ord.balance+' Energon'"></el-option>
+                                <el-option v-for="ord in ordWalletList" :value="ord.address" :label="(ord.account.length>10?(ord.account.slice(0,10)+'...'):ord.account)+'-'+ord.balance+' Energon'"></el-option>
                             </el-select>
                         </el-form-item>
                         <el-form-item >

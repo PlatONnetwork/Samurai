@@ -162,7 +162,7 @@ export const appAction = {
                             }
                         });
                     }else{
-                      resolve(null)
+                        resolve(null)
                     }
                 }else{
                     resolve(null)
@@ -398,7 +398,7 @@ export const appAction = {
                 if(arr && arr.length>0){
                     arr.sort((a,b)=>{
                         return b.tradeTime - a.tradeTime;
-                    })
+                    });
                     let lastObj = arr[0];
                     contractService.web3.eth.getTransactionReceipt(lastObj.hash,(err,data)=>{
                         if(err){

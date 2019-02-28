@@ -2,10 +2,12 @@
     <div class="validator-node format-style">
         <div class="header">
             <el-select v-model="sortBy" @change="search" :class="[lang=='en'?'enSearch':'']">
-                <el-option v-for="option in options" :label="option.label" :value="option.code"></el-option>
+                <el-option v-for="option in options" :label="option.label" :value="option.code" :key="option.code"></el-option>
             </el-select>
             <span class="icon-search">
-                <el-input :class="[keyword&&!/^\s*$/g.test(keyword)?'input1':'input2',lang=='en'?'width278':'']" v-model="keyword" v-if="showKeyInput" @change="search" @keyup.enter.native="search" :placeholder="$t('application.enterAccount')"></el-input>
+                <el-input :class="[keyword&&!/^\s*$/g.test(keyword)?'input1':'input2',lang=='en'?'width278':'']" v-model="keyword" v-if="showKeyInput" @change="search" @keyup.enter.native="search" :placeholder="$t('application.enterAccount')">
+                    <i slot="append" class="icon-close" @click="clearSearch"></i>
+                </el-input>
                 <i v-if="!showKeyInput" @click="showKeyInput=!showKeyInput"></i>
             </span>
             <el-button class="my-node" @click="gotoMyNote">{{$t('vote.myVote')}}</el-button>
@@ -24,7 +26,7 @@
                     {{$t('vote.blocks')}}
                 </span>
             </div>
-            <div class="candidate-list" v-if="nodeList && nodeList.length>0">
+            <div class="candidate-list" v-if="loadCompolete && nodeList && nodeList.length>0">
                 <table class="table" cellspacing="0">
                     <thead>
                         <tr>
@@ -41,7 +43,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="node in nodeList" @click="gotoDetail(node.CandidateId,node.Owner,node.Extra.nodePortrait,node.ranking,node.city)">
+                        <tr v-for="node in nodeList" @click="gotoDetail(node.CandidateId,node.Owner,node.Extra.nodePortrait,node.ranking,node.city,node.allowed)">
                             <td width="1"></td>
                             <td class="bold">
                                 <img :src="'./static/images/characters/characters-'+node.Extra.nodePortrait+'.jpg'" alt="" v-if="node.Extra">
@@ -49,7 +51,7 @@
                             </td>
                             <td class="node-state">
                                 <span v-if="node.verNode" class="node1">{{$t('application.status3')}}</span>
-                                <span v-else :class="[node.ranking>100?'node3':'node2']">{{node.ranking>100?$t('application.status4'):$t('application.status5')}}</span>
+                                <span v-else :class="[node.allowed?'node3':'node2']">{{node.allowed?$t('application.status5'):$t('application.status4')}}</span>
                             </td>
                             <td>{{node.city}}</td>
                             <td>{{node.Deposit}}</td>
@@ -62,7 +64,7 @@
                     </tbody>
                 </table>
             </div>
-            <div v-else class="no-data-bg">
+            <div v-else-if="loadCompolete" class="no-data-bg">
                 <p>{{$t('application.noCandidate')}}</p>
             </div>
         </div>
@@ -87,11 +89,12 @@
                 nodeListCopy:[],
                 ticketPrice:0,
                 remainder:100,
-                remainderBlock:'000'
+                remainderBlock:'000',
+                loadCompolete:false
             }
         },
         computed: {
-            ...mapGetters(['lang']),
+            ...mapGetters(['lang','network','chainName']),
             options:function(){
                 return [{
                     code:'1',
@@ -110,6 +113,24 @@
             APIConfig:function(){
                 var APIConfig = require('@/config/API-config');
                 return APIConfig.default;
+            },
+            allowed:function(){
+                let cate,filePath;
+                if(this.network.type=='custom'){
+                    cate = this.chainName;
+                }
+                if(cate){
+                    filePath = Settings.userDataPath+'net_'+this.network.type+'/chain/'+cate+'/cbft.json';
+                }else{
+                    filePath = Settings.userDataPath+'net_'+this.network.type+'/data/cbft.json';
+                }
+                let cbftJson = fs.readFileSync(`${filePath}`,'utf8');
+                try{
+                    let cbftObj = JSON.parse(cbftJson);
+                    return cbftObj.ppos.candidate.allowed
+                }catch(e){
+                    return 512
+                }
             }
         },
         mounted(){
@@ -124,6 +145,7 @@
                 this.getBlockNumber();
                 this.verifiersList().then((verList)=> {
                     this.candidateList().then((list) => {
+                        this.loadCompolete = true;
                         this.getTicketInfo(list);
                         console.log('candidateList---000--', list);
                         this.nodeList = list;
@@ -149,7 +171,18 @@
                 });
                 window.getTicketInfoTimer = setInterval(()=>{
                     this.getTicketInfo(this.nodeList);
+                    this.getVerifiers();
+                    this.getPoolRemainder();
                 },5000);
+            },
+            //查看节点是否成为验证节点
+            getVerifiers(){
+                this.verifiersList().then((verList)=> {
+                    this.nodeList.forEach((item, index) => {
+                        item.verNode = (verList.indexOf(item.CandidateId) !== -1);
+                        this.$set(this.nodeList, index, item);
+                    })
+                })
             },
             //获取节点所得选票数
             getTicketInfo(list){
@@ -164,8 +197,14 @@
                             this.nodeList.forEach((node,index)=>{
                                 if(ticketsList[node.CandidateId]){
                                     node.ticketsCount = ticketsList[node.CandidateId].length;
+                                    if(node.ticketsCount>this.allowed || node.ticketsCount==this.allowed){
+                                        node.allowed = true;
+                                    }else{
+                                        node.allowed = false;
+                                    }
                                 }else{
                                     node.ticketsCount = 0;
+                                    node.allowed = false;
                                 }
                                 this.$set(this.nodeList,node,index);
                                 this.nodeListCopy = JSON.parse(JSON.stringify(this.nodeList));
@@ -184,7 +223,7 @@
             //获取票池剩余票数量
             getPoolRemainder(){
                 contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetPoolRemainder',contractService.voteContractAddress).then((remainder)=>{
-                    this.remainder = (remainder/51200)*100;
+                    this.remainder = ((remainder/51200)*100).toFixed(2);
                 })
             },
             getBlockNumber(){
@@ -252,7 +291,7 @@
             gotoMyNote(){
                 this.$router.push('/my-vote')
             },
-            gotoDetail(id,owner,nodePortrait,ranking,city){
+            gotoDetail(id,owner,nodePortrait,ranking,city,allowed){
                 //由于SetCandidateExtra接口会暴露出去 用户logo可能会不按照格式传参，获取列表若nodePortrait不是合法的，则随机设置，带过去详情页
                 this.isMyNode(id).then((bool)=>{
                     if(bool){
@@ -265,7 +304,8 @@
                                 owner:owner,
 				                nodePortrait:nodePortrait,
                                 ranking:ranking,
-                                city:city
+                                city:city,
+                                allowed:allowed
                             }
                         });
                     }
@@ -279,7 +319,7 @@
                     }else{
                         this.getBalOrd().then((arr)=>{
                             if(arr.length==0){
-                                this.$message.warning(this.$t('application.noBalance'));
+                                this.$message.warning(this.$t('vote.noBalance'));
                                 return;
                             }else{
                                 this.$router.push({
@@ -295,6 +335,10 @@
                     }
                 });
             },
+            clearSearch(){
+                this.keyword='';
+                this.search();
+            }
         },
         filters:{
             'perc':function(num){
@@ -478,6 +522,13 @@
             height:32px;
             background: url("./images/icon_query.svg") no-repeat left center;
         }
+        .icon-close{
+            width:25px;
+            height:25px;
+            background: url("./images/cancel.png") no-repeat left center;
+            background-size: 10px 10px;
+            cursor: pointer;
+        }
     }
     .no-data-bg{
         padding-top:310px;
@@ -543,6 +594,20 @@
                 .el-input__inner{
                     background: url("./images/icon_query.svg") no-repeat 10px center transparent;
                 }
+            }
+            .el-input-group__append{
+                position: absolute;
+                right: -22px;
+                top: 0;
+                margin:0;
+                background:transparent;
+                border:0px;
+            }
+            .icon-search-close{
+                width:8px;
+                height: 8px;
+                background: url("./images/close.svg") no-repeat center center;
+                cursor: pointer;
             }
         }
     }

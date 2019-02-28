@@ -187,11 +187,12 @@
                 background-color: transparent;
             }
         }
+        .no-data{
+            margin-top:150px;
+            font-size: 12px;
+            color: #9EABBE;
+            text-align: center;
+        }
     }
-    .no-data{
-        margin-top:150px;
-        text-align: center;
-        font-size: 12px;
-        color: #9EABBE;
-    }
+
 </style>

@@ -1,11 +1,11 @@
 <template>
     <div class="select-self" :style="{width:sWidth+'px'}"  ref="sel-ref" style="-webkit-app-region: no-drag">
-        <span class="model" @click="selBtn" :style="{fontSize:page=='/trade-list'?'15px':'16px'}">
+        <span class="model" @click="selBtn">
             {{sel}}
             <i class="el-icon-caret-top" v-if="showOptions"></i>
             <i class="el-icon-caret-bottom" v-else></i>
         </span>
-        <ul v-if="showOptions" :style="{minWidth:sWidth>100?sWidth:100+'px'}">
+        <ul v-if="showOptions" :style="{minWidth:sWidth+'px'}">
             <li v-for="item in optionVs" @click="selOption(item)" :class="[((item.address==curWallet&&sel==item.account) || (item.address==''&&sel==$t('wallet.allWallet')))?'active':'']">
                 {{item.account}}
             </li>
@@ -27,10 +27,7 @@
         },
         props:(['optionVs','defaultSel']),
         computed:{
-            ...mapGetters(['curWallet']),
-            page: function(){
-                 return this.$route.path
-            }
+            ...mapGetters(['curWallet'])
         },
         watch:{
             'curWallet':function(val){

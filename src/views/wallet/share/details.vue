@@ -9,7 +9,7 @@
                         <span class="wallet-name">{{balance}} </span>Energon
                         <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
                     </p>
-                    <p class="address">{{wallet.address}}</p>
+                    <p class="address" ref="address">{{wallet.address}}</p>
                 </div>
                 <ul class="wallet-operate">
                     <li class="send" @click="handleSend" v-if="isOwner">
@@ -120,6 +120,11 @@
         },
         mounted(){
             this.init();
+            this.$refs.address.addEventListener('copy',(e)=> {
+                e.preventDefault();
+                e.stopPropagation();
+                this.doCopy();
+            })
         },
         methods: {
             ...mapActions(['WalletListAction','replaceWallet','getWalletByAddress','getOrd']),
@@ -141,11 +146,15 @@
                         clearInterval(window.balanceInterval);
                         window.balanceInterval = setInterval(_this.refresh,5*1000);
                         this.getOrd().then((ords)=>{
-                            let ownersArr = this.wallet.ownersArr.map((owner)=>{
-                                return owner.address
-                            });
-                            let atLocalOwners = ords.filter((ord)=>{
-                                return ownersArr.indexOf(ord.address)!==-1
+                            let atLocalOwners=[];
+                            _this.wallet.ownersArr.forEach((owner)=>{
+                                let atLocalOwner = ords.filter((ord)=>{
+                                    return ord.address==owner.address;
+                                });
+                                if(atLocalOwner.length>0){
+                                    owner.account = atLocalOwner[0].account;
+                                    atLocalOwners.push(atLocalOwner[0].address)
+                                }
                             });
                             if(atLocalOwners.length>0){
                                 this.isOwner = true;

@@ -50,20 +50,21 @@ export const WalletAction = {
                         walletCate = 'custom_'+rootState.setting.chainName;
                     }
                     let arr = retData[walletCate];
-                    if(walletType==1){
-                       dispatch('getUnknownNum',(b)=>{
-                           let unknownNum = b;
-                           arr.forEach((item)=>{
-                               if(!item.account){
-                                   item.account='Unknown'+(unknownNum<10?'0':'')+unknownNum;
-                                   unknownNum++;
-                               }
-                           });
-                           retData[walletCate] = arr;
-                           fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(retData))
-                       });
-                    }
+
                     if(arr && arr.length>0){
+                        if(walletType==1){
+                            dispatch('getUnknownNum',(b)=>{
+                                let unknownNum = b;
+                                arr.forEach((item)=>{
+                                    if(!item.account){
+                                        item.account='Unknown'+(unknownNum<10?'0':'')+unknownNum;
+                                        unknownNum++;
+                                    }
+                                });
+                                retData[walletCate] = arr;
+                                fs.writeFileSync(`${Settings.userDataPath}${fileName}`,JSON.stringify(retData))
+                            });
+                        }
                         arr.sort(function(a,b){
                             let value1 = a['createTime'];
                             let value2 = b['createTime'];
@@ -85,14 +86,18 @@ export const WalletAction = {
         let data = fs.readFileSync(`${Settings.userDataPath}${fileName}`,'utf8');
         if(data && data!=="{}"){
             let retData = JSON.parse(data)[walletCate];
-            retData.forEach((item,index)=>{
-                if(/^Unknown[0-9]+$/.test(item.account)){
-                    let a = item.account.replace(/Unknown0/,'');
-                    unknownNum = Math.max(unknownNum,a);
-                }
-            });
-            console.log('unknownNum',unknownNum);
-            cb(unknownNum+1);
+            if(retData && retData.length>0){
+                retData.forEach((item,index)=>{
+                    if(/^Unknown[0-9]+$/.test(item.account)){
+                        let a = item.account.replace(/Unknown0/,'');
+                        unknownNum = Math.max(unknownNum,a);
+                    }
+                });
+                console.log('unknownNum',unknownNum);
+                cb(unknownNum+1);
+            }else{
+                cb(1)
+            }
         }else{
             cb(1);
         }
@@ -497,27 +502,43 @@ export const WalletAction = {
     },
     //删除共享钱包
     deleteShare({state,commit,rootState},hash){
-        // return new Promise((resolve, reject)=>{
-            let type = rootState.setting.network.type;
-            fsObj.ReadFile(Settings.userDataPath,fileNameS,(err, data) => {
-                if(data && data!=="{}"){
-                    let retData = JSON.parse(data.toString().replace(/\n\r/g,'')),walletCate=type;
-                    if(type=='custom'){
-                        walletCate = 'custom_'+rootState.setting.chainName;
+        let type = rootState.setting.network.type;
+        fsObj.ReadFile(Settings.userDataPath,fileNameS,(err, data) => {
+            if(data && data!=="{}"){
+                let retData = JSON.parse(data.toString().replace(/\n\r/g,'')),walletCate=type;
+                if(type=='custom'){
+                    walletCate = 'custom_'+rootState.setting.chainName;
+                }
+                let arr = retData[walletCate];
+                arr.forEach((item,index)=>{
+                    if(item.hash==hash){
+                        arr.splice(index,1);
                     }
-                    let arr = retData[walletCate];
-                    arr.forEach((item,index)=>{
-                        if(item.hash==hash){
-                            arr.splice(index,1);
-                        }
+                });
+                retData[walletCate]=arr;
+                fs.writeFileSync(`${Settings.userDataPath}${fileNameS}`,JSON.stringify(retData));
+            }
+        })
+    },
+    //获取某联名钱包的 还未上链的 执行联名钱包交易
+    getPendingExecution({state,commit,rootState,dispatch},trade){
+        return new Promise((resolve, reject)=>{
+            let walletAddress = trade.from,
+                txId = trade.id;
+            dispatch('getOrdTradeList').then((tradeList)=> {
+                let arr = tradeList.filter((item) => {
+                    return item.type=='jointWalletExecution' && item.to==walletAddress && item.txId==txId;
+                });
+                if(arr && arr.length>0){
+                    arr.sort((a,b)=>{
+                        return b.tradeTime - a.tradeTime;
                     });
-                    retData[walletCate]=arr;
-                    fs.writeFileSync(`${Settings.userDataPath}${fileNameS}`,JSON.stringify(retData));
-                    // resolve();
+                    let lastObj = arr[0];
+                    resolve(lastObj);
                 }else{
-                    // resolve();
+                    resolve(null)
                 }
             })
-        // })
+        })
     }
 };

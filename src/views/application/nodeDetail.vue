@@ -13,7 +13,7 @@
                     </p>
                     <p class="node-state">
                         <span v-if="node.verNode" class="node1">{{$t('application.status3')}}</span>
-                        <span v-else :class="[node.ranking>100?'node3':'node2']">{{node.ranking>100?$t('application.status4'):$t('application.status5')}}</span>
+                        <span v-else :class="[node.allowed?'node3':'node2']">{{node.allowed?$t('application.status5'):$t('application.status4')}}</span>
                     </p>
                 </div>
                 <div>
@@ -36,7 +36,7 @@
                         </li>
                         <li class="perc-li">
                             <p>{{$t('vote.ticketAge')}}</p>
-                            <p><span class="txt">{{epoch}}Bs</span></p>
+                            <p><span class="txt">{{epoch}}</span>Bs</p>
                         </li>
                         <li  class="atp-li"></li>
                     </ul>
@@ -133,6 +133,7 @@
                         this.node.Deposit = contractService.web3.fromWei(this.node.Deposit,"ether");
                         this.node.Extra.nodePortrait = param.nodePortrait;
                         this.node.ranking = param.ranking;
+                        this.node.allowed = param.allowed;
                         this.getNodeNote();
                         this.getEpoch();
                     });
@@ -162,7 +163,7 @@
                     }else{
                         this.getBalOrd().then((arr)=>{
                             if(arr.length==0){
-                                this.$message.warning(this.$t('application.noBalance'));
+                                this.$message.warning(this.$t('vote.noBalance'));
                                 return;
                             }else{
                                 this.$router.push({

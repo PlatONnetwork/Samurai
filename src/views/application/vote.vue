@@ -16,21 +16,24 @@
             <el-select v-model="wallet" @change="selWallet" :style="{pointerEvents:wallet?'auto':'none'}">
                 <el-option v-for="w in wallets"
                            :key="w.address"
-                           :label="w.account.length>16?w.account.slice(0,16)+'...':w.account+'--'+w.balance+'ATP'"
+                           :label="w.account.length>10?w.account.slice(0,10)+'...':w.account+'--'+w.balance+' Energon'"
                            :value="w.address">
                 </el-option>
             </el-select>
             <p class="sub-title">{{$t('vote.ticketsCount')}}</p>
-            <span :disabled="count<1 || count==1" @click="step(-1)" class="step sub"></span>
-            <input v-model.trim="count" @input="changeCount($event)" class="step-input el-input__inner"/>
-            <span @click="step(1)"  class="step add"></span>
+            <p class="nonselect">
+                <span @click="step(-1)" class="step sub"></span>
+                <numberOnly-input class="input-width" :placeholder="$t('vote.enterVoteNumber')" @valueChange="changeCount" :typeInt="true" :inputVal="count"></numberOnly-input>
+                <!--<input type="number" v-model.trim="count" @input="changeCount($event)" class="step-input el-input__inner"/>-->
+                <span @click="step(1)"  class="step add"></span>
+            </p>
         </div>
         <p class="btn-box">
-            <span class="bold">{{$t('vote.total')}}:{{total}}ATP</span>
+            <span class="bold">{{$t('vote.total')}}:{{total}} Energon</span>
             <span class="ticket-price">({{$t('vote.ticketPrice')}}:{{price}} Energon)</span>
             <span class="btns">
                 <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="back">{{$t("form.cancel")}}</el-button>
-                <el-button type="primary" :class="[lang=='en'?'':'letterSpace']" @click="submit">{{$t("form.submit")}}</el-button>
+                <el-button type="primary" :class="[lang=='en'?'':'letterSpace']" :disabled="count<1" @click="submit">{{$t("form.submit")}}</el-button>
             </span>
         </p>
 
@@ -42,10 +45,10 @@
                 </div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{total}}ATP</span></p>
+                        <p>{{$t("wallet.amount")}}<span class="txt">{{total}} Energon</span></p>
                         <p>From<span class="txt">{{keyObj.address}}</span></p>
                         <p>To<span class="txt contract-addr">{{voteContractAddress}}</span></p>
-                        <p>{{$t("wallet.fee")}}<span class="txt">{{fee}}ATP</span></p>
+                        <p>{{$t("wallet.fee")}}<span class="txt">{{fee}} Energon</span></p>
                     </div>
                     <p class="inputb">
                         <el-input :placeholder="$t('wallet.input')+keyObj.account+' '+$t('wallet.walletPsw')" type="password" v-model.trim="psw" :disabled="handleLoading"></el-input>
@@ -66,6 +69,7 @@
     import MathService from '@/services/math';
     import contractService from '@/services/contract-servies';
     import keyManager from '@/services/key-manager';
+    import numberOnlyInput from '@/components/numberOnlyInput';
 
     var fs = require("fs");
     export default {
@@ -97,7 +101,7 @@
             this.init();
         },
         methods: {
-            ...mapActions(['candidateList','verifiersList','getCityByIp','isMyNode','getBalOrd','saveVoteRecord','getOrdByAddress']),
+            ...mapActions(['candidateList','verifiersList','getCityByIp','isMyNode','getBalOrd','saveVoteRecord','getOrdByAddress','saveTractRecord']),
             init(){
                 this.nodeId = '0x'+this.$route.query.nodeId.replace(/^0x/,'');
                 this.nodeName = this.$route.query.nodeName;
@@ -121,25 +125,20 @@
                 this.getGas().then(()=>{
                     let fee = MathService.mul(this.gas,MathService.toNonExponential(contractService.web3.fromWei(this.gasPrice,"ether")));
                     let amount = MathService.mul(this.count,MathService.toNonExponential(this.price));
-                    console.log('amount---',amount,this.count,MathService.toNonExponential(contractService.web3.fromWei(this.price,"ether")));
+                    // console.log('amount---',amount,this.count,MathService.toNonExponential(contractService.web3.fromWei(this.price,"ether")));
                     this.amount = amount;
                     this.fee = fee;
                     this.total = MathService.add(fee,amount);
                 })
             },
             step(num){
+                if(num==-1 && this.count==1) return;
                 this.count = this.count+num;
                 this.getTotal();
             },
-            changeCount(e){
-                let val = e.target.value;
-                if(val.indexOf('.')!==-1){
-                    setTimeout(()=>{
-                        this.count = val.slice(0,val.indexOf('.'));
-                    },1000);
-                }else{
-                    this.getTotal();
-                }
+            changeCount(val){
+                this.count = val-0;
+                this.getTotal();
             },
             async getTicketPrice(){
                 await contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetTicketPrice',contractService.voteContractAddress).then((price)=>{
@@ -159,11 +158,22 @@
                 this.getGas().then(()=>{
                     this.getTicketPrice();
                     this.getTotal();
-                    if(this.total>this.wallet.balance){
-                        this.$message.warning(this.$t('wallet.cannotTrans2'));
-                    }else{
-                        this.showConfirm = true;
-                    }
+                    contractService.web3.eth.getBalance(this.wallet,(err,data)=>{
+                        if(err) return;
+                        let balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                        if(this.total-balance>0){
+                            this.$message.warning(this.$t('wallet.cannotTrans2'));
+                        }else{
+                            //获取票池剩余票数量
+                            contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetPoolRemainder',contractService.voteContractAddress).then((remainder)=>{
+                                if(this.count>remainder){
+                                    this.$message.warning(this.$t('vote.exceed'));
+                                }else{
+                                    this.showConfirm = true;
+                                }
+                            });
+                        }
+                    })
                 })
             },
             send(){
@@ -172,24 +182,45 @@
                         this.$message.error(this.$t('form.wrongPsw'));
                         return;
                     }
-                    this.amount = MathService.mul(this.count,this.price);
-                    let params=[this.count,contractService.web3.toWei(this.price,"ether").toString(10),this.nodeId];
-                    this.handleLoading = true;
-                    contractService.platONSendTransaction(contractService.getABI(3),contractService.voteContractAddress,'VoteTicket',JSON.stringify(params),this.keyObj.address,privateKey,this.gas,this.gasPrice,this.amount,false,1000).then((result)=>{
-                        console.log('投票结果--->',result);
-                        this.handleLoading = false;
-                        this.saveVoteRecord({
-                            txHash:result.hash,
-                            CandidateId:this.nodeId,
-                            nodeName:this.nodeName,
-                            icon:this.icon
-                        }).then(()=>{
-                            this.$router.push('/validator-node')
-                        });
-                    }).catch(()=>{
-                        this.handleLoading = false;
-                        this.$message.error(this.$t('wallet.transactionFailed'))
-                    })
+                    //提交时重新获取最新票价判断余额是否充足
+                    this.getTicketPrice();
+                    this.getTotal();
+                    if(this.total>this.wallet.balance){
+                        this.$message.warning(this.$t('wallet.cannotTrans2'));
+                    }else{
+                        this.amount = MathService.mul(this.count,this.price);
+                        let params=[this.count,contractService.web3.toWei(this.price,"ether").toString(10),this.nodeId];
+                        this.handleLoading = true;
+                        contractService.platONSendTransaction(contractService.getABI(3),contractService.voteContractAddress,'VoteTicket',JSON.stringify(params),this.keyObj.address,privateKey,this.gas,this.gasPrice,this.amount,false,1000).then((result)=>{
+                            console.log('投票结果--->',result);
+                            //记录交易
+                            let tradeObj={
+                                tradeTime:new Date().getTime(),
+                                hash:result.hash,
+                                value:this.amount,
+                                gasPrice:this.gasPrice,
+                                fromAccount:this.keyObj.account,
+                                from:this.keyObj.payWallet,
+                                to:contractService.voteContractAddress,
+                                type:'vote',
+                                state:0
+                            };
+                            this.handleLoading = false;
+                            this.saveVoteRecord({
+                                txHash:result.hash,
+                                CandidateId:this.nodeId,
+                                nodeName:this.nodeName,
+                                icon:this.icon
+                            }).then(()=>{
+                                this.saveTractRecord(tradeObj).then(()=>{
+                                    this.$router.push('/validator-node')
+                                });
+                            });
+                        }).catch(()=>{
+                            this.handleLoading = false;
+                            this.$message.error(this.$t('wallet.transactionFailed'))
+                        })
+                    }
                 });
             },
             back(){
@@ -198,6 +229,9 @@
         },
         filters:{
 
+        },
+        components:{
+            numberOnlyInput
         }
     }
 </script>
@@ -295,12 +329,23 @@
             font-size: 12px;
             color: #120000;
         }
+        .input-width{
+            margin:0 10px;
+            display: inline-block;
+            width:228px;
+            height:40px;
+        }
     }
 </style>
 <style lang="less">
     .vote{
         .el-input__inner{
             height:100%;
+        }
+        .input-width{
+            .el-input__inner{
+                text-align: center;
+            }
         }
     }
 </style>
