@@ -17,6 +17,11 @@ export default {
             name: '设置',
             component: Setting
         },
+        {
+            path: '/coin', //设置
+            name: '申请测试币',
+            component: coin
+        },
         Wallet.OWallet,
         Wallet.OWalletNew,
         Wallet.OWalletShareNew,
@@ -39,7 +44,6 @@ export default {
         Application.increaseStake,
         Application.reduceStake,
         Application.vote,
-        Application.myVote,
-        Application.voteDetail
+        Application.myVote
     ]
 }

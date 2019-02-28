@@ -4,7 +4,7 @@
 
 ; 安装程序初始定义常量
 !define PRODUCT_NAME "Samurai"
-!define PRODUCT_VERSION " 0.4.0.1"; 加版本号，开头多加一个空格！
+!define PRODUCT_VERSION " 0.3.0.9"; 加版本号，开头多加一个空格！
 !define PRODUCT_PUBLISHER "www.platon.network<support@platon.network>"
 !define PRODUCT_WEB_SITE "https://www.platon.network"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Samurai.exe"

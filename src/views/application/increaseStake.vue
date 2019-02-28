@@ -5,11 +5,11 @@
                 <el-form-item prop="payWallet" :label="$t('application.payWallet')">
                     <el-select v-model="payForm.payWallet" :placeholder="$t('wallet.selectHint')" @change="changePayWallet" :style="{pointerEvents:payForm.payWallet?'auto':'none'}">
                         <el-option v-for="wallet in wallets" :key="wallet.address" :value="wallet.address"
-                                   :label="(wallet.account.length>16?wallet.account.slice(0,16):wallet.account)+'--'+wallet.balance+' Energon'"></el-option>
+                                   :label="(wallet.account.length>10?wallet.account.slice(0,10):wallet.account)+'--'+wallet.balance+' Energon'"></el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item prop="value" :label="$t('application.stakeAmount')">
-                    <el-input v-model.trim="payForm.value" @blur="changeVal" @input="getRanking" :placeholder="$t('application.stakeNumber')" type="number">
+                    <el-input v-model.trim="payForm.value" @blur="changeVal" @input="getRanking" :placeholder="$t('application.stakeNumber')" type="number" v-focus="payFormInputFocus" :key="payFormInputKey">
                         <el-button slot="append" @click="sendAll">All</el-button>
                     </el-input>
                     <p class="danger" v-if="valueNull">{{$t('application.stakeAmountNull')}}</p>
@@ -91,7 +91,9 @@
                 gasPrice:'',
                 valueNull:false,
                 total:0,
-                handleLoading:false
+                handleLoading:false,
+                payFormInputKey:0,
+                payFormInputFocus:false
             }
         },
         computed: {
@@ -193,7 +195,14 @@
 
                 });
             },
-            getRanking(){
+            getRanking(val){
+                if(val.length>20){
+                    const now=val.substring(0,20)
+                    val=now
+                    this.payForm.value=now
+                    this.payFormInputKey=Math.random()
+                    this.payFormInputFocus=true
+                }
                 this.valueNull = false;
                 this.totalDep = (this.node.Deposit-0)+(this.payForm.value-0);
                 let arr = JSON.parse(JSON.stringify(this.depositList));
@@ -260,13 +269,20 @@
                     })
                 });
 
-            }
+            },
         },
         filters:{
 
         },
         components:{
             feeSlider
+        },
+        directives: {
+            focus: {
+                inserted: function (el, {value}) {
+                    value&&el.firstElementChild&&el.firstElementChild.focus()
+                }
+            }
         }
     }
 </script>

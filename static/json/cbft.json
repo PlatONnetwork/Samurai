@@ -6,10 +6,17 @@
   "duration": 10,
   "ppos": {
     "candidate": {
+      "threshold": "1000000000000000000",
       "depositLimit": 10,
-      "maxCount": 10,
-      "maxChair": 4,
+      "allowed": 100,
+      "maxCount": 100,
+      "maxChair": 10,
       "refundBlockNumber": 1
+    },
+    "ticket": {
+      "ticketPrice": "1000000000000000000",
+      "maxCount": 51200,
+      "expireBlockNumber": 1536000
     }
   }
 }

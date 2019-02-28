@@ -6,13 +6,12 @@ const reduceStake= resolve => require(['@/views/application/reduceStake'], resol
 const nodeDetail= resolve => require(['@/views/application/nodeDetail'], resolve)
 const vote= resolve => require(['@/views/application/vote'], resolve)
 const myVote= resolve => require(['@/views/application/myVote'], resolve)
-const voteDetail= resolve => require(['@/views/application/voteDetail'], resolve)
 
 
 import store from '@/vuex/store';
 const application= {
     validatorNode: {
-        name: '共识节点',
+        name: '竞选节点',
         path: '/validator-node',
         component: validatorNode,
         meta: {
@@ -28,7 +27,7 @@ const application= {
         }
     },
     myNode: {
-        name: '我的共识节点',
+        name: '我的竞选节点',
         path: '/my-node',
         component: myNode,
         meta: {
@@ -36,7 +35,7 @@ const application= {
         }
     },
     nodeApply: {
-        name: '共识节点注册',
+        name: '节点竞选申请',
         path: '/node-apply',
         component: nodeApply,
         meta: {
@@ -71,14 +70,6 @@ const application= {
         name: '我的投票',
         path: '/my-vote',
         component: myVote,
-        meta: {
-            flag: 'child'
-        }
-    },
-    voteDetail: {
-        name: '投票详情',
-        path: '/vote-detail',
-        component: voteDetail,
         meta: {
             flag: 'child'
         }

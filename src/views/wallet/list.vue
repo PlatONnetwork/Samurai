@@ -71,7 +71,7 @@
             this.showBalance = local;
         },
         methods: {
-            ...mapActions(['WalletListAction','updateCurWallet','updateWalletType','getOrd','getTotalBalance','insertShareAddress','getWalletByAddress','loadKeyStore','deleteShare','deleteInitParam']),
+            ...mapActions(['WalletListAction','updateCurWallet','updateWalletType','getOrd','getTotalBalance','insertShareAddress','getWalletByAddress','loadKeyStore','deleteShare','deleteInitParam','saveTractRecord']),
             init(){
                 if(this.curIndex==1){
                     this.loadKeyStore();
@@ -211,7 +211,20 @@
                         });
                     let params = [ownersArr.join(':'),item.required];
                     contractService.platONSendTransaction(contractService.getABI(1),item.address,'initWallet',JSON.stringify(params),item.admin.address,prikey,false,false,false,true,2).then((data)=>{
-                        cb(1);
+                        console.log('initWallet--data---',data);
+                        let tradeObj={
+                            tradeTime:new Date().getTime(),
+                            hash:data.hash,
+                            value:0,
+                            gasPrice:0,
+                            fromAccount:(item.ownersArr&&item.ownersArr.length>0)?item.ownersArr[0].account:'',
+                            from:(item.ownersArr&&item.ownersArr.length>0)?item.ownersArr[0].address:'',
+                            type:'createJointWallet',
+                            state:1
+                        };
+                        this.saveTractRecord(tradeObj).then(()=>{
+                            cb(1);
+                        })
                     }).catch((e)=>{
                         cb(2);
                     })

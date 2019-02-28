@@ -34,9 +34,13 @@
                                 <el-input :placeholder="input.type" v-model.trim="input.value"></el-input>
                             </el-form-item>
                         </el-form>
-                        <p>{{$t("contracts.executeFrom")}}</p>
+                        <p class="title">{{$t("contracts.executeFrom")}}</p>
                         <el-select v-model="wallet">
                             <el-option v-for="ord in ordWalletList" :key="ord.address" :value="ord.address" :label="ord.account"></el-option>
+                        </el-select>
+                        <p class="title marT14">{{$t("contracts.executeType")}}</p>
+                        <el-select v-model="tradeType">
+                            <el-option v-for="type in tradeTypes" :key="type.code" :value="type.code" :label="type.label"></el-option>
                         </el-select>
                     </div>
                     <p class="btn-box">
@@ -153,11 +157,22 @@
                 constant:'',
                 hash:'',
                 params:[],
-                abiInfo:[]
+                abiInfo:[],
+                tradeType:2
             }
         },
         computed: {
-            ...mapGetters(['network','lang'])
+            ...mapGetters(['network','lang']),
+            //2 普通交易  5 MPC交易  6 VC交易
+            tradeTypes:function(){
+                return [{
+                    code:2,
+                    label:this.$t('contracts.ordTx')
+                },{
+                    code:5,
+                    label:this.$t('contracts.mpcTx')
+                }]
+            }
         },
         mounted(){
             this.contract = this.$route.query?this.$route.query:null;
@@ -313,7 +328,7 @@
                         console.log(' this.params----', this.params);
                         // abi中的constant参数为false时是交易类的，返回hash。为true时是call查询，返回结果
                         if(this.constant == 'false'){
-                            contractService.platONSendTransaction(JSON.parse(this.contract.abi),this.contract.address,this.fun,JSON.stringify(this.params),keyObject.address,priKey,false,false,false,true,2).then((data)=>{
+                            contractService.platONSendTransaction(JSON.parse(this.contract.abi),this.contract.address,this.fun,JSON.stringify(this.params),keyObject.address,priKey,false,false,false,true,this.tradeType).then((data)=>{
                                 console.log('hash-->result--->',data.hash);
                                 this.hash = data.hash
                                 let obj={
@@ -490,6 +505,9 @@
     }
     .marR30{
         margin-right:30px;
+    }
+    .marT14{
+        margin-top:14px;
     }
     .btn-box{
         padding-right:30px;

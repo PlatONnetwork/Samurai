@@ -17,13 +17,13 @@
                         <span class="bold" v-else>―</span>
                     </p>
                 </li>
-                <li>
-                    <p class="top">{{$t('vote.Profit')}}</p>
-                    <p class="bottom">
-                        <span class="bold">{{voteRecord.length==0?'―':'0'}}</span>
-                        <span>{{voteRecord.length==0?'':'Energon'}}</span>
-                    </p>
-                </li>
+                <!--<li>-->
+                    <!--<p class="top">{{$t('vote.Profit')}}</p>-->
+                    <!--<p class="bottom">-->
+                        <!--<span class="bold">{{voteRecord.length==0?'―':profit}}</span>-->
+                        <!--<span>{{voteRecord.length==0?'':'Energon'}}</span>-->
+                    <!--</p>-->
+                <!--</li>-->
             </ul>
         </div>
         <div class="content ticket-record">
@@ -39,13 +39,13 @@
                         <span class="label">{{$t('vote.vaildTicket')}}</span>
                     </p>
                     <p class="column">
-                        <span> <span class="bold">{{ticket.locked}}</span><span class="unit"> Energon</span></span>
+                        <span> <span class="bold">{{ticket.locked}}</span></span>
                         <span class="label">{{$t('vote.voteStaked')}}</span>
                     </p>
-                    <p class="column">
-                        <span><span class="bold">{{ticket.profit?profit:'—'}}</span><span class="unit">{{ticket.profit?' Energon':''}}</span></span>
-                        <span class="label">{{$t('vote.Profit')}}</span>
-                    </p>
+                    <!--<p class="column">-->
+                        <!--<span class="profit"><span class="bold">{{ticket.profit?ticket.profit:'—'}}</span></span>-->
+                        <!--<span class="label">{{$t('vote.Profit')}}</span>-->
+                    <!--</p>-->
                     <p class="vote-btn">
                         <span class="vote" @click="toVote(ticket)">{{$t('vote.addVote')}}</span>
                         <span class="detail" @click="toVoteDetail(ticket)">{{$t('vote.voteDetail')}}</span>
@@ -60,6 +60,7 @@
 <script>
     import {mapGetters, mapActions} from 'vuex'
     import contractService from '@/services/contract-servies';
+    import mathService from '@/services/math';
 
     export default {
         name: 'myVote',
@@ -69,7 +70,8 @@
                 tickets:[],
                 locked:0,
                 validVote:0,
-                invalidVote:0
+                invalidVote:0,
+                profit:0
             }
         },
         computed: {
@@ -79,13 +81,15 @@
             this.init();
         },
         methods: {
-            ...mapActions(['getMyVoteList','getNodeInfo','calculatedIncome','updateNodeName']),
+            ...mapActions(['getMyVoteList','getNodeInfo','calculatedIncome','updateNodeName','getOrd','getBalOrd']),
             init(){
                 this.getMyVoteList().then((ticketIds)=>{
                     console.log('getMyVoteList---',JSON.stringify(ticketIds));
                     contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetBatchTicketDetail',contractService.voteContractAddress,[ticketIds.join(":")]).then((data)=>{
                         this.tickets = JSON.parse(data);
+                        console.log('tickets--->',JSON.stringify(this.tickets));
                         let statisticsData = this.statistics(this.tickets);
+                        console.log('statisticsData--->',statisticsData);
                         this.locked = statisticsData.locked;
                         this.validVote = statisticsData.validVote;
                         this.invalidVote = statisticsData.invalidVote;
@@ -96,17 +100,16 @@
              statistics(arr){
                 let locked=0,validVote=0,invalidVote=0,profit=0;
                  arr.forEach((ticket)=>{
+                     console.log('票状态---->',ticket.State);
                     if(ticket.State==1){
                         validVote++;
                         locked+=contractService.web3.fromWei(ticket.Deposit,"ether")-0;
                     }else{
                         invalidVote++;
                     }
-                    if(ticket.State==2){
-                        this.calculatedIncome().then((f)=>{
-                            profit+=f;
-                        })
-                    }
+                     if(ticket.State==2){
+                         profit++;
+                     }
                 });
                 return ({
                     locked:locked,
@@ -134,26 +137,48 @@
                 this.voteRecord.forEach((item,index)=>{
                     let obj={};
                     let statisticsData = _this.statistics(item);
+                    console.log('statisticsData--2-->',statisticsData);
                     obj.nodeName = item[0].nodeName;
                     obj.CandidateId = item[0].CandidateId;
                     obj.locked = statisticsData.locked;
                     obj.validVote = statisticsData.validVote;
                     obj.invalidVote = statisticsData.invalidVote;
+                    obj.luckyTicket = statisticsData.profit;
                     obj.ticketList = item;
-                    this.getNodeInfo(item[0].CandidateId).then((nodeObj)=>{
-                        obj.nodeName = nodeObj.nodeName;
-                        obj.icon = nodeObj.icon;
-                        _this.$set(this.voteRecord,index,obj);
+                    this.calculatedIncome().then((income)=>{
+                        let profit = mathService.mul((contractService.web3.fromWei(income,"ether")-0),statisticsData.profit);
+                        console.log('profit--->',profit);
+                        this.profit+=profit-0;
+                        obj.profit = profit;
+                        this.getNodeInfo(item[0].CandidateId).then((nodeObj)=>{
+                            obj.nodeName = nodeObj.nodeName;
+                            obj.icon = nodeObj.icon;
+                            _this.$set(this.voteRecord,index,obj);
+                        });
                     });
                 });
             },
             toVote(node){
-                this.$router.push({
-                    path:'/vote',
-                    query:{
-                        nodeId:node.CandidateId,
-                        nodeName:node.nodeName,
-                        icon:node.icon
+                this.getOrd().then((arr)=>{
+                    if(arr.length==0){
+                        this.$message.warning(this.$t('application.noWallet'));
+                        return;
+                    }else{
+                        this.getBalOrd().then((arr)=>{
+                            if(arr.length==0){
+                                this.$message.warning(this.$t('vote.noBalance'));
+                                return;
+                            }else{
+                                this.$router.push({
+                                    path:'/vote',
+                                    query:{
+                                        nodeId:node.CandidateId,
+                                        nodeName:node.nodeName,
+                                        icon:node.icon
+                                    }
+                                });
+                            }
+                        });
                     }
                 });
             },
@@ -176,7 +201,11 @@
 
 <style lang="less" scoped>
     .my-vote{
-
+        .profit{
+            display: block;
+            max-width:100px;
+            white-space: nowrap;
+        }
     }
     .header{
         margin-bottom:15px;

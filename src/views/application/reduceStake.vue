@@ -2,7 +2,7 @@
     <div class="reduce-stake format-style">
         <div class="reduce-stake-content">
             <p>{{$t('application.reduceStake')}}</p>
-            <numberOnly-input class="input-width" :placeholder="$t('application.reduceAmount')" @valueChange="valueChange"></numberOnly-input>
+            <numberOnly-input class="input-width" :placeholder="$t('application.reduceAmount')" @valueChange="valueChange" :typeInt="false"></numberOnly-input>
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.maximumAmount')}}</span><span class="value-txt">{{depositList.length>0?depositList[0]:node.Deposit}} Energon</span></p>
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.minimumAmount')}}</span><span class="value-txt">{{depositList.length>0?depositList[depositList.length-1]:node.Deposit}} Energon</span></p>
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.remainingStake')}}</span><span class="value-txt">{{remaining}}{{remaining>0?' Energon':''}}</span></p>

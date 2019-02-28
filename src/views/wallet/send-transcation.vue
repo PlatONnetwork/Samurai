@@ -11,7 +11,7 @@
                             <el-option
                                     v-for="item in wallets"
                                     :key="item.address"
-                                    :label="(item.account.length>16?item.account.slice(0,16)+'...':item.account)+'--'+item.balance+'Energon'"
+                                    :label="(item.account.length>10?item.account.slice(0,10)+'...':item.account)+'--'+item.balance+'Energon'"
                                     :value="item.address">
                             </el-option>
                         </el-select>
@@ -22,7 +22,7 @@
                     </el-form-item>
                 </div>
                 <el-form-item :label="$t('wallet.amountSend')">
-                    <el-input v-model.trim="sendTranscation.value" @blur="changeVal" :placeholder="$t('wallet.amountHint')" type="number">
+                    <el-input v-model.trim="sendTranscation.value" @blur="changeVal" :placeholder="$t('wallet.amountHint')" type="number" @input="sendTranscationValueChange" :key="sendTranscationInputKey" v-focus="sendTranscationFocus">
                         <el-button class="append" slot="append" @click="sendAll">ALL</el-button>
                     </el-input>
                     <span class="wantTo">{{$t("wallet.wantTo")}}
@@ -81,12 +81,12 @@
                         <p class="fee">{{$t("wallet.fee")}}<span class="txt"><span class="bold">{{sendTranscation.gas}}</span>&nbsp;Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input class="input-psw" :disabled="sendLoading" :placeholder="$t('wallet.input')+(walletType==1?fromW.account:(owner.account?owner.account:''))+' '+$t('wallet.walletPsw')" type="password" v-model.trim="sendTranscation.psw"></el-input>
+                        <el-input class="input-psw" :disabled="sendLoading" :placeholder="confirmPswPlaceholder" type="password" v-model.trim="sendTranscation.psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
                     <el-button :class="[lang=='en'?'':'letterSpace']" @click="showConfirm=false" :disabled="sendLoading">{{$t("form.cancel")}}</el-button>
-                    <el-button :class="[lang=='en'?'':'letterSpace','subBtn']" @click="send" type="primary" :loading="sendLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','subBtn']" @click="send" type="primary" :loading="sendLoading">{{sendLoading?$t('form.submiting'):$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -133,12 +133,23 @@
                 gasLoading:false,
                 showSelOwners:false,
                 availOwners:[],
-                owner:null
+                owner:null,
+                sendTranscationInputKey:0,
+                sendTranscationFocus:false
             }
 
         },
         computed:{
-            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','walletType','lang'])
+            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','walletType','lang']),
+            confirmPswPlaceholder(){
+                const {walletType,fromW,owner}=this,
+                sliceLen=str=>{
+                    if(!str)return ''
+                    return str.length>16?str.slice(0,16)+'...':str
+                }
+
+                return this.$t('wallet.input')+sliceLen(walletType==1?fromW.account:owner.account)+' '+this.$t('wallet.walletPsw')
+            }
         },
         created(){
             this.init();
@@ -238,7 +249,8 @@
             sendAll(){
                 contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
                     let balance=contractService.web3.fromWei(data.toString(10), 'ether');
-                    console.log('sendAll',balance,this.walletType,data,balance)
+                    // console.log('sendAll',balance,this.sendTranscation.gas);
+                    this.init();
                     if(this.walletType==1){
                         this.sendTranscation.value = mathService.sub(balance,this.sendTranscation.gas);
                     }else{
@@ -259,7 +271,7 @@
                     return;
                 }
                 // if(this.walletType==1){
-                if(mathService.sub(mathService.add(this.sendTranscation.value-0,this.sendTranscation.gas-0),this.balance)>0){
+                if(mathService.sub(mathService.accAdd(this.sendTranscation.value-0,this.sendTranscation.gas-0),this.balance)>0){
                     this.$message.warning({message:this.$t('wallet.insufficientBalance'),customClass:'warn'});
                     return;
                 }
@@ -285,8 +297,14 @@
                                     this.$set(this.availOwners,index,item)
                                 });
                             });
-                            this.showSelOwners = true;
                             this.availOwners = avail;
+                            if(this.availOwners.length==1){
+                                this.owner = this.availOwners[0];
+                                this.showSelOwners = false;
+                                this.showConfirm = true;
+                            }else{
+                                this.showSelOwners = true;
+                            }
                         }
                     });
                 }
@@ -310,7 +328,7 @@
                         data: contractService.web3.toHex(this.sendTranscation.input)
                     };
                     keyManager.recover(transParam.from,this.sendTranscation.psw,'hex',(err,data)=>{
-                        console.warn('private---',err,data);
+                        // console.warn('private---',err,data);
                         if(err){
                             this.$message.error(this.$t('form.wrongPsw'));
                             return;
@@ -360,46 +378,31 @@
                             this.$message.error(this.$t('form.wrongPsw'));
                             return;
                         }
-                        console.log('recover--->',data);
                         let priKey = data;
                         this.sendLoading = true;
                         contractService.platONSendTransaction(contractService.getABI(1),this.fromW.address,'submitTransaction',JSON.stringify(param1),this.owner.address,priKey,false,false,false,true).then((data)=>{
-                            console.log('submitTransaction----->',data);
-                            let tradeObj={
-                                tradeTime:new Date().getTime(),
-                                hash:data.hash,
-                                value:contractService.web3.fromWei(param.value,"ether"),
-                                gasPrice:this.gasPrice,
-                                fromAccount:this.fromW.account,
-                                from:this.fromW.address,
-                                type:'jointWalletExecution',
-                                state:1
-                            };
-                            console.log('submitTransaction-----tradeObj---->',tradeObj);
-                            this.saveTractRecord(tradeObj).then(()=>{
-                                contractService.platONSendTransaction(contractService.getABI(1),this.fromW.address,'confirmTransaction',JSON.stringify([data.result[0]]),this.owner.address,priKey,false,false,false).then((data1)=>{
-                                    console.log('confirmTransaction------>',data1);
-                                    let tradeObj1={
-                                        tradeTime:new Date().getTime(),
-                                        hash:data1.hash,
-                                        value:0,
-                                        gasPrice:this.gasPrice,
-                                        fromAccount:this.owner.account,
-                                        from:this.owner.address,
-                                        type:'jointWalletExecution',
-                                        state:0
-                                    };
-                                    console.log('confirmTransaction-----tradeObj---->',tradeObj1);
-                                    this.saveTractRecord(tradeObj1).then(()=>{
-                                        this.sendLoading = false;
-                                        this.showConfirm = false;
-                                        this.$router.push('/o-wallet-share-detail')
-                                    });
-                                    console.log('confirmTransaction---->',data1);
-                                }).catch((e)=>{
+                            let txId = (data.result&&data.result.length>0)?data.result[0]:null;
+                            contractService.platONSendTransaction(contractService.getABI(1),this.fromW.address,'confirmTransaction',JSON.stringify([data.result[0]]),this.owner.address,priKey,false,false,false).then((data1)=>{
+                                let tradeObj1={
+                                    tradeTime:new Date().getTime(),
+                                    hash:data1.hash,
+                                    value:0,
+                                    gasPrice:this.gasPrice,
+                                    fromAccount:this.owner.account,
+                                    from:this.owner.address,
+                                    to:this.fromW.address,
+                                    txId:txId,
+                                    type:'jointWalletExecution',
+                                    state:0
+                                };
+                                this.saveTractRecord(tradeObj1).then(()=>{
                                     this.sendLoading = false;
-                                    this.$message.error(this.$t('wallet.transactionFailed'));
+                                    this.showConfirm = false;
+                                    this.$router.push('/o-wallet-share-detail')
                                 });
+                            }).catch((e)=>{
+                                this.sendLoading = false;
+                                this.$message.error(this.$t('wallet.transactionFailed'));
                             });
                         }).catch((e)=>{
                             this.sendLoading = false;
@@ -411,12 +414,27 @@
             selFee(data){
                 this.gasPrice=data;
                 this.sendTranscation.gas = mathService.mul(this.gas,this.gasPrice);
+            },
+            sendTranscationValueChange(val){
+                if(val.length>20){
+                    const now=val.substring(0,20)
+                    val=now
+                    this.sendTranscation.value=now
+                    this.sendTranscationInputKey=Math.random()
+                    this.sendTranscationFocus=true
+                }
             }
         },
         components:{
             feeSlider
+        },
+        directives: {
+            focus: {
+                inserted: function (el, {value}) {
+                    value&&el.firstElementChild&&el.firstElementChild.focus()
+                }
+            }
         }
-
     }
 </script>
 
@@ -452,6 +470,9 @@
         padding-left: 30px;
         font-size: 12px;
         color: #525768;
+        .el-input-group__append{
+            position:relative;
+        }
         .more{
             color: #24272b;
             i{

@@ -30,11 +30,16 @@ export const voteAction = {
                         if(data.Data){
                             let num = data.Data-0,ids=[];
                             for(let i=0;i<num;i++){
-                                let ticketIndex = (i+'').charCodeAt(0).toString(16)
+                                let is = i+'',ticketIndex='';
+                                for(let j=0;j<is.length;j++){
+                                    ticketIndex+=is.charCodeAt(j).toString(16)
+                                }
+                                // let ticketIndex = (i+'').charCodeAt(0).toString(16)
                                 let str = txHash.replace(/^0x/,'')+ticketIndex;
                                 var shaObj = new jsSHA("SHA3-256", "HEX");
                                 shaObj.update(str);
                                 let id='0x'+shaObj.getHash("HEX");
+                                console.log('id---->',id);
                                 ids.push(id);
                             }
                             resolve(ids);

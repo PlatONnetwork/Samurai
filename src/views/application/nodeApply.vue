@@ -38,7 +38,7 @@
                             <el-form-item prop="admin">
                                 <el-select v-model="nodeForm.Owner">
                                     <el-option v-for="wallet in allWallets"
-                                               :label="(wallet.account.length>16?wallet.account.slice(0,16):wallet.account)+'--'+wallet.balance+' Energon'"
+                                               :label="(wallet.account.length>10?wallet.account.slice(0,10):wallet.account)+'--'+wallet.balance+' Energon'"
                                                :value="wallet.address"></el-option>
                                 </el-select>
                             </el-form-item>
@@ -77,12 +77,12 @@
                     <el-form-item prop="payWallet" :label="$t('application.payWallet')">
                         <el-select v-model="payForm.payWallet" @change="changePayWallet">
                             <el-option v-for="wallet in wallets"
-                                       :label="(wallet.account.length>16?wallet.account.slice(0,16):wallet.account)+'--'+wallet.balance+' Energon'"
+                                       :label="(wallet.account.length>10?wallet.account.slice(0,10):wallet.account)+'--'+wallet.balance+' Energon'"
                                        :value="wallet.address"></el-option>
                         </el-select>
                     </el-form-item>
                     <el-form-item prop="value" :label="$t('application.stakeAmount')">
-                        <el-input v-model.trim="payForm.value" @blur="changeVal" @input="getRanking" :placeholder="$t('application.stakeNumber')" type="number">
+                        <el-input v-model.trim="payForm.value" @blur="changeVal" @input="getRanking" :placeholder="$t('application.stakeNumber')" type="number"  v-focus="payFormInputFocus" :key="payFormInputKey">
                             <el-button slot="append" @click="sendAll">All</el-button>
                         </el-input>
                         <span class="send-txt">{{$t("wallet.wantTo")}} <span class="send-val"><span class="bold">{{payForm.value || 0}}</span>&nbsp;Energon</span></span>
@@ -188,36 +188,21 @@
                 totalPay:0,
                 min:1000000,
                 belowMinimum:false,
-                handleLoading:false
+                handleLoading:false,
+                payFormInputKey:0,
+                payFormInputFocus:false
             }
         },
         computed: {
             ...mapGetters(['joinNode','contractAddress','lang']),
             logoIndex(){
-                return '01';
                 let index = Math.floor(Math.random()*(42-1+1)+1);
                 return index<10?'0'+index:index;
             }
         },
         mounted(){
             let _this = this;
-            this.getBalOrd().then((list)=>{
-                this.wallets = list;
-            });
-            this.getOrd().then((arr)=>{
-                this.allWallets = arr;
-                this.allWallets.forEach((wallet,index)=>{
-                    contractService.web3.eth.getBalance(wallet.address,(err,data)=>{
-                        if(err) throw err;
-                        let balance=contractService.web3.fromWei(data.toString(10), 'ether');
-                        wallet.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
-                        _this.$set(_this.allWallets,index,wallet)
-                    })
-                });
-                if((!this.joinNode || JSON.stringify(this.joinNode)=='{}') && arr.length>0){
-                    this.nodeForm.Owner = arr[0].address
-                }
-            });
+            this.initWallets();
             if(this.joinNode && JSON.stringify(this.joinNode)!=='{}'){
                 this.nodeForm.name = this.joinNode.Extra.nodeName;
                 this.nodeForm.host = this.joinNode.Host+':'+this.joinNode.Port;
@@ -328,6 +313,26 @@
                     this.payForm.fee = mathService.mul(this.gas,this.gasPrice);
                 }
             },
+            initWallets(){
+                let _this = this;
+                this.getBalOrd().then((list)=>{
+                    this.wallets = list;
+                });
+                this.getOrd().then((arr)=>{
+                    this.allWallets = arr;
+                    this.allWallets.forEach((wallet,index)=>{
+                        contractService.web3.eth.getBalance(wallet.address,(err,data)=>{
+                            if(err) throw err;
+                            let balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                            wallet.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
+                            _this.$set(_this.allWallets,index,wallet)
+                        })
+                    });
+                    if((!this.joinNode || JSON.stringify(this.joinNode)=='{}') && arr.length>0){
+                        this.nodeForm.Owner = arr[0].address
+                    }
+                });
+            },
             //检验文件
             validateFile(fileObj) {
                 let fileSize = fileObj.size;
@@ -347,9 +352,17 @@
                     this.payForm.value = balance - this.payForm.fee;
                     this.total = (this.payForm.value-0)+this.payForm.fee;
                     this.getRanking();
+                    this.initWallets();
                 });
             },
-            getRanking(){
+            getRanking(val){
+                if(val && val.length>20){
+                    const now=val.substring(0,20)
+                    val=now
+                    this.payForm.value=now
+                    this.payFormInputKey=Math.random()
+                    this.payFormInputFocus=true
+                }
                 this.valueNull = false;
                 this.belowMinimum = false;
                 let arr = JSON.parse(JSON.stringify(this.depositList));
@@ -365,7 +378,8 @@
                     this.valueNull = true;
                 }else{
                     this.valueNull = false;
-                    this.total = (this.payForm.value-0)+this.payForm.fee;
+                    console.log(this.payForm.value-0,this.payForm.fee);
+                    this.total = this.add(this.payForm.value-0,this.payForm.fee-0);
                     this.getGas().then((gas)=>{
                         console.log('getGas---->',gas);
                         this.gas = gas;
@@ -577,6 +591,13 @@
         },
         components:{
             feeSlider
+        },
+        directives: {
+            focus: {
+                inserted: function (el, {value}) {
+                    value&&el.firstElementChild&&el.firstElementChild.focus()
+                }
+            }
         }
     }
 </script>
@@ -599,7 +620,8 @@
         padding:20px;
         font-size: 12px;
         .step{
-            padding-right:70px;
+            // padding-right:70px;
+            padding: 0 70px 40px 0;
         }
         .label-txt-line{
             display:inline-block;
@@ -679,6 +701,7 @@
             line-height:60px;
             text-align: right;
             border-top:solid 1px #D3D8E1;
+            background: #fff;
             .el-button{
                 margin-right:40px;
             }

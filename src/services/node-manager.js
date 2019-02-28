@@ -261,6 +261,7 @@ class nodeManager {
                         nodeId = this.getTestNode();
                     console.log('nodeId',nodeId,_this.getExePath());
                     // var conncetProc = spawn.exec(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir ${userDataPath}data --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 --bootnodes=${nodeId} --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --gcmode=archive --wasmlog wasm.log console \n`, {
+                    console.log(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir ${userDataPath}data --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --gcmode=archive --wasmlog wasm.log console \n`)
                     var conncetProc = spawn.exec(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir ${userDataPath}data --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --gcmode=archive --wasmlog wasm.log console \n`, {
                         cwd: _this.getExePath(),
                         encoding: 'arrayBuffer',

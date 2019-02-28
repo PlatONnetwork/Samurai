@@ -57,6 +57,8 @@ class Settings {
                     this.mkf(this.userDataPath+'net_test/data',()=>{
                         let configJSON = require("../../static/json/platon");
                         fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON));
+                        let cbftJSON = require("../../static/json/cbft.json");
+                        fs.writeFileSync(`${this.userDataPath}net_test/data/cbft.json`,JSON.stringify(cbftJSON));
                         let staticNodesJSON = require("../../static/json/static-nodes.json");
                         fs.writeFileSync(`${this.userDataPath}net_test/data/static-nodes.json`,JSON.stringify(staticNodesJSON));
                     });
