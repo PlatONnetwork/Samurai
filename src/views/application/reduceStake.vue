@@ -2,27 +2,27 @@
     <div class="reduce-stake format-style">
         <div class="reduce-stake-content">
             <p>{{$t('application.reduceStake')}}</p>
-            <numberOnly-input class="input-width" :placeholder="$t('application.reduceAmount')" @valueChange="valueChange" :typeInt="false"></numberOnly-input>
-            <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.maximumAmount')}}</span><span class="value-txt">{{depositList.length>0?depositList[0]:node.Deposit}} Energon</span></p>
-            <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.minimumAmount')}}</span><span class="value-txt">{{depositList.length>0?depositList[depositList.length-1]:node.Deposit}} Energon</span></p>
+            <numberOnly-input class="input-width" :placeholder="$t('application.reduceAmount')" @valueChange="valueChange" :typeInt="false" :inputVal="inputVal"></numberOnly-input>
+            <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.maximumAmount')}}</span><span class="value-txt">{{depositList.length>0?depositList[0]:node&&node.Deposit}} Energon</span></p>
+            <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.minimumAmount')}}</span><span class="value-txt">{{depositList.length>0?depositList[depositList.length-1]:node&&node.Deposit}} Energon</span></p>
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.remainingStake')}}</span><span class="value-txt">{{remaining}}{{remaining>0?' Energon':''}}</span></p>
             <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.expectedRanking')}}</span><span class="value-txt">{{ranking}}</span></p>
             <p class="btn-box">
-                <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="back">{{$t('form.cancel')}}</el-button>
                 <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="confirm" :disabled="!value">{{$t('form.submit')}}</el-button>
+                <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="back">{{$t('form.cancel')}}</el-button>
             </p>
 
         </div>
 
         <!--超过200名提示-->
-        <div class="modal" v-if="showRankingTip">
+        <div class="modal confirm tipModal" v-if="showRankingTip || showRemainTip">
             <div class="modal-main">
                 <div class="modal-title">{{$t('application.after200Warn')}}</div>
                 <div class="modal-content">
-                    {{$t('application.after200Tip')}}
+                    {{showRankingTip?$t('application.after200Tip'):$t('application.remainTip')}}
                 </div>
                 <div class="modal-btn">
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showRankingTip=false">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="closeModal">{{$t("form.cancel")}}</el-button>
                     <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="confirmRanking" type="primary">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
@@ -36,18 +36,22 @@
                 </div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{value}} Energon</span></p>
-                        <p>From<span class="txt">{{node.Owner}}</span></p>
-                        <p>To<span class="txt">{{contractAddress}}</span></p>
+                        <p>{{$t("application.reduceAmount2")}}<span class="txt">{{value}} Energon</span></p>
+                        <p>
+                            {{$t("application.nodeWallet")}}
+                            <span class="txt">
+                                <i :class="['trade-wallet-icon',keyObj.icon]">{{keyObj.account.slice(0,1).toUpperCase()}}</i>
+                                {{keyObj.account || node.Owner}}</span>
+                        </p>
                         <p>{{$t("wallet.fee")}}<span class="txt">{{price}} Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input type="password" :placeholder="$t('wallet.input')+(keyObj?keyObj.account:'')+' '+$t('wallet.walletPsw')" v-model.trim="psw"></el-input>
+                        <el-input type="password" :placeholder="$t('wallet.input')+(keyObj?keyObj.account:'')+$t('wallet.walletPsw')" v-model.trim="psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :loading="handleLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :loading="handleLoading" :disabled="!psw">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -79,7 +83,9 @@
                 gas:0,
                 gasPrice:0,
                 price:0,
-                handleLoading:false
+                handleLoading:false,
+                inputVal:0,
+                showRemainTip:false
             }
         },
         computed: {
@@ -87,24 +93,32 @@
         },
         mounted(){
             this.node = this.$route.query;
+            this.inputVal=mathService.mul(this.node.Deposit,0.1);
+            this.value=mathService.mul(this.node.Deposit,0.1);
+            this.remaining = mathService.sub(this.node.Deposit,this.value);
             this.getDepositList().then((data)=>{
-                console.log('质押排名--',data);
                 if(data.length>0){
-                    this.ranking = data.indexOf(this.node.Deposit)+1;
+                    let arr = JSON.parse(JSON.stringify(data));
+                    arr.push(this.remaining);
+                    this.ranking = arr.indexOf(this.remaining)+1;
                 }else{
                     this.ranking = 1;
                 }
                 this.depositList = data;
-                this.remaining = this.node.Deposit;
             });
             this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                 this.keyObj  = keyObj
-            })
+            });
         },
         methods: {
             ...mapActions(['getDepositList','getWalletByAddress','saveTractRecord']),
             valueChange(value){
                 this.value = value;
+                if(this.value-0<mathService.mul(this.node.Deposit,0.1)-0){
+                    this.value = mathService.mul(this.node.Deposit,0.1);
+                }
+                this.inputVal = this.value;
+                this.getRanking();
             },
             back(){
                 this.$router.back();
@@ -114,6 +128,8 @@
                     this.$message.warning(this.$t('application.stakeNull'))
                 }else if(this.ranking>200){
                     this.showRankingTip = true;
+                }else if(this.remaining<50000){
+                    this.showRemainTip = true;
                 }else if(Number(this.value) < Number(mathService.mul(this.node.Deposit,0.1))){
                     this.$message.warning(this.$t('application.cannotBeLess'))
                 }else if(Number(this.value) > Number(this.node.Deposit)){
@@ -124,10 +140,12 @@
                         this.gas = gas;
                         this.price = contractService.web3.fromWei(this.gasPrice, "ether")*this.gas;
                         this.showRankingTip = false;
+                        this.showRemainTip = false;
                         this.showConfirm=true;
                     }).catch((e)=>{
                         console.log('估算gas值失败',e);
                         this.showRankingTip = false;
+                        this.showRemainTip = false;
                         this.showConfirm=true;
                         // this.$message.error('估算gas值失败')
                     });
@@ -147,6 +165,10 @@
                     });
                     this.ranking = arr.indexOf(this.remaining)+1;
                 }
+            },
+            closeModal(){
+                this.showRankingTip = false;
+                this.showRemainTip = false
             },
             confirmRanking(){
                 this.showRankingTip = false;
@@ -188,7 +210,9 @@
                                 from:this.keyObj.address,
                                 to:contractService.appContractAddress,
                                 type:'reduceStake',
-                                state:0
+                                state:0,
+                                nodeId:this.node.CandidateId,
+                                nodeName:this.node.Extra.nodeName
                             };
                             this.saveTractRecord(tradeObj).then(()=>{
                                 this.$message.success(this.$t('trade.transactionSent'));
@@ -248,16 +272,11 @@
             color: #000002;
         }
         .btn-box{
-            padding-right:60px;
-            position:absolute;
-            bottom:0;
+            padding-top:20px;
             width:calc(~"100% - 40px");
-            height:60px;
-            line-height:60px;
-            text-align: right;
             border-top:solid 1px #D3D8E1;
             .el-button{
-                margin-left:40px;
+                margin-right:30px;
             }
         }
         .check-box{
@@ -270,6 +289,11 @@
         }
         .input-width{
             width:300px;
+        }
+    }
+    .tipModal{
+        .modal-main .modal-content{
+            padding:20px 20px 85px;
         }
     }
 

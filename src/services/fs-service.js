@@ -27,16 +27,36 @@ const fsObj = {
         path=`${keyPath}/${address}.json`;
         try{
             keyObj = JSON.parse(content);
-            if(keyObj.account){
+            /*if(keyObj.account){
                 delete keyObj.account
-            }
+            }*/
             jsonKeyObj = JSON.stringify(keyObj)
         }catch(e){
             jsonKeyObj = content;
         }
         fs.writeFileSync(path, jsonKeyObj)
-    }
+    },
+    deleteFolder(path,cb){
+        var _this = this;
+        var files = [];
+        try {
+            if( fs.existsSync(path) ) {
+                files = fs.readdirSync(path);
+                files.forEach(function(file,index){
+                    var curPath = path + "/" + file;
+                    if(fs.statSync(curPath).isDirectory()) { // recurse
+                        _this.deleteFolder(curPath);
+                    } else { // delete file
+                        fs.unlinkSync(curPath);
+                    }
+                });
+                fs.rmdirSync(path);
+            }
+        }catch(e){
+            cb(e);
+        }
 
+    }
 
  }
 export default fsObj

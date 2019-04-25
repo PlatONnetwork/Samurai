@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="116px" height="116px" viewBox="0 0 116 116" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.1 (67048) - http://www.bohemiancoding.com/sketch -->
+    <title>Icon</title>
+    <desc>Created with Sketch.</desc>
+    <g id="0.6.0" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="1.网络选择-初次选择" transform="translate(-122.000000, -205.000000)">
+            <g id="Card1" transform="translate(50.000000, 123.000000)">
+                <g id="Card">
+                    <g id="Icon" transform="translate(72.000000, 82.000000)">
+                        <circle id="Oval-4" fill="#FFFFFF" opacity="0.098828125" cx="58" cy="58" r="58"></circle>
+                        <g id="Group" transform="translate(25.000000, 25.000000)" fill-rule="nonzero">
+                            <polygon id="Rectangle-path" fill="#FBB613" points="24.8630137 24.9308219 41.1143836 24.9308219 41.1143836 41.1821918 24.8630137 41.1821918"></polygon>
+                            <g transform="translate(9.041096, 9.041096)" fill="#FFFFFF" id="Shape">
+                                <path d="M8.0239726,47.8726027 L40.8883562,47.8726027 C44.6856164,47.8726027 47.7821918,44.7760274 47.7821918,40.9787671 L47.7821918,8.11438356 L40.2328767,8.11438356 L40.2328767,40.3006849 L8.0239726,40.3006849 L8.0239726,47.8726027 Z"></path>
+                                <path d="M39.8938356,7.75273973 L39.8938356,0.180821918 L7.02945205,0.180821918 C3.23219178,0.180821918 0.135616438,3.27739726 0.135616438,7.07465753 L0.135616438,39.9390411 L7.68493151,39.9390411 L7.68493151,7.75273973 L39.8938356,7.75273973 Z"></path>
+                            </g>
+                            <polygon id="Rectangle-path" fill="#00B6DC" points="56.8232877 0.203424658 65.8417808 0.203424658 65.8417808 9.22191781 56.8232877 9.22191781"></polygon>
+                            <polygon id="Rectangle-path" fill="#EA106E" points="0.158219178 56.9136986 9.17671233 56.9136986 9.17671233 65.9321918 0.158219178 65.9321918"></polygon>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

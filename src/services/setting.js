@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const packageJson = require('../../package.json');
 const lodash = require('lodash');
+const os=require('os')
 import store from '@/vuex/store';
 let instance = null;
 import nodeManager from '@/services/node-manager';
@@ -39,30 +40,34 @@ class Settings {
 
     init() {
         return new Promise((resolve, reject)=>{
-            console.info(`Running in production mode: ${this.inProductionMode}`);
+            console.info(`Running in production mode: ${store.state.setting.testMode}`);
+            const buildDir=(net)=>{
+                this.mkf(`${this.userDataPath}net_${net}`,()=>{
+                    this.mkf(`${this.userDataPath}net_${net}/keystore`);
+                    if(!fs.existsSync(`${this.userDataPath}net_${net}/init`)){
+                        fs.writeFileSync(`${this.userDataPath}net_${net}/init`,0)
+                    }else{
+                        let dataExit = fs.existsSync(`${this.userDataPath}net_${net}/data/platon`);
+                        fs.writeFileSync(`${this.userDataPath}net_${net}/init`,dataExit?1:0);
+                    }
+                    this.mkf(`${this.userDataPath}net_${net}/data`,()=>{
+                        let configJSON = require("../../static/json/platon");
+                        fs.writeFileSync(`${this.userDataPath}net_${net}/data/platon.json`,JSON.stringify(configJSON));
+                    });
+                });
+            };
             const run=() =>{
+                let testMode = store.state.setting.testMode;
                 //初始化文件存储目录
                 this.mkf(this.userDataPath+'net_main',()=>{
                     this.mkf(this.userDataPath+'net_main/keystore')
                 });
-                this.mkf(this.userDataPath+'net_test',()=>{
-                    this.mkf(this.userDataPath+'net_test/keystore');
-                    if(!fs.existsSync(`${this.userDataPath}net_test/init`)){
-                        fs.writeFileSync(`${this.userDataPath}net_test/init`,0)
-                    }else{
-                        let dataExit = fs.existsSync(`${this.userDataPath}net_test/data/platon`);
-                        console.log('dataExit----',dataExit);
-                        fs.writeFileSync(`${this.userDataPath}net_test/init`,dataExit?1:0);
-                    }
-                    this.mkf(this.userDataPath+'net_test/data',()=>{
-                        let configJSON = require("../../static/json/platon");
-                        fs.writeFileSync(`${this.userDataPath}net_test/data/platon.json`,JSON.stringify(configJSON));
-                        let cbftJSON = require("../../static/json/cbft.json");
-                        fs.writeFileSync(`${this.userDataPath}net_test/data/cbft.json`,JSON.stringify(cbftJSON));
-                        let staticNodesJSON = require("../../static/json/static-nodes.json");
-                        fs.writeFileSync(`${this.userDataPath}net_test/data/static-nodes.json`,JSON.stringify(staticNodesJSON));
-                    });
-                });
+                buildDir('amigo');
+                buildDir('batalla');
+                if(testMode){
+                    buildDir('test');
+                    buildDir('innerdev');
+                }
                 this.mkf(this.userDataPath+'net_custom',()=>{
                     this.mkf(this.userDataPath+'net_custom/chain');
                     this.mkf(this.userDataPath+'net_custom/keystore')
@@ -103,39 +108,41 @@ class Settings {
                 appVersion:packageJson.version,
                 rpcMode:this.rpcMode
             });
-
             //获取用户数据存储目录
-            // let exePath = nodeManager.getExePath();
-            // let pathProc = child_process.execFile("getUserDataPath.bat", null, {
-            //     cwd: exePath,
-            // },  (error, stdout, stderr)=> {
-            //     if (error !== null) {
-            //         console.log("exec error" + error);
-            //         reject();
-            //     }
-            // });
-            // pathProc.stdout.once('data', (data)=>{
-            //     console.log('stdout: ' + data);
-            //     const arr = data.trim().split(/\s+/);
-            //     console.log('UserDataPath=', arr[2]);
-            //     let dataPath = arr[2];
-            //     dataPath = dataPath.replace(/\\/g,'/')+'/';
-            //     this.userDataPath = dataPath;
-            //     run();
-            // });
+            if (/win/.test(os.platform())) {
+            // if(false){
+                let exePath = nodeManager.getExePath();
+                let pathProc = child_process.execFile("getUserDataPath.bat", null, {
+                    cwd: exePath,
+                },  (error, stdout, stderr)=> {
+                    if (error !== null) {
+                        console.log("exec error" + error);
+                        reject();
+                    }
+                });
+                pathProc.stdout.once('data', (data)=>{
+                    console.log('stdout: ' + data);
+                    // const arr = data.trim().split(/\s+/);
+                    // console.log('UserDataPath=', arr[2]);
+                    // let dataPath = arr[2];
+                    let dataPath=data.trim().replace('UserDataPath    REG_SZ','').trim()
+                    dataPath = dataPath.replace(/\\/g,'/')+'/';
+                    this.userDataPath = dataPath;
+                    this.mkf(this.userDataPath,  run)
 
-            let dataPath = app.getPath('appData');
-            dataPath = dataPath.replace(/\\/g,'/')+'/';
-            console.log('dataPath----',dataPath);
-            // this.userDataPath = dataPath+'\\Samurai\\';
-            this.mkf(dataPath + '/Samurai', () => {
-                this.userDataPath =path.join( dataPath,'','Samurai/');
-                this.userDataPath = this.userDataPath.replace(/\\/g,'/');
-                console.log(`appData dataPath=${this.userDataPath},${dataPath}`)
-                run();
-            });
-
-
+                });
+            } else {
+                let dataPath = app.getPath('appData');
+                dataPath = dataPath.replace(/\\/g,'/')+'/';
+                console.log('dataPath----',dataPath);
+                // this.userDataPath = dataPath+'\\Samurai\\';
+                this.mkf(dataPath + '/Samurai', () => {
+                    this.userDataPath =path.join( dataPath,'','Samurai/');
+                    this.userDataPath = this.userDataPath.replace(/\\/g,'/');
+                    console.log(`appData dataPath=${this.userDataPath},${dataPath}`)
+                    run();
+                });
+            }
        });
 
     }
@@ -151,14 +158,14 @@ class Settings {
             if(exists){
                 let data =  JSON.parse(fs.readFileSync(userDataPath,{encoding:'utf8'}));
                 console.log('data----',data);
-                if(type=='test' || type=='main'){
+                if(type=='test' || type=='amigo' || type=='batalla' || type=='innerdev'){
                     this.keyPath = data[type]
                 }else{
                     let chainName = type.replace(/^custom_/,'');
                     this.keyPath = data[type]?data[type]:(defaultKeyPath+'net_custom'+'/chain/'+chainName+'/keystore');
                 }
             }else{
-                if(type=='test' || type=='main'){
+                if(type=='test' || type=='amigo' || type=='batalla' || type=='innerdev'){
                     this.keyPath = defaultKeyPath+'net_'+type+'/keystore/';
                 }else{
                     let chainName = type.replace(/^custom_/,'');

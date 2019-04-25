@@ -22,5 +22,8 @@ export const settingGetter = {
     },
     isMaximized(state){
         return state.isMax
+    },
+    testMode(state){
+        return state.testMode
     }
 };

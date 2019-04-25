@@ -48,6 +48,7 @@ export const settingAction = {
     },
     deleteTxn(){
         Settings.deleteUseData('net_test/txn.json');
+        Settings.deleteUseData('net_bata/txn.json');
     },
     updateChainName({state,commit},name){
         console.log('update chainName',name);
@@ -68,7 +69,8 @@ export const settingAction = {
                 throw err;
             } else {
                 if(paths && paths.length>0){
-                    paths.forEach(function(path) {
+                    let count=0;
+                    paths.forEach(function(path,index) {
                         console.warn(userDataPath,path);
                         var _src = userDataPath + '/' +path;
                         fs.stat(_src, function(err, stat) {
@@ -83,7 +85,9 @@ export const settingAction = {
                                             name:path,
                                             port:port
                                         });
-                                        cb(arr);
+                                        if(index==paths.length-1){
+                                            cb(arr);
+                                        }
                                     }
                                 }
                             }
@@ -94,5 +98,8 @@ export const settingAction = {
                 }
             }
         })
+    },
+    updataTeseMode({state,commit},bool){
+        state.testMode = bool;
     }
 }

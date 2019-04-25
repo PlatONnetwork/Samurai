@@ -4,10 +4,10 @@
             <div class="header">
                 <div class="node-info">
                     <p class="pic">
-                        <img :src="'./static/images/characters/characters-'+node.Extra.nodePortrait+'.jpg'" alt="" v-if="node.Extra">
+                        <span :class="['icon-node','node-'+node.Extra.nodePortrait%4]" v-if="node.Extra">{{node.Extra ? node.Extra.nodeName.slice(0,1).toUpperCase():''}}</span>
                     </p>
                     <p class="name">
-                        <span> <span class="bold">{{node.Extra?node.Extra.nodeName:''}}</span> <span v-if="city">({{city}})</span></span>
+                        <span><span class="bold">{{node.Extra?node.Extra.nodeName:''}}</span> <span v-if="city">({{city}})</span></span>
                         <span class="time" v-if="node.Extra">{{$t('application.applyTime')}}:{{node.Extra.time | FormatDate}}</span>
                         <span class="time" v-else>{{$t('application.applyTime')}}:</span>
                     </p>
@@ -32,17 +32,17 @@
                         </li>
                         <li class="perc-li">
                             <p>{{$t('vote.currentTickets')}}</p>
-                            <p><span class="txt">{{ticketsCount}}</span></p>
+                            <p><span class="txt">{{node.ticketsCount}}</span></p>
                         </li>
-                        <li class="perc-li">
-                            <p>{{$t('vote.ticketAge')}}</p>
-                            <p><span class="txt">{{epoch}}</span>Bs</p>
-                        </li>
-                        <li  class="atp-li"></li>
+                        <!--<li class="perc-li">-->
+                            <!--<p>{{$t('vote.ticketAge')}}</p>-->
+                            <!--<p><span class="txt">{{epoch}}</span>Bs</p>-->
+                        <!--</li>-->
+                        <!--<li  class="atp-li"></li>-->
                     </ul>
                 </div>
-                <div class="vote-btn">
-                    <span @click="gotoVote">{{$t('vote.toVote')}}</span>
+                <div class="vote-btn" v-if="!node.outSideNode">
+                    <span @click="gotoVote" :class="[hasBalOrds?'':'disabled']">{{$t('vote.toVote')}}</span>
                 </div>
             </div>
             <div class="detail">
@@ -50,20 +50,18 @@
                 <div class="block">
                     <p class="sub-title">{{$t('application.nodeInfo')}}</p>
                     <p>
-                        <span class="label-txt">{{$t('application.nodeUrl')}}</span>
-                        <span class="bold">{{node.Host}}:{{node.Port}}</span>
+                        <span class="label-txt">{{$t('application.nodeUrl')}}</span><span class="bold">{{node.Host}}:{{node.Port}}</span>
                     </p>
                     <p class="candidateId-box">
                         <span class="label-txt">{{$t('application.nodePublicKeyID')}}</span>
                         <span class="candidateId bold">0x{{node.CandidateId}}</span>
                     </p>
                     <p>
-                        <span class="label-txt">{{$t('application.nodeWallet')}}</span>
-                        <span class="bold">{{node.Owner}}</span>
+                        <span class="label-txt">{{$t('application.nodeWallet')}}</span><span class="bold">{{node.Owner}}</span>
                     </p>
                     <p class="nodeIntro">
                         <span class="label-txt">{{$t('application.nodeIntro')}}</span>
-                        <span class="nodeIntroTxt bold">{{node.Extra?node.Extra.nodeDiscription:''}}</span>
+                        <span class="nodeIntroTxt bold" :style="{width:isMaximized?'604px':'88%'}">{{node.Extra?node.Extra.nodeDiscription:''}}</span>
                     </p>
                 </div>
                 <div class="block">
@@ -103,11 +101,12 @@
             return {
                 node:{},
 		        city:'',
-                ticketsCount:'',
-                epoch:null
+                epoch:null,
+                hasBalOrds:false
             }
         },
         computed: {
+            ...mapGetters(['isMaximized']),
             APIConfig:function(){
                 var APIConfig = require('@/config/API-config');
                 return APIConfig.default;
@@ -117,11 +116,15 @@
             this.init();
         },
         methods: {
-            ...mapActions(['getNodeDetail','getCityByIp','verifiersList','getOrd','getBalOrd']),
+            ...mapActions(['getNodeDetail','getCityByIp','verifiersList','getOrd','getBalOrd','hasBalOrd','candidateList']),
             init(){
                 let param=this.$route.query,_this=this;
                 this.city = param.city;
+                this.hasBalOrd().then((hasBalOrd)=>{
+                    this.hasBalOrds = hasBalOrd;
+                });
                 this.getNodeDetail(param).then((data)=>{
+                    console.log('getNodeDetail----',data);
                     if(!data) return;
                     let ip = data.Host.replace(/^http\:\/\//g,'');
                     data.officialWebsite = data.Extra.officialWebsite;
@@ -134,46 +137,39 @@
                         this.node.Extra.nodePortrait = param.nodePortrait;
                         this.node.ranking = param.ranking;
                         this.node.allowed = param.allowed;
-                        this.getNodeNote();
+                        this.node.outSideNode = param.outSideNode;
+                        this.node.ticketsCount = param.ticketsCount;
                         this.getEpoch();
                     });
                 });
             },
             openNet(){
+                //打开外部网站
                 const shell = require('electron').shell;
                 shell.openExternal(this.node.Extra.officialWebsite);
             },
-            getNodeNote(){
-                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateTicketIds',this.node.Owner,[this.node.CandidateId]).then((ticketIds)=>{
-                    console.log('ticketIds---->',ticketIds);
-                    this.ticketsCount = JSON.parse(ticketIds).length;
-                })
-            },
             getEpoch(){
+                // 获取指定候选人的票龄
                 contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateEpoch',this.node.Owner,[this.node.CandidateId]).then((epoch)=>{
                     console.log('epoch----',epoch);
                     this.epoch = epoch;
                 })
             },
             gotoVote(){
-                this.getOrd().then((arr)=>{
-                    if(arr.length==0){
-                        this.$message.warning(this.$t('application.noWallet'));
-                        return;
+                if(!this.hasBalOrds) return;
+                this.candidateList().then((list)=>{
+                    let idArr = list.map((item)=>{
+                        return item.CandidateId
+                    });
+                    if(idArr.length==0 || idArr.indexOf(this.node.CandidateId.replace(/^0x/,''))==-1){
+                        this.$message.warning(this.$t('vote.invalidNode'));
                     }else{
-                        this.getBalOrd().then((arr)=>{
-                            if(arr.length==0){
-                                this.$message.warning(this.$t('vote.noBalance'));
-                                return;
-                            }else{
-                                this.$router.push({
-                                    path:'/vote',
-                                    query:{
-                                        nodeId:this.node.CandidateId,
-                                        nodeName:this.node.Extra?this.node.Extra.nodeName:'',
-                                        icon:this.node.Extra?this.node.Extra.nodePortrait:''
-                                    }
-                                });
+                        this.$router.push({
+                            path:'/vote',
+                            query:{
+                                nodeId:this.node.CandidateId,
+                                nodeName:this.node.Extra?this.node.Extra.nodeName:'',
+                                icon:this.node.Extra?this.node.Extra.nodePortrait:''
                             }
                         });
                     }
@@ -190,15 +186,26 @@
 </script>
 
 <style lang="less" scoped>
+    .node-detail .pledge-info{
+        .atp-li{
+            margin-right: 20px;
+        }
+        .perc-li{
+            margin-right: 20px;
+        }
+    }
+    .label-txt+.bold{
+        font-weight:bold;
+    }
     .nodeIntro{
         display: flex;
     }
     .nodeIntroTxt{
         word-break: break-all;
-        width: 611px;
+        width: 604px;
     }
     .net-btn{
-        color: #18C2E9;
+        color:  #0077FF;
         cursor: pointer;
     }
     .header{
@@ -208,7 +215,6 @@
         height:45px;
         line-height:45px;
         background: #ECF1F8;
-        box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
         border-radius: 0 0 4px 4px;
         text-align: center;
         >span{
@@ -216,8 +222,30 @@
             font-size: 12px;
             color: #24272B;
             cursor:pointer;
-            background: url("./images/icon_vote_black.svg") no-repeat left center;
+            background: url("./images/61.icon_vote2.svg") no-repeat left center;
             background-size: 16px 16px;
+            &:not(.disabled):hover{
+                 color:#0077FF;
+                 background: url("./images/61.icon_vote.svg") no-repeat left center;
+                 background-size: 16px 16px;
+             }
+        }
+        .disabled{
+            cursor:not-allowed;
+            background: url("./images/61.icon_vote3.svg") no-repeat left center;
+            background-size: 16px 16px;
+        }
+    }
+    .icon-node{
+        width:42px;
+        height:42px;
+        line-height:42px;
+        font-size: 16px;
+    }
+    .node-state{
+        span{
+            height:32px;
+            line-height:30px;
         }
     }
 </style>

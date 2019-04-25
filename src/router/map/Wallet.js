@@ -46,7 +46,6 @@ const Wallet= {
         path: '/o-wallet-send',
         component: OWalletSend,
         meta: {
-            flag: 'child'
         }
     },
     OWalletAccept: {

@@ -2,7 +2,9 @@ import { nativeImage, app, BrowserWindow, globalShortcut, ipcMain, Tray, Menu } 
 import god from './god'
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
+// import os from 'os';
+import { autoUpdater } from 'electron-updater'
+
 const {
 	exec
 } = require('child_process');
@@ -50,6 +52,7 @@ function createWindow() {
         height: 672,
         minWidth: 980,
         minHeight: 672,
+        transparent: true,
         icon: iconPath,
         useContentSize: true,
         iconNativeImage: iconPath,
@@ -90,7 +93,7 @@ function createWindow() {
         }
     ]);
 
-    tray.setToolTip('PlatONWallet');
+    tray.setToolTip('Samurai');
     tray.setContextMenu(contextMenu);
     tray.on('double-click', () => { //双击显示
         mainWindow.show();
@@ -119,6 +122,8 @@ const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
 if(shouldQuit) {
 	app.quit();
 }
+
+app.setPath('userData', path.join(app.getPath('userData'),'..','Samurai data'))
 
 // Electron 会在初始化后并准备
 // 创建浏览器窗口时，调用这个函数。
@@ -158,12 +163,16 @@ ipcMain.on('minimize-window', () => {
 
 //最大化
 ipcMain.on('maximize-window', () => {
-	mainWindow.maximize()
+    mainWindow.setResizable(true)
+    mainWindow.maximize()
+    mainWindow.setResizable(false)
 });
 
 //还原
 ipcMain.on('orignal-window', () => {
-	mainWindow.unmaximize();
+    mainWindow.setResizable(true)
+    mainWindow.unmaximize();
+    mainWindow.setResizable(false)
 	// mainWindow.restore()
 });
 
@@ -239,14 +248,71 @@ function autoRunDriver() {
 	}
 }
 
-/*
-import { autoUpdater } from 'electron-updater'
+autoUpdater.autoDownload = false
 
-autoUpdater.on('update-downloaded', () => {
-  autoUpdater.quitAndInstall()
+if (process.env.NODE_ENV !== "production") {
+    autoUpdater.updateConfigPath = path.join(
+        __dirname,
+        "../../dist/builder-effective-config.yaml",
+    )
+}
+
+function sendStatusToWindow(data) {
+    mainWindow.webContents.send("message", data)
+}
+autoUpdater.on("checking-for-update", () => {
+    sendStatusToWindow({
+        code: 1,
+        msg:"Checking for update..."
+    })
+})
+autoUpdater.on("update-available", info => {
+    sendStatusToWindow("Update available.")
+    mainWindow.webContents.send("isUpdateNow",{
+        code: 2,
+        data:info,
+        msg:'isUpdateNow'
+    })
+
+})
+autoUpdater.on("update-not-available", info => {
+    sendStatusToWindow("Update not available.")
+    mainWindow.webContents.send("noUpdateNow",{
+        code: 3,
+        data:info,
+        msg:'noUpdateNow'
+    })
+})
+autoUpdater.on("error", err => {
+    sendStatusToWindow({
+        code: -1,
+        data: err,
+        msg: 'Error in auto-updater.'
+    })
+})
+autoUpdater.on("download-progress", progressObj => {
+    let log_message = "Download speed: " + progressObj.bytesPerSecond
+    log_message = log_message + " - Downloaded " + progressObj.percent + "%"
+    log_message =
+        log_message +
+        " (" +
+        progressObj.transferred +
+        "/" +
+        progressObj.total +
+        ")"
+
+    mainWindow.webContents.send("downloadProgress", progressObj)
+    // sendStatusToWindow(log_message)
+})
+autoUpdater.on("update-downloaded", info => {
+    console.log(info)
+    sendStatusToWindow("Update downloaded")
+    autoUpdater.quitAndInstall()
 })
 
-app.on('ready', () => {
-  if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()
-})
-*/
+ipcMain.on('checkForUpdate', () => {
+	autoUpdater.checkForUpdates()
+});
+ipcMain.on('downloadUpdate', () => {
+	autoUpdater.downloadUpdate()
+});

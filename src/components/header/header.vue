@@ -53,8 +53,7 @@
 <style lang="less" scoped>
     .header-wrapper{
         width: 100%;
-        height: 120px;
-        background: url("./images/header-bg-max.png") no-repeat center center #EAECF6;
+        height: 60px;
         .header-tool{
             float: right;
             height: 20px;
@@ -73,7 +72,7 @@
             font-weight: 600;
             position: relative;
             top: -6px;
-            padding-left: 9px;
+            padding-left: 14px;
             height: 22px;
             font-size: 16px;
             color: #24272B;

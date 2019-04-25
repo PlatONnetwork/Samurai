@@ -1,7 +1,7 @@
 <template>
     <div class="coin">
         <p>接收地址</p>
-        <el-select v-model="wallet">
+        <el-select v-model="wallet" :placeholder="$t('wallet.selectHint')">
 
         </el-select>
     </div>
@@ -88,7 +88,7 @@
                 margin-left:10px;
                 width:60px;
                 height:24px;
-                background: #18C2E9;
+                background: #0077FF;
                 border-radius: 4px;
                 color:#fff;
                 border:none;

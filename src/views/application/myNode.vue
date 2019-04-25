@@ -4,15 +4,16 @@
             <div class="no-result" v-if="loadCompolete && (!node || JSON.stringify(node)=='{}')">
                 {{$t('application.noResult')}}
                 <p class="btn-box">
-                    <el-button @click="nodeQuery">{{$t('application.apply')}}</el-button>
+                    <el-button @click="nodeQuery" :disabled="norTotalBalance<1000000">{{$t('application.apply')}}</el-button>
                 </p>
+                <p v-if="norTotalBalance<1000000" class="register-invalid gray">{{$t('application.registerInvalid')}}</p>
             </div>
             <div v-else-if="loadCompolete" style="height: 100%">
                 <div v-if="nodeLoading" class="no-result">
                     <p class="bold">{{$t('application.applyWaiting')}}</p>
                     <div class="node-apply">
                         <div class="pic-box">
-                            <img :src="'./static/images/characters/characters-'+node.Extra.nodePortrait+'.jpg'" alt="" v-if="node.Extra">
+                            <span :class="['icon-node','node-'+node.Extra.nodePortrait%4]" v-if="node.Extra">{{node.Extra ? node.Extra.nodeName.slice(0,1).toUpperCase():''}}</span>
                         </div>
                         <div class="main">
                             <p class="bold">{{node.Extra?node.Extra.nodeName:''}}</p>
@@ -29,7 +30,7 @@
                     <div class="header">
                         <div class="node-info">
                             <p class="pic">
-                                <img :src="'./static/images/characters/characters-'+node.Extra.nodePortrait+'.jpg'" alt="" v-if="node.Extra">
+                                <span :class="['icon-node','node-'+node.Extra.nodePortrait%4]" v-if="node.Extra">{{node.Extra ? node.Extra.nodeName.slice(0,1).toUpperCase():''}}</span>
                             </p>
                             <p class="name">
                                 <span> <span class="bold">{{node.Extra?node.Extra.nodeName:''}}</span> <span v-if="city">({{city}})</span></span>
@@ -48,9 +49,11 @@
                                 <li class="atp-li">
                                     <p>{{$t('application.staked')}}</p>
                                     <p>
-                                        <span class="txt">{{((nodeState==1&&!quitPending) || nodeState==2)?'一':node.Deposit}}</span>
+                                        <span class="txt" v-if="(nodeState==1&&!quitPending) || nodeState==2">一</span>
+                                        <span v-else class="txt">{{node.Deposit | NumberFilter}}</span>
                                         <span>{{((nodeState==1&&!quitPending) || nodeState==2)?'':' Energon'}}</span>
                                     </p>
+                                    <p v-if="pendingStake" class="pending-stake">{{$t('application.pending')}} (-{{pendingStake}} Energon)</p>
                                 </li>
                                 <li class="perc-li">
                                     <p>{{$t('application.fee')}}</p>
@@ -65,17 +68,17 @@
                                     <p>{{$t('vote.currentTickets')}}</p>
                                     <p><span class="txt">{{ticketsCount}}</span></p>
                                 </li>
-                                <li class="perc-li">
-                                    <p>{{$t('vote.ticketAge')}}</p>
-                                    <p><span class="txt">{{epoch}}</span>Bs</p>
-                                </li>
+                                <!--<li class="perc-li">-->
+                                    <!--<p>{{$t('vote.ticketAge')}}</p>-->
+                                    <!--<p><span class="txt">{{epoch}}</span>Bs</p>-->
+                                <!--</li>-->
                                 <li class="atp-li">
                                     <p>
                                         {{$t('application.unboundStake')}}
-                                        <span v-if="!!pendingRedeemStake" class="danger font10">{{$t('application.pendingRedeem')}}({{pendingRedeemStake}} Energon)</span>
+                                        <span v-if="!!pendingRedeemStake" class="danger font10">{{$t('application.pendingRedeem')}}({{pendingRedeemStake | NumberFilter}} Energon)</span>
                                     </p>
                                     <p>
-                                        <span class="txt">{{unboundStake}}</span> Energon
+                                        <span class="txt">{{unboundStake | NumberFilter}}</span> Energon
                                         <span :class="[!!unboundStake&&!pendingRedeemStake?'':'gray','btn']" @click="handleWidthdraw(1)">{{$t('application.redeem')}}</span>
                                     </p>
                                 </li>
@@ -83,21 +86,23 @@
                         </div>
                     </div>
                     <div :class="[(!!pendingIncrease || !!pendingStake)?'handle-btns-1':'','handle-btns']" v-if="nodeState==0">
-                        <span @click="handle(1)" :class="[!!pendingIncrease?'unabled':'','pending-btn']">
-                            <span class="increase span-btn">{{$t('application.increase')}}</span>
-                            <span v-if="pendingIncrease">{{$t('application.pending')}}(+{{pendingIncrease}} Energon)</span>
-                        </span>
-                        <span @click="handle(2)" :class="[!!pendingStake?'unabled':'','pending-btn']">
-                            <span class="reduce span-btn">{{$t('application.reduce')}}</span>
-                            <span v-if="pendingStake">{{$t('application.pending')}}(-{{pendingStake}} Energon)</span>
-                        </span>
-                        <span @click="handle(3)">
+                        <!--<span @click="handle(1)" :class="[!!pendingIncrease?'unabled':'','pending-btn']">-->
+                            <!--<span :class="[hasBalOrds?'':'disabled','increase','span-btn']">{{$t('application.increase')}}</span>-->
+                            <!--<span v-if="pendingIncrease">{{$t('application.pending')}}(+{{pendingIncrease | NumberFilter}} Energon)</span>-->
+                        <!--</span>-->
+                        <!--<span @click="handle(2)" :class="[!!pendingStake?'unabled':'','pending-btn']">-->
+                            <!--<span class="reduce span-btn">{{$t('application.reduce')}}</span>-->
+                            <!--<span v-if="pendingStake">{{$t('application.pending')}}(-{{pendingStake | NumberFilter}} Energon)</span>-->
+                        <!--</span>-->
+                        <span @click="handle(3)" class="revoke">
                             <span class="span-btn">{{$t('application.revoke')}}</span>
                         </span>
                     </div>
                     <p class="handle-btns" v-else>
                         <span v-if="quitPending">{{$t('application.revokePending')}}</span>
-                        <span v-else class="join-again" @click="handle(4)">{{$t('application.joinAgain')}}</span>
+                        <span v-else :class="[norTotalBalance<1000000?'disabled':'','join-again']" @click="handle(4)">{{$t('application.joinAgain')}}</span>
+                        <br>
+                        <span v-if="norTotalBalance<1000000" class="gray">{{$t('application.registerInvalid')}}</span>
                     </p>
                     <div class="detail">
                         <p class="title">{{$t('application.basicInfo')}}</p>
@@ -113,7 +118,7 @@
                             </p>
                             <p>
                                 <span class="label-txt">{{$t('application.nodeWallet')}}</span>
-                                <span>{{node.Owner}}</span>
+                                <span>{{node.Owner}} <span v-if="keyObj&&keyObj.account">({{keyObj.account}})</span></span>
                             </p>
                             <p class="nodeIntro">
                                 <span class="label-txt">{{$t('application.nodeIntro')}}</span>
@@ -129,9 +134,9 @@
                         </div>
                         <div class="block">
                             <p class="sub-title">{{$t('application.institutionalInfo')}}</p>
-                            <p>
+                            <p class="nodeIntro">
                                 <span class="label-txt">{{$t('application.orgName')}}</span>
-                                <span>{{node.Extra?node.Extra.nodeDepartment:''}}</span>
+                                <span class="nodeIntroTxt">{{node.Extra?node.Extra.nodeDepartment:''}}</span>
                             </p>
                             <p>
                                 <span class="label-txt">{{$t('application.orgNet')}}</span>
@@ -146,19 +151,21 @@
         </div>
 
         <!--质押申请确认-->
-        <div class="modal" v-if="candidateWithdrawModal">
+        <div class="modal confirm" v-if="candidateWithdrawModal">
             <div class="modal-main">
                 <div class="modal-title">
                     {{$t('application.prompt')}}
                     <span class="modal-close" @click="candidateWithdrawModal=false"></span>
                 </div>
                 <div class="modal-content">
-                    <p>{{$t('application.promptTxt')}}</p>
-                    <p class="marT14">{{$t('application.walletAddress')}}:</p>
-                    <p>{{node.Owner}}</p>
+                    <p class="padd">{{$t('application.promptTxt')}}</p>
+                    <p class="padd marT14">{{$t('application.walletAddress')}}:</p>
+                    <div class="confirm-content">
+                        <p>{{node.Owner}}</p>
+                    </div>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="cancel" :class="[lang=='zh-cn'?'letterSpace':'']" @click="candidateWithdrawModal=false">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="candidateWithdrawModal=false">{{$t('form.cancel')}}</el-button>
                     <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']"  @click="handleWidthdraw(2)">{{$t('form.comfirm')}}</el-button>
                 </div>
             </div>
@@ -172,19 +179,20 @@
                 </div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{unboundStake}} Energon</span></p>
-                        <p>From<span class="txt">{{node.Owner}}</span></p>
-                        <p>To<span class="txt contract-addr">{{contractAddress}}</span></p>
+                        <p v-if="handleType==1">{{$t("application.withdraw")}}<span class="txt">{{unboundStake}} Energon</span></p>
+                        <p v-if="handleType==2">{{$t("application.nodeName2")}}<span class="txt">{{node.Extra.nodeName}}</span></p>
+                        <p>{{$t("application.nodeWallet")}}<span class="txt"><i :class="['trade-wallet-icon',keyObj.icon]">{{keyObj.account.slice(0,1).toUpperCase()}}</i>{{keyObj?keyObj.account:node.Owner}}</span></p>
+                        <p v-if="handleType==1">{{$t("wallet.to")}}<span class="txt"><i :class="['trade-wallet-icon',keyObj.icon]">{{keyObj.account.slice(0,1).toUpperCase()}}</i>{{keyObj?keyObj.account:node.Owner}}</span></p>
                         <p>{{$t("wallet.fee")}}<span class="txt">{{price}} Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input  type="password" :placeholder="$t('wallet.input')+(keyObj?keyObj.account:'')+' '+$t('wallet.walletPsw')" v-model="psw"></el-input>
+                        <el-input  type="password" :placeholder="$t('wallet.input')+(keyObj?keyObj.account:'')+$t('wallet.walletPsw')" v-model="psw"></el-input>
                     </p>
                     <p class="danger" v-if="pswNull">{{$t('form.nonPsw')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="cancel" @click="withdrawPswModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" :loading="handleLoading" @click="handleCandidateWithdraw">{{$t('form.submit')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="withdrawPswModal=false">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" :loading="handleLoading" @click="handleCandidateWithdraw" :disabled="!psw">{{$t('form.submit')}}</el-button>
                 </div>
             </div>
         </div>
@@ -193,16 +201,33 @@
         <div class="modal quit-modal" v-if="quitModal">
             <div class="modal-main">
                 <div class="modal-title">
-                    {{$t('application.warn')}}
+                    {{$t('form.warn')}}
                     <span class="modal-close" @click="quitModal=false"></span>
                 </div>
                 <div class="modal-content">
-                    <p class="icon-warn"></p>
-                    <p class="danger">{{$t('application.warnText')}}</p>
+                    <p class="warn-txt">{{$t('application.warnText')}}</p>
                 </div>
                 <div class="modal-btn">
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="cancel" @click="quitModal=false">{{$t('form.cancel')}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="quitModal=false">{{$t('form.cancel')}}</el-button>
                     <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="handleWidthdraw(3)">{{$t('trade.confirm')}}</el-button>
+                </div>
+            </div>
+        </div>
+
+        <!--节点钱包不存在提示-->
+        <div class="modal confirm non-wallet-modal" v-if="showNonWalletModal">
+            <div class="modal-main">
+                <div class="modal-title">
+                    {{$t('form.warn')}}
+                    <span class="modal-close" @click="showNonWalletModal=false"></span>
+                </div>
+                <div class="modal-content">
+                    <p>{{$t('application.notOperated')}}</p>
+                    <p>{{$t('application.nodeWalletAddress')}}</p>
+                    <p class="owner">{{node.Owner}}</p>
+                </div>
+                <div class="modal-btn">
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="showNonWalletModal = false">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
@@ -230,13 +255,13 @@
                 pswNull:false,
                 quitModal:false,
                 keyObj:null,
-                gas:0,
+                gas:2000000,
                 gasPrice:0,
                 price:0,
                 handleType:0,
                 withdrawInfos:[],
                 pendingStake:0,
-                pendingIncrease:0,
+                pendingIncrease:0,  //增加质押--处理中的金额
                 pendingReduce:0,
                 unboundStake:0,
                 nodeState:0,
@@ -245,7 +270,7 @@
                 pendingTradeTimer:null,
                 getRecuceDetailTimer:null,
                 getMyNodeTimer:null,
-                quitPending:false,
+                quitPending:false, //退出竞选是否还没成功
                 depositApplyProcess:0,
                 city:null,
                 pendingRedeemStake:0,
@@ -253,11 +278,14 @@
                 epoch:0,
                 withdrawInfosTimer:null,
                 loadCompolete:false,
-                nodeAllowed:false
+                nodeAllowed:false,
+                hasBalOrds:false,
+                showNonWalletModal:false,
+                min:1000000
             }
         },
         computed: {
-            ...mapGetters(['contractAddress','lang','network','chainName']),
+            ...mapGetters(['contractAddress','lang','network','chainName','norTotalBalance']),
             APIConfig:function(){
                 var APIConfig = require('@/config/API-config');
                 return APIConfig.default;
@@ -282,12 +310,30 @@
             }
         },
         mounted(){
+            this.ticketsCount = this.$route.query.ticketsCount;
+            this.nodeAllowed = this.$route.query.allowed;
+            this.hasBalOrd().then((hasBalOrd)=>{
+                this.hasBalOrds = hasBalOrd;
+            });
+            contractService.web3.eth.getGasPrice((e,gasPrice)=>{
+                if(e){
+                    reject(e)
+                }
+                this.gasPrice = gasPrice.toString(10)-0;
+                let price = contractService.web3.fromWei(this.gasPrice, "ether")*this.gas;
+                price+='';
+                if(price.length - price.indexOf('.')>8){
+                    this.price = (price-0).toFixed(6);
+                }else{
+                    this.price = price-0
+                }
+            });
             this.init();
         },
         methods: {
-            ...mapActions(['getApplyNodeList','getNodeDetail','getOrd','getBalOrd','getCityByIp','verifiersList','getWalletByAddress','saveQuitRecord','getNodeState','clearApplyRecord','getQuitNodeList','updateJoinNode','saveTractRecord','getLastDeposit','getLastStake']),
+            ...mapActions(['getApplyNodeList','getNodeDetail','getOrd','getBalOrd','getCityByIp','verifiersList','getWalletByAddress','saveQuitRecord','getNodeState','clearApplyRecord','getQuitNodeList','updateJoinNode','saveTractRecord','getLastDeposit','getLastStake','hasBalOrd','getNormalTotalBalance']),
             init(){
-                console.log('myNode--init');
+                this.getNormalTotalBalance();
                 this.getQuitNodeList().then((quitList)=>{
                     console.log('quitList---',quitList,quitList.length);
                     if(quitList.length>0){   //判断对否已退出竞选
@@ -297,7 +343,6 @@
                             this.loadCompolete = true;
                             // this.pendingStake = 0;
                             // this.unboundStake = 0;
-                            this.getTicketInfo();
                             clearInterval(this.pendingTradeTimer);
                             this.pendingTradeTimer = setInterval(()=>{
                                 this.getLastDeposit().then((lastDeposit)=>{
@@ -338,7 +383,6 @@
                                     this.nodeState = 2;
                                     console.log('this.node--2-->',this.node);
                                     this.candidateWithdrawInfos();
-                                    this.getTicketInfo();
                                     this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                                         this.keyObj  = keyObj
                                     })
@@ -374,18 +418,18 @@
                     }
                 })
             },
-            getTicketInfo(){
-                //获取得票信息
-                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateTicketIds',this.node.Owner,[this.node.CandidateId]).then((ticketIds)=>{
-                    console.log('ticketIds---->',ticketIds);
-                    this.ticketsCount = JSON.parse(ticketIds).length;
-                    this.nodeAllowed = this.ticketsCount<this.allowed?false:true;
-                });
-                contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateEpoch',this.node.Owner,[this.node.CandidateId]).then((epoch)=>{
-                    console.log('epoch----',epoch);
-                    this.epoch = epoch=='0x'?0:epoch;
-                })
-            },
+            // getTicketInfo(){
+            //     //获取得票信息
+            //     contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateTicketIds',this.node.Owner,[this.node.CandidateId]).then((ticketIds)=>{
+            //         console.log('ticketIds---->',ticketIds);
+            //         this.ticketsCount = JSON.parse(ticketIds).length;
+            //         this.nodeAllowed = this.ticketsCount<this.allowed?false:true;
+            //     });
+            //     contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateEpoch',this.node.Owner,[this.node.CandidateId]).then((epoch)=>{
+            //         console.log('epoch----',epoch);
+            //         this.epoch = epoch=='0x'?0:epoch;
+            //     })
+            // },
             getRecuceDetail(){
                 console.log('do getRecuceDetail');
                 let _this = this;
@@ -436,7 +480,6 @@
                     if(!obj || obj=='0x'){
                         this.nodeLoading = true;
                         this.node = curNodeApply;
-                        this.getTicketInfo();
                         this.getCity();
                     }else{
                         this.nodeLoading = false;
@@ -450,7 +493,6 @@
                                 this.nodeState = state;
                                 this.node = obj;
                                 this.node.CandidateId = '0x'+this.node.CandidateId;
-                                this.getTicketInfo();
                                 this.getWalletByAddress(this.node.Owner).then((keyObj)=> {
                                     this.keyObj  = keyObj
                                 })
@@ -461,99 +503,54 @@
                 })
             },
             nodeQuery(){
-                this.getOrd().then((arr)=>{
-                    if(arr.length==0){
-                       this.$message.warning(this.$t('application.noWallet'));
-                       return;
-                    }else{
-                        this.getBalOrd().then((arr)=>{
-                            if(arr.length==0){
-                                this.$message.warning(this.$t('application.noBalance'));
-                                return;
-                            }else{
-                                this.$router.push('/node-apply')
-                            }
-                        });
-                    }
-                });
+                this.$router.push('/node-apply')
+            },
+            //判断节点钱包是否存在本客户端
+            hasNodeWallet(cb){
+                this.getWalletByAddress(this.node.Owner).then((obj)=>{
+                    cb(obj?true:false);
+                })
             },
             handle(num){
                 let _this=this;
                 switch(num){
                     case 1:
-                        if(!!this.pendingIncrease) return;
+                        if(!!this.pendingIncrease || !this.hasBalOrds) return;
                         _this.$router.push({
                             path:'/increase-stake',
                             query:this.node
                         });
                         break;
                     case 2:
-                        if(!!this.pendingStake) return;
-                        _this.$router.push({
-                            path:'/reduce-stake',
-                            query:this.node
+                        this.hasNodeWallet((bool)=>{
+                            if(!bool){
+                                this.showNonWalletModal = true;
+                                return;
+                            }
+                            if(!!this.pendingStake) return;
+                            _this.$router.push({
+                                path:'/reduce-stake',
+                                query:this.node
+                            });
                         });
                         break;
                     case 3:
-                        this.getGas(2).then(()=>{
-                            this.price = contractService.web3.fromWei(this.gasPrice, "ether")*this.gas;
+                        this.hasNodeWallet((bool)=> {
+                            if (!bool) {
+                                this.showNonWalletModal = true;
+                                return;
+                            }
+                            this.handleType=2;
                             this.quitModal=true;
-                        }).catch((e)=>{
-                            this.quitModal=true;
-                            // this.$message.error('估算gas值失败')
                         });
                         break;
                     case 4:
                         // 重新加入
+                        if(this.norTotalBalance<this.min) return;
                         this.updateJoinNode(this.node);
                         this.$router.push('/node-apply');
                         break;
                 }
-            },
-            getGas(num){
-                return new Promise((resolve, reject)=>{
-
-                    const MyContract = contractService.web3.eth.contract(contractService.getABI(2));
-                    const myContractInstance = MyContract.at(contractService.appContractAddress);
-                    let params=[],funN='';
-                    if(num==2){
-                        params=[this.node.CandidateId,contractService.web3.toWei(this.node.Deposit*2,"ether")];
-                        funN='CandidateApplyWithdraw';
-                    }else if(num==1){
-                        params=[this.node.CandidateId];
-                        funN='CandidateWithdraw';
-                    }
-                    console.log('params',params,funN,num);
-                    let platOnData = myContractInstance[funN].getPlatONData(...params);
-                    console.log(JSON.stringify({
-                        "from":this.node.Owner,
-                        "to":contractService.appContractAddress,
-                        "data":platOnData
-                    }));
-                    try{
-                        contractService.web3.eth.estimateGas({
-                            "from":this.node.Owner,
-                            "to":contractService.appContractAddress,
-                            "data":platOnData,
-                        },(err,data)=>{
-                            console.log('估算gas--->',err,data);
-                            this.gas = data?data:2000000;
-                            contractService.web3.eth.getGasPrice((e,gasPrice)=>{
-                                console.log('getGasPrice--->',e,gasPrice.toString(10));
-                                if(e){
-                                    reject(e)
-                                }
-                                this.gasPrice = gasPrice.toString(10)-0;
-                                this.price = contractService.web3.fromWei(this.gasPrice, "ether")*this.gas;
-                                this.handleType = num;
-                                resolve();
-                            });
-                        })
-                    }catch(e){
-                        console.log('estimateGas failed',e)
-                    }
-
-                });
             },
             handleWidthdraw(num){
                 this.candidateWithdrawModal = false;
@@ -562,15 +559,15 @@
                 this.psw='';
                 switch(num){
                     case 1:
-                        if(!this.unboundStake || this.pendingRedeemStake) return;
-                        //提取质押金确认弹窗
-                        this.getGas(1).then(()=>{
-                            this.price = contractService.web3.fromWei(this.gasPrice, "ether")*this.gas;
+                        this.hasNodeWallet((bool)=> {
+                            if (!bool) {
+                                this.showNonWalletModal = true;
+                                return;
+                            }
+                            if(!this.unboundStake || this.pendingRedeemStake) return;
+                            //提取质押金确认弹窗
+                            this.handleType = 1;
                             this.candidateWithdrawModal =true;
-                        }).catch((e)=>{
-                            console.log('估算gas值失败',e);
-                            this.candidateWithdrawModal =true;
-                            // this.$message.error('估算gas值失败')
                         });
                         break;
                     case 2:
@@ -619,7 +616,10 @@
                             fromAccount:this.keyObj.account,
                             from:this.node.Owner,
                             type:this.handleType==1?'redeemStake':'quitStake',
-                            state:0
+                            state:0,
+                            nodeId:this.node.CandidateId,
+                            nodeName:this.node.Extra.nodeName,
+                            to:contractService.appContractAddress
                         };
                         this.saveTractRecord(tradeObj).then(()=>{
                             if(this.handleType==2){
@@ -641,7 +641,11 @@
                         });
                     }).catch((e)=>{
                         this.handleLoading = false;
-                        this.$message.error(this.$t('application.increaseFail'))
+                        if(e.toString().indexOf('insufficient funds for gas * price + value')!==-1){
+                            window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
+                        }else{
+                            this.$message.error(this.$t('application.increaseFail'));
+                        }
                     })
                 })
             },
@@ -664,7 +668,9 @@
                             fromAccount:this.keyObj.account,
                             from:this.node.Owner,
                             type:'quitStake',
-                            state:0
+                            state:0,
+                            nodeId:this.node.CandidateId,
+                            nodeName:this.node.Extra.nodeName
                         };
                         console.log('reduceStake-----tradeObj---->',tradeObj);
                         this.saveTractRecord(tradeObj).then(()=>{
@@ -700,8 +706,9 @@
                     }
                 }
                 function getData(){
-                    contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'CandidateWithdrawInfos',_this.node.Owner,[_this.node.CandidateId]).then((data)=>{
-                        _this.withdrawInfos = toObj(data).Infos;
+                    console.log('getData---');
+                    contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetCandidateWithdrawInfos',_this.node.Owner,[_this.node.CandidateId]).then((data)=>{
+                        _this.withdrawInfos = toObj(data);
                         console.log('_this.withdrawInfos-------',_this.withdrawInfos,_this.pendingReduce);
                         if(_this.nodeState==1 || _this.nodeState==2){
                             if(_this.withdrawInfos.length==0){
@@ -715,6 +722,7 @@
                             _this.withdrawInfos.forEach((item)=>{
                                 item.Balance = contractService.web3.fromWei(item.Balance,"ether");
                                 if(blockNumber - item.LockNumber > item.LockBlockCycle){
+                                    // 已解除的质押金
                                     _this.unboundStake+=(item.Balance-0);
                                 }else{
                                     _this.pendingStake+=(item.Balance-0);
@@ -742,6 +750,14 @@
             'perc':function(num){
                 if(!num) return;
                 return 100 - MathService.div(num,100)
+            },
+            'NumberFilter':function(num){
+                num = num+'';
+                if(num.indexOf('.')!==-1 && num.length - num.indexOf('.')>8){
+                    return (num-0).toFixed(8)
+                }else{
+                    return num;
+                }
             }
         },
          beforeDestroy() {
@@ -774,14 +790,15 @@
         font-size: 12px;
         color: #24272B;
         letter-spacing: 0.43px;
+        background-color: #fff;
     }
     a{
-        color:#18C2E9;
+        color: #0077FF;
         text-decoration: underline;
     }
     .btn{
         margin-left:9.5px;
-        color: #18C2E9;
+        color:  #0077FF;
         cursor:pointer;
     }
     .btn.gray{
@@ -793,7 +810,7 @@
         height:100%;
         text-align: center;
         border-radius:10px;
-        background: url("./images/node_images.png") no-repeat center 60px #fff;
+        background: url("../../../static/images/empty.png") no-repeat center 60px #fff;
         box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
     }
     .node-apply{
@@ -846,18 +863,19 @@
             width:auto;
             font-size: 14px;
             color: #FFFFFF;
-            background: #18C2E9;
+            background:  #0077FF;
             border-radius: 4px;
         }
     }
     .txt{
         margin-top:14px;
         span{
-            color: #18C2E9;
+            color:  #0077FF;
             cursor: pointer;
         }
     }
     .handle-btns{
+        position:relative;
         height:45px;
         line-height:45px;
         color: #24272B;
@@ -872,15 +890,29 @@
             cursor: pointer;
         }
         >span.join-again{
-            background: url("./images/icon_join.svg") no-repeat left center;
             background-size: 16px;
+            background: url("./images/icon_join.svg") no-repeat left center;
+            &:not(.disabled):hover{
+                 color:#0077FF;
+                 background: url("./images/icon_join_2.svg") no-repeat left center;
+             }
+            &.disabled{
+                position:relative;
+                top:-8px;
+                cursor:not-allowed;
+                background: url("./images/icon_join_3.svg") no-repeat left center;
+             }
         }
-        >span:nth-of-type(3){
+        >span.revoke{
             .span-btn{
                 padding-left:20px;
                 margin-right:0;
                 background: url("./images/icon_esc.svg") no-repeat left center;
                 background-size: contain;
+                &:hover{
+                     color:#0077FF;
+                     background: url("./images/icon_esc3.svg") no-repeat left center;
+                 }
             }
         }
         .pending-btn{
@@ -896,10 +928,24 @@
             .increase {
                 background: url("./images/icon_add.svg") no-repeat left center;
                 background-size: 16px;
+                &:not(.disabled):hover{
+                     color:#0077FF;
+                     background: url("./images/icon_add3.svg") no-repeat left center;
+                 }
+            }
+            .increase.disabled{
+                color: #9EABBE;
+                cursor:not-allowed;
+                background: url("./images/icon_add2.svg") no-repeat left center;
+                background-size: 16px;
             }
             .reduce{
                 background: url("./images/icon_reduce.svg") no-repeat left center;
                 background-size: 16px;
+                &:hover{
+                     color:#0077FF;
+                     background: url("./images/icon_reduce3.svg") no-repeat left center;
+                 }
             }
         }
         .pending-btn.unabled{
@@ -908,6 +954,10 @@
             .increase {
                 background: url("./images/icon_add2.svg") no-repeat left center;
                 background-size: 16px;
+                &:hover{
+                     color:#9EABBE;
+                     background: url("./images/icon_add2.svg") no-repeat left center;
+                 }
             }
             .reduce{
                 background: url("./images/icon_reduce2.svg") no-repeat left center;
@@ -922,38 +972,64 @@
                 font-weight: normal;
             }
         }
+        .gray{
+            position:absolute;
+            top:10px;
+            left:0;
+            width:100%;
+            font-size:10px;
+            font-weight: normal;
+            color: #9EABBE;
+            cursor: default;
+        }
     }
     .handle-btns-1{
         >span:not(.unabled){
            .span-btn{
-               position:relative;
-               top:-8px;
+               /*position:relative;*/
+               /*top:-8px;*/
            }
         }
     }
     .modal{
-        .modal-main .modal-content{
-            padding:20px 20px 60px;
-            font-size:12px;
-        }
         .marT14{
             margin-top:14px;
         }
     }
-    .modal.confirm .modal-main .modal-content .inputb{
-        margin:10px 0 0 0;
+    .modal.confirm .modal-main .modal-content{
+        .confirm-content{
+            margin:10px 0 16px;
+        }
+        .padd{
+            padding:0 14px;
+        }
+    }
+    .non-wallet-modal .modal-main .modal-content{
+        >p{
+            padding:0 20px;
+            &.owner{
+                margin:10px 0 18px;
+             }
+        }
     }
     .quit-modal{
         .modal-main{
             width:483px;
             .modal-content{
-                padding:40px 0;
-                text-align: center;
+                padding:22px 0 83px;
+            }
+            .warn-txt{
+                padding-left:50px;
+                height:20px;
+                line-height:20px;
+                font-size: 12px;
+                background: url("./images/icon_Anerror.svg") no-repeat 20px center;
+                background-size: 20px;
             }
             .icon-warn{
                 margin-bottom:18px;
                 height:30px;
-                background: url("./images/icon_warning.svg") no-repeat center center;
+
                 background-size: contain;
             }
         }
@@ -968,15 +1044,47 @@
     }
     .label-txt+span{
         font-weight: bold;
-        font-family: Arial;
+        font-family: "Chinese Quote",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
         letter-spacing: 0.5px;
     }
     .candidateId{
         margin-left: 4px;
     }
     .net-btn{
-        color: #18C2E9;
+        color:  #0077FF;
         cursor: pointer;
+    }
+    .icon-node{
+        width:42px;
+        height:42px;
+        line-height:42px;
+        font-size: 16px;
+    }
+    .node-state{
+        span{
+            height:32px;
+            line-height:30px;
+        }
+    }
+    .non-wallet-modal{
+        .modal-main{
+            p{
+                margin-bottom:10px;
+            }
+            .owner{
+                height:45px;
+                line-height:45px;
+                background-color: #ECF1F8;;
+            }
+        }
+    }
+    .register-invalid{
+        margin-top:10px;
+        padding:0 133px;
+    }
+    .pending-stake{
+        font-size: 10px;
+        color: #F32E25;
     }
 </style>
 

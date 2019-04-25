@@ -8,6 +8,7 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     .modal-main {
+        box-shadow: 0 2px 16px 0 rgba(203,210,221,0.50);
         //弹窗主体
         position: absolute;
         top: 50%;
@@ -18,29 +19,30 @@
         border-radius:5px;//3px 梁燕翔
         .modal-title {
             //弹窗标题
-            padding: 0 20px 0 25px;
-            height: 40px;
-            line-height: 40px;
-            color: #fff;
+            padding: 0 20px 0;
+            height: 45px;
+            line-height: 45px;
+            color: #24272B;
             font-size: 14px;
             font-weight:500;
-            background-color: #112561;
+            background-color: #fff;
             border-top-left-radius: 5px;
             border-top-right-radius: 5px;
+            border-bottom: 1px solid #D3D8E1;
         }
         .modal-close {
             //关闭按钮
             float: right;
-            width:9px;
-            height:40px;
+            width:10px;
+            height:45px;
             cursor: pointer;
             font-weight: 100;
-            background: url(../../../static/images/cancel.png) no-repeat center center;
+            background: url('../../../static/images/icon_Shut down.svg') no-repeat center center;
             background-size: contain;
             border:none;
         }
         .modal-content {
-            padding:40px 36px 30px 25px;
+            padding:14px 0;
             .input {
                 width: 328px;
             }
@@ -49,23 +51,27 @@
         }
         .modal-btn{
             padding-right:20px;
-            height:48.5px;
-            line-height:48.5px;
+            height:60px;
+            line-height:60px;
             text-align: right;
-            background-color:#f9f9f9;
-            border-top:solid 1px #eee;
+            border-top:solid 1px #D3D8E1;
             button{
                 margin-left:40px;
                 padding:0;
                 width:79px;
-                height:32px;
-                line-height:32px;
+                height:34px;
                 font-size:12px;
+                i{
+                    width: 14px;
+                    height: 14px;
+                    font-size: 14px;
+                    vertical-align: text-bottom;
+                }
             }
-            .cancel{
-                border: 1px solid #18C2E9;
-                color:#18C2E9;
-            }
+            // .cancel{
+            //     border: 1px solid #18C2E9;
+            //     color:#18C2E9;
+            // }
         }
     }
 }
@@ -74,14 +80,20 @@
         width:483px;
         font-size: 12px;
         .modal-content{
-            padding:12px;
+            padding:12px 0;
             .confirm-content{
-                padding:14px 10px;
-                height:126px;
+                padding:14px 20px !important;
+                //padding:14px 0;
+                //height:126px;
                 background: #ECEFF6;
                 p{
-                    color: #24272B;
                     margin-bottom:9px;
+                    height:17px;
+                    line-height:17px;
+                    color: #24272B;
+                    &:last-of-type{
+                        margin-bottom:0;
+                    }
                     .txt{
                         margin:0;
                         float:right;
@@ -100,16 +112,16 @@
                 padding-left:10px;
             }
             .inputb{
-                margin:10px 10px 0;
+                margin:30px 20px 18px;
                 .el-input{
                     width:100%;
                 }
             }
         }
         .modal-btn{
-            padding-top:7.5px;
-            line-height:1;
-            height:48.5px;
+            //padding-top:2px;
+            // line-height:1;
+            // height:48.5px;
             button{
                 width:79px;
                 height:32px;
@@ -125,6 +137,10 @@
             padding:12px 20px;
         }
     }
+    .owners-list{
+        max-height: 400px;
+        overflow-y: auto;
+    }
     .owners-list>li{
         display:flex;
         margin-bottom:10px;
@@ -137,7 +153,7 @@
         font-weight:bold;
         cursor:pointer;
         &:hover,&.avail-cur{
-            border-color:#18C2E9;
+            border-color:#07f;
         }
         &.avail-disabled{
             background: #ECEFF6;
@@ -147,6 +163,7 @@
             cursor:not-allowed;
         }
         .lt{
+            margin-top: 5px;
             margin-right:9px;
             min-width:40px;
             background-size: contain;
@@ -168,6 +185,10 @@
             text-overflow: ellipsis;
         }
     }
+}
+.modal.diff-modal .modal-main .modal-title{
+    height: 46px;
+    line-height: 46px;
 }
 
 

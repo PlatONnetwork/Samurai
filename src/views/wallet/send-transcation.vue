@@ -1,26 +1,23 @@
 <template>
     <div class="send-transcation format-style">
         <div class="send-content card">
-            <el-form ref="sendTranscation"
+            <el-form class="send-transcation-form" ref="sendTranscation"
                      v-model="sendTranscation"
                      :rules="sendTranscationRule"
                      label-position="top">
-                <div class="conversion-box">
-                    <el-form-item :label="$t('wallet.from')">
-                        <el-select v-model="fromW.address" @change="selWallet()">
-                            <el-option
-                                    v-for="item in wallets"
-                                    :key="item.address"
-                                    :label="(item.account.length>10?item.account.slice(0,10)+'...':item.account)+'--'+item.balance+'Energon'"
-                                    :value="item.address">
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                    <span class="conversion"></span>
-                    <el-form-item :label="$t('wallet.to')">
-                        <el-input v-model.trim="sendTranscation.to" :placeholder="$t('wallet.walletAddress0x')" @change="changeDest"></el-input>
-                    </el-form-item>
-                </div>
+                <el-form-item :label="$t('wallet.from')">
+                    <el-select v-model="fromW.address" @change="selWallet()" :placeholder="$t('wallet.selectHint')" :disabled="wallets.length==0">
+                        <el-option
+                                v-for="item in wallets"
+                                :key="item.address"
+                                :label="(item.account.length>10?item.account.slice(0,10)+'...':item.account)+'--'+item.balance+'Energon'"
+                                :value="item.address">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item :label="$t('wallet.to')">
+                    <el-input v-model.trim="sendTranscation.to" :placeholder="$t('wallet.walletAddress0x')" @change="changeDest"></el-input>
+                </el-form-item>
                 <el-form-item :label="$t('wallet.amountSend')">
                     <el-input v-model.trim="sendTranscation.value" @blur="changeVal" :placeholder="$t('wallet.amountHint')" type="number" @input="sendTranscationValueChange" :key="sendTranscationInputKey" v-focus="sendTranscationFocus">
                         <el-button class="append" slot="append" @click="sendAll">ALL</el-button>
@@ -38,10 +35,16 @@
                     </span>
                 </el-form-item>
             </el-form>
-            <p class="total">
-                <span class="bold">{{$t("wallet.total")}}：<span class="font16">{{add(sendTranscation.value-0,sendTranscation.gas-0)}}</span>&nbsp;Energon</span>
+            <div class="total-box">
+                <div class="total-num">
+                    <p class="total-text">{{$t("wallet.total")}}</p>
+                    <p class="font16 bold">
+                        {{selWalletType==1?add(sendTranscation.value-0,sendTranscation.gas-0):sendTranscation.value-0}}&nbsp;Energon
+                    </p>
+                    <span class="share-info" v-if="selWalletType==2">{{$t("wallet.ServiceChargeMsg")}} ({{sendTranscation.gas-0}} Energon)</span>
+                    </div>
                 <el-button :class="[lang=='en'?'':'letterSpace']" type="primary" @click="confirm()" :disabled="gasLoading || !sendTranscation.to || !sendTranscation.value">{{$t("wallet.send")}}</el-button>
-            </p>
+            </div>
         </div>
 
         <div class="modal sel-owner" v-if="showSelOwners">
@@ -56,7 +59,9 @@
                            :key="wallet.address"
                            :class="[owner&&owner.address==wallet.address?'avail-cur':'',wallet.balance==0?'avail-disabled':'']"
                            @click="selOwner(wallet)">
-                           <div class="lt" :class="wallet.icon"></div>
+                           <div :class="['lt wallet-icon',wallet.icon]">
+                               {{wallet.account&&wallet.account.slice(0,1).toUpperCase()}}
+                           </div>
                            <div class="rt">
                                <p class="marB wallet-name">{{wallet.account}}</p>
                                <p> {{wallet.balance}}<span class="txt"> Energon</span></p>
@@ -73,20 +78,44 @@
                     {{$t("wallet.sendTransaction")}}
                     <span class="modal-close" @click="closeShowConfirm"></span>
                 </div>
-                <div class="modal-content">
+                <div class="modal-content"><!--
                     <div class="confirm-content">
                         <p>{{$t("wallet.amount")}}<span class="txt"><span class="bold">{{sendTranscation.value}}</span>&nbsp;Energon</span></p>
-                        <p>From<span class="txt">{{fromW.address}}</span></p>
-                        <p>To<span class="txt">{{sendTranscation.to}}</span></p>
+                        <p>{{$t('wallet.from')}}<span class="txt">{{fromW.address}}</span></p>
+                        <p>{{$t('wallet.to')}}<span class="txt">{{sendTranscation.to}}</span></p>
+                        <p class="fee">{{$t("wallet.fee")}}<span class="txt"><span class="bold">{{sendTranscation.gas}}</span>&nbsp;Energon</span></p>
+                    </div>-->
+
+                    <div class="confirm-content">
+                        <p>{{$t("wallet.amount")}}<span class="txt"><span class="bold">{{sendTranscation.value}}</span>&nbsp;Energon</span></p>
+                        <p>{{$t('wallet.from')}}
+                            <span class="txt">
+                            <i :class="['trade-wallet-icon',wallet.icon,wallet.type=='share'?'wallet-share':'']">{{fromW.account&&fromW.account.slice(0,1).toUpperCase()}}</i>
+                            {{fromW.account&&fromW.account.slice(0,16)}}
+                                <!-- {{fromW.address}} -->
+                            </span>
+                        </p>
+                        <p>{{$t('wallet.to')}}<span class="txt">
+                            <i :class="['trade-wallet-icon',toWallet.icon?toWallet.icon:'wallet-icon1',toWallet.type=='share'?'wallet-share':'']">{{toWallet.account?toWallet.account.slice(0,1).toUpperCase():sendTranscation.to.slice(2,3).toUpperCase()}}</i>
+                            {{toWallet.account?toWallet.account:sendTranscation.to}}
+                            <!-- {{sendTranscation.to}} -->
+                            </span></p>
+                        <p v-if="selWalletType==2">{{$t('wallet.executorFrom')}}
+                            <span class="txt">
+                            <i :class="['trade-wallet-icon',owner.icon]">{{owner.account&&owner.account.slice(0,1).toUpperCase()}}</i>
+                            {{owner.account&&owner.account.slice(0,16)}}
+                                <!-- {{fromW.address}} -->
+                            </span>
+                        </p>
                         <p class="fee">{{$t("wallet.fee")}}<span class="txt"><span class="bold">{{sendTranscation.gas}}</span>&nbsp;Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input class="input-psw" :disabled="sendLoading" :placeholder="confirmPswPlaceholder" type="password" v-model.trim="sendTranscation.psw"></el-input>
+                        <el-input class="input-psw" :disabled="sendLoading" :placeholder="confirmPswPlaceholder()" type="password" v-model.trim="sendTranscation.psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
                     <el-button :class="[lang=='en'?'':'letterSpace']" @click="showConfirm=false" :disabled="sendLoading">{{$t("form.cancel")}}</el-button>
-                    <el-button :class="[lang=='en'?'':'letterSpace','subBtn']" @click="send" type="primary" :loading="sendLoading">{{sendLoading?$t('form.submiting'):$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='en'?'':'letterSpace','subBtn']" @click="send" type="primary" :loading="sendLoading" :disabled="!sendTranscation.psw">{{sendLoading?$t('form.submiting'):$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -103,6 +132,7 @@
     import feeSlider from '@/components/feeSlider';
 
     var fs = require("fs");
+    let pwsErrorFlag=true,pwsErrorTimer=null,subSendTimer=null;
     export default {
         name: "o-wallet-send-transcation",
         data(){
@@ -119,7 +149,8 @@
                     to: '',
                     value: '',
                     gas: 0,
-                    input: ''
+                    input: '',
+                    psw:''
                 },
                 sendTranscationRule:{
 
@@ -135,84 +166,84 @@
                 availOwners:[],
                 owner:null,
                 sendTranscationInputKey:0,
-                sendTranscationFocus:false
+                sendTranscationFocus:false,
+                selWalletType:null,
+                toWallet:{}
             }
-
         },
         computed:{
             ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','walletType','lang']),
-            confirmPswPlaceholder(){
-                const {walletType,fromW,owner}=this,
-                sliceLen=str=>{
-                    if(!str)return ''
-                    return str.length>16?str.slice(0,16)+'...':str
-                }
-
-                return this.$t('wallet.input')+sliceLen(walletType==1?fromW.account:owner.account)+' '+this.$t('wallet.walletPsw')
-            }
         },
         created(){
             this.init();
         },
         watch:{
             'wallets':function(val){
-                let curWallet = this.curWallet;
-                let curWalletArr = this.wallets.filter((item)=>{
-                    return item.address == curWallet;
-                });
-                if(curWalletArr.length>0){
-                    this.wallet = curWalletArr[0];
-                    this.fromW.account = curWalletArr[0].account;
-                    this.fromW.address = curWalletArr[0].address;
-                    if(this.walletType==2){
+                if(val.length>0){
+                    this.wallet = val[0];
+                    this.selWalletType = this.wallet.type&&this.wallet.type=='share'?2:1;
+                    this.fromW.account = val[0].account;
+                    this.fromW.address = val[0].address;
+                    if(this.selWalletType==2){
                         //获取签名数
                         contractService.platONCall(contractService.getABI(1),this.fromW.address,'getRequired',this.fromW.address).then((required)=>{
                             this.fromW.required = required;
                         })
                     }
                     contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
-                        this.balance =  contractService.web3.fromWei(data.toString(10), 'ether');
+                        // this.balance =  contractService.web3.fromWei(data.toString(10), 'ether');
                         // this.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
+                        const {fromWei,toDecimal}=contractService.web3
+                        this.balance=fromWei(toDecimal(data), 'ether');
                     })
                 }
             }
         },
         methods: {
-            ...mapActions(['WalletListAction','getGasOptions','getOrdByAddress','saveTractRecord','getAvailOwner']),
+            ...mapActions(['getAllWallets','WalletListAction','getGasOptions','getOrdByAddress','saveTractRecord','getAvailOwner','updateCurWallet','getWalletByAddress']),
              init(){
                 this.wallets=[];
                 let _this = this;
-                if(this.walletType==2){
-                    this.gas = 2000000;
-                }
-                function _getBalance(item){
-                    contractService.web3.eth.getBalance(item.address,(err,data)=>{
-                        let balance = contractService.web3.fromWei(data.toString(10), 'ether');
-                        if(balance>0){
-                            balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
-                            item.balance = balance;
-                            _this.wallets.push(item);
-                            _this.wallets.sort((a,b)=>{
-                                return a['createTime'] - b['createTime'];
-                            });
-                        }
-                    })
-                }
-                this.WalletListGetter.forEach((item)=>{
-                    if(this.walletType==2){
-                        if(item.state!==1){
-                            return;
-                        }else{
-                            this._getAvailOwner(item.address,(avail)=>{
+                 function _getBalance(item){
+                     console.log('item----',item.account);
+                     contractService.web3.eth.getBalance(item.address,(err,data)=>{
+                        //  let balance = contractService.web3.fromWei(data.toString(10), 'ether');
+                        const {fromWei,toDecimal}=contractService.web3
+                        let balance=fromWei(toDecimal(data), 'ether');
+                         if(balance>0){
+                             balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
+                             item.balance = balance;
+                             _this.wallets.push(item);
+                             _this.wallets.sort((a,b)=>{
+                                 return a['createTime'] - b['createTime'];
+                             });
+                         }
+                     })
+                 }
+                this.getAllWallets().then((allWallets)=>{
+                    console.log('allWallets----',allWallets);
+                    allWallets.forEach((wallet)=>{
+                        if(wallet.type=='share'){
+                            if(wallet.state!==1) return;
+                            this._getAvailOwner(wallet.address,(avail)=>{
                                 if(avail.length>0){
-                                    _getBalance(item);
+                                    _getBalance(wallet);
                                 }
                             });
+                        }else{
+                            _getBalance(wallet);
                         }
-                    }else{
-                        _getBalance(item);
-                    }
+                    });
                 });
+            },
+            confirmPswPlaceholder(){
+                const {selWalletType,fromW,owner}=this,
+                    sliceLen=str=>{
+                        if(!str)return ''
+                        return str.length>16?str.slice(0,16)+'...':str
+                    }
+
+                return this.$t('wallet.input')+sliceLen(selWalletType==1?fromW.account:owner.account)+this.$t('wallet.walletPsw')
             },
             async _getAvailOwner(walletAddr,cb){
                 let data = await this.getAvailOwner(walletAddr);
@@ -238,20 +269,27 @@
                     return item.address==fromW.address;
                 });
                 this.fromW.account = arr.length>0?arr[0].account:'';
+                this.selWalletType = arr[0].type&&arr[0].type=='share'?2:1;
                 contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
                     if(err){
                         throw err;
                     }
-                    this.balance = contractService.web3.fromWei(data.toString(10), 'ether');
+                    // this.balance = contractService.web3.fromWei(data.toString(10), 'ether');
+                    const {fromWei,toDecimal}=contractService.web3
+                    this.balance=fromWei(toDecimal(data), 'ether');
                 });
                 this.changeVal();
             },
             sendAll(){
+                const address=this.sendTranscation.to;//
                 contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
-                    let balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                    // let balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                    const {fromWei,toDecimal}=contractService.web3
+                    let balance=fromWei(toDecimal(data), 'ether');
                     // console.log('sendAll',balance,this.sendTranscation.gas);
-                    this.init();
-                    if(this.walletType==1){
+                    // this.init();
+                    this.sendTranscation.to=address;//
+                    if(this.selWalletType==1){
                         this.sendTranscation.value = mathService.sub(balance,this.sendTranscation.gas);
                     }else{
                         this.sendTranscation.value = balance;
@@ -270,12 +308,17 @@
                     this.$message.error(this.$t('wallet.sendToSelf'));
                     return;
                 }
-                // if(this.walletType==1){
-                if(mathService.sub(mathService.accAdd(this.sendTranscation.value-0,this.sendTranscation.gas-0),this.balance)>0){
-                    this.$message.warning({message:this.$t('wallet.insufficientBalance'),customClass:'warn'});
-                    return;
+                if(this.selWalletType==1){
+                    if(mathService.sub(mathService.add(this.sendTranscation.value-0,this.sendTranscation.gas-0),this.balance)>0){
+                        this.$message.warning({message:this.$t('wallet.insufficientBalance'),customClass:'warn'});
+                        return;
+                    }
+                }else{
+                    if(mathService.sub(this.sendTranscation.value-0,this.balance)>0){
+                        this.$message.warning({message:this.$t('wallet.insufficientBalance'),customClass:'warn'});
+                        return;
+                    }
                 }
-                // }
                 if(!/(0x)[0-9a-fA-F]{40}$/g.test(this.sendTranscation.to)){
                     this.$message.error(this.$t('wallet.incorrectAddress'));
                     return;
@@ -285,7 +328,8 @@
                     return;
                 }
                 this.sendTranscation.psw='';
-                if(this.walletType==1){
+                this.getWalletByAddress(this.sendTranscation.to).then(res=>((res&&(this.toWallet=res))||(this.toWallet={})))
+                if(this.selWalletType==1){
                     this.showConfirm = true;
                 }else{
                     this._getAvailOwner(this.fromW.address,(avail)=>{
@@ -295,6 +339,7 @@
                                     if(err) return null;
                                     item.balance=contractService.web3.fromWei(data,"ether").toString(10)-0;
                                     this.$set(this.availOwners,index,item)
+                                    this.$set(this.availOwners[index],'icon',item.icon)
                                 });
                             });
                             this.availOwners = avail;
@@ -320,7 +365,7 @@
                 this.showConfirm = false;
             },
             send(){
-                if(this.walletType==1){ //普通钱包发送交易
+                if(this.selWalletType==1){ //普通钱包发送交易
                     let transParam = {
                         from: this.fromW.address,
                         to: this.sendTranscation.to,
@@ -330,7 +375,16 @@
                     keyManager.recover(transParam.from,this.sendTranscation.psw,'hex',(err,data)=>{
                         // console.warn('private---',err,data);
                         if(err){
-                            this.$message.error(this.$t('form.wrongPsw'));
+                            if(!pwsErrorFlag){
+                                pwsErrorTimer==null&& (pwsErrorTimer=setTimeout(()=>{
+                                    pwsErrorFlag=true
+                                    clearTimeout(pwsErrorTimer)
+                                    pwsErrorTimer=null
+                                },3000))
+                            }else{
+                                pwsErrorFlag=false
+                                this.$message.error(this.$t('form.wrongPsw'));
+                            }
                             return;
                         }
                         let priKey = data;
@@ -357,6 +411,7 @@
                             };
                             this.saveTractRecord(tradeObj).then(()=>{
                                 this.showConfirm = false;
+                                this.updateCurWallet(this.fromW.address)
                                 this.$router.push('/o-wallet-details')
                             });
                         })
@@ -380,7 +435,15 @@
                         }
                         let priKey = data;
                         this.sendLoading = true;
+                        if(subSendTimer){
+                            clearTimeout(subSendTimer)
+                        }
+                        subSendTimer=setTimeout(()=>{
+                            this.$message.error(this.$t('wallet.networkTimeout'));
+                            this.sendLoading = false;
+                        },10000)
                         contractService.platONSendTransaction(contractService.getABI(1),this.fromW.address,'submitTransaction',JSON.stringify(param1),this.owner.address,priKey,false,false,false,true).then((data)=>{
+                            // alert(data.hash);
                             let txId = (data.result&&data.result.length>0)?data.result[0]:null;
                             contractService.platONSendTransaction(contractService.getABI(1),this.fromW.address,'confirmTransaction',JSON.stringify([data.result[0]]),this.owner.address,priKey,false,false,false).then((data1)=>{
                                 let tradeObj1={
@@ -398,6 +461,7 @@
                                 this.saveTractRecord(tradeObj1).then(()=>{
                                     this.sendLoading = false;
                                     this.showConfirm = false;
+                                    this.updateCurWallet(this.fromW.address)
                                     this.$router.push('/o-wallet-share-detail')
                                 });
                             }).catch((e)=>{
@@ -443,20 +507,13 @@
         font-size:16px;
     }
     .send-transcation{
-        height: calc(~"100% - 90px");
+        height: calc(~"100% - 70px");
     }
     .cur{
         cursor:pointer;
     }
     .send{
         float:right;
-    }
-    .conversion-box{
-        display:flex;
-        .conversion{
-            width:60px;
-            background: url("./images/icon_conversion.svg") no-repeat center center;
-        }
     }
     .send-slider{
         display:block;
@@ -465,9 +522,9 @@
     .send-content{
         height: 100%;
         box-sizing: border-box;
-        margin: 10px auto;
+        margin: 0 auto;
         padding-top: 20px;
-        padding-left: 30px;
+        padding-left: 14px;
         font-size: 12px;
         color: #525768;
         .el-input-group__append{
@@ -479,34 +536,61 @@
                 font-size:10px;
             }
         }
-        .total{
+        .total-box{
             position: absolute;
-            bottom: 21px;
+            bottom: 12px;
             width:calc(~"100% - 240px");
-            height: 60px;
+            /*height: 60px;*/
             line-height:60px;
-            border-top:solid 1px #D3D8E1;
             color:#24272b;
             .el-button{
-                position:absolute;
-                right:20px;
-                top: 14px;
+                // position:absolute;
+                // right:20px;
+                // top: 14px;
                 width: 79px;
                 height: 32px;
                 padding: 0;
             }
         }
+        .total-num{
+            font-size: 14px;
+            border-bottom:solid 1px #D3D8E1;
+            height: auto;
+            >.font16{
+                margin: 10px 0 14px;
+                height: 22px;
+                line-height: 22px;
+            }
+        }
+        .share-info{
+            /*position: absolute;*/
+            bottom: 0;
+            /*height: 12px;*/
+            font-size: 12px;
+            color: #9EABBE;
+            letter-spacing: 0.38px;
+            line-height: 17px;
+            margin-bottom: 14px;
+            display: block;
+        }
+        .total-text{
+            height: 20px;
+            line-height: 20px;
+        }
 
+    }
+    .send-transcation-form{
+        width: 750px;
     }
     .confirm{
         .modal-main{
             width:483px;
             font-size: 12px;
             .modal-content{
-                padding:12px;
+                // padding:12px;
                 .confirm-content{
                     padding:14px 10px;
-                    max-height:126px;
+                    max-height:152px;
                     height:auto;
                     background: #ECEFF6;
                     p{
@@ -533,16 +617,19 @@
                     word-break: break-all;
                 }
                 .inputb{
-                    margin:10px 10px 0;
+                    margin:30px 20px 18px;
                     .el-input{
                         width:100%;
                     }
                 }
+                .wallet-share{
+                    border-radius: 0;
+                }
             }
             .modal-btn{
-                padding-top:7.5px;
-                line-height:1;
-                height:48.5px;
+                // padding-top:7.5px;
+                // line-height:1;
+                // height:48.5px;
                 button{
                     width:79px;
                     height:32px;
@@ -552,20 +639,22 @@
         }
     }
     .el-button.is-disabled{
-        background-color: #18C2E9;
+        background-color: #0077FF;
         opacity: 0.5;
     }
     .append{
-        width: 52px;
+        width:72px;
         letter-spacing: 0;
+        font-weight: normal;
     }
     .EnergonCount{
         font-weight: bold;
     }
     .wantTo{
-        line-height: normal;
+        line-height: 40px;
         padding-left: 10px;
         .black{
+            font-size: 14px;
             color:#22272C;
         }
     }
@@ -575,20 +664,21 @@
         .el-form-item__label{
             color:#24272b;
             font-size: 12px !important;
+            font-weight:600;
         }
         .el-form-item__content{
             display: flex;
             align-items: flex-end;
             font-size: 12px !important;
         }
-        .el-form-item{
-            &:nth-child(1){
-                display: inline-block;
-            }
-            &:nth-child(2){
-                display: inline-block;
-            }
-        }
+        /*.el-form-item{*/
+            /*&:nth-child(1){*/
+                /*display: inline-block;*/
+            /*}*/
+            /*&:nth-child(2){*/
+                /*display: inline-block;*/
+            /*}*/
+        /*}*/
         .el-input{
             font-size:12px;
             .el-input__inner{
@@ -597,7 +687,7 @@
         }
         .el-input-group__append{
             color:#fff;
-            background: #9EABBE;
+            background: #4897F6;
         }
         .txea{
             margin-top:10px;
@@ -617,4 +707,5 @@
             }
         }
     }
+
 </style>
