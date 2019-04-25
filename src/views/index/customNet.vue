@@ -1,160 +1,137 @@
 <template>
     <div class="custom-net">
-        <div class="custom-header" style="-webkit-app-region: drag">
-            <!-- <span @click="close" style="-webkit-app-region: no-drag"> <i class="el-icon-close"></i></span>
-            <span @click="min" style="-webkit-app-region: no-drag">—</span> -->
-            <span @click="close"><i class="close"></i></span>
-            <span @click="max"><i class="max" ref="max"></i></span>
-            <span @click="min"><i class="min"></i></span>
-        </div>
-        <div class="padd compolete" v-if="compolete">
-            <p class="title">
-                {{$t('settings.priNet')}}--{{net.name}} {{$t('settings.customNet.successfully')}}
-            </p>
-            <div class="content">
-                <p>
-                    <span class="label">{{$t('settings.customNet.netName')}}:</span>
-                    {{net.name}}
+        <div class="bg">
+            <div class="custom-header" style="-webkit-app-region: drag">
+                <span @click="close"><i class="close"></i></span>
+                <span @click="max"><i class="max" ref="max"></i></span>
+                <span @click="min"><i class="min"></i></span>
+            </div>
+            <div class="padd compolete" v-if="compolete">
+                <p class="title">{{$t("settings.customNet.createNet")}}</p>
+                <p class="net-name">
+                    {{$t('settings.priNet')}} -
+                    <span class="success">{{net.name}}</span>
+                    {{$t('settings.customNet.successfully')}}
                 </p>
-                <p class="pub-box">
-                    <span :class="[lang=='zh-cn'?'min1':'min2','label']">{{$t('application.nodePublicKey')}}:</span>
-                    <span class="pub">{{nodeList[0].publicKey}}</span>
-                </p>
+                <div class="content">
+                    <p>
+                        <span class="label">{{$t('settings.customNet.netName')}}:</span>
+                        {{net.name}}
+                    </p>
+                    <p class="pub-box">
+                        <span :class="[lang=='zh-cn'?'min1':'min2','label']">{{$t('application.nodePublicKey')}}:</span>
+                        <span class="pub">{{nodeInfo.publicKey}}</span>
+                    </p>
+                    <p>
+                        <span class="label">{{$t('settings.customNet.nodeIP')}}</span>
+                        {{nodeInfo.ip}}
+                    </p>
+                    <p>
+                        <span class="label">RPC {{$t('settings.customNet.port')}}:</span>
+                        {{nodeInfo.port}}
+                    </p>
+                    <p>
+                        <span class="label">P2P {{$t('settings.customNet.port')}}:</span>
+                        26793
+                    </p>
+                    <p>
+                        <span class="label">Coinbase {{$t('sideBar.wallet')}}:</span>
+                        {{keystore?keystore.address:''}}
+                    </p>
+                    <p>
+                        <span class="label">{{$t('settings.customNet.folder')}}:</span>
+                        {{userDataPath}}
+                    </p>
+                </div>
                 <p>
-                    <span class="label">{{$t('settings.customNet.nodeIP')}}</span>
-                    {{nodeList[0].ip}}
-                </p>
-                <p>
-                    <span class="label">RPC {{$t('settings.customNet.port')}}:</span>
-                    {{nodeList[0].port}}
-                </p>
-                <p>
-                    <span class="label">P2P {{$t('settings.customNet.port')}}:</span>
-                    26793
-                </p>
-                <p>
-                    <span class="label">Coinbase {{$t('sideBar.wallet')}}:</span>
-                    {{keystore?keystore.address:''}}
-                    <el-button type="primary" @click="backup">{{$t('settings.customNet.backUpKey')}}</el-button>
-                </p>
-                <p>
-                    <span class="label">{{$t('settings.customNet.folder')}}:</span>
-                    {{userDataPath}}
+                    <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']" @click="finish">{{$t('wallet.finish')}}</el-button>
+                    <el-button class="back-up" @click="backup">{{$t('settings.customNet.backUpKey')}}</el-button>
                 </p>
             </div>
-            <p>
-                <el-button type="primary" :class="[lang=='zh-cn'?'letterSpace':'']" @click="finish">{{$t('wallet.finish')}}</el-button>
-            </p>
-        </div>
-        <div class="padd" v-else>
-            <p class="title">
-                <span @click="selTab(1)" class="tab">{{$t("settings.customNet.createNet")}}</span>
-                <!--<span @click="selTab(2)" :class="[tab==2?'active':'']">{{$t("settings.customNet.addNet")}}</span>-->
-            </p>
-            <div v-if="tab==1">
-                <ul v-show="step==1" class="ul">
-                    <li>
-                        <span class="sub-title">1.{{$t("settings.customNet.block")}}</span>
-                        <el-form class="center" :model="net" ref="net" :rules="rules"  label-width="105px" label-position="left">
-                            <el-form-item prop="name" :label="$t('settings.customNet.netName')">
-                                <el-input v-model.trim="net.name" :placeholder="$t('settings.customNet.netNameHint')"></el-input>
-                            </el-form-item>
-                            <el-form-item :label="$t('settings.customNet.consensus')">
-                                <el-select v-model="net.algo" disabled>
-                                    <el-option value="CBFT" label="CBFT"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item prop="interval" :label="$t('settings.customNet.interval')">
-                                <el-input v-model.trim="net.interval" type="number" class="interval"></el-input>
-                            </el-form-item>
-                        </el-form>
-                    </li>
-                </ul>
-                <ul v-show="step==2" class="ul">
-                    <li>
-                        <span class="sub-title">2.{{$t("settings.customNet.createWallet")}}</span>
-                        <el-form class="center" :model="wallet" ref="wallet" :rules="walletRules"  label-width="118px" label-position="left">
-                            <el-form-item prop="name" :label="$t('settings.customNet.walletName')">
-                                <el-input v-model.trim="wallet.name" :placeholder="$t('settings.customNet.walletName')"></el-input>
-                            </el-form-item>
-                            <el-form-item prop="psw" :label="$t('settings.customNet.password')">
-                                <el-input v-model.trim="wallet.psw" type="password" :placeholder="$t('wallet.enterNewPsw')"></el-input>
-                            </el-form-item>
-                            <el-form-item prop="pswA" :label="$t('settings.customNet.rePassword')">
-                                <el-input v-model.trim="wallet.pswA" type="password" :placeholder="$t('wallet.repeatPsw')"></el-input>
-                            </el-form-item>
-                        </el-form>
-                    </li>
-                </ul>
-                <div v-show="step==3">
-                    <!--<p class="addr">{{$t("settings.customNet.address")}}:{{keystore?keystore.address:''}}</p>-->
-                    <!--<p class="mark">{{$t("settings.customNet.tip")}}{{wallet.name}}{{$t("settings.customNet.tip2")}} <el-button @click="backup">{{$t("settings.customNet.download")}}</el-button></p>-->
-                    <ul class="ul node-list">
-                        <span class="sub-title">{{$t("settings.customNet.nodeaddress")}}</span>
-                        <el-form ref="node" :model="nodeList[0]" :rules="nodeRules"  label-width="124px" label-position="left">
-                            <li v-for="(item,index) in nodeList">
-                                <el-form-item prop="privateKey" :label="$t('settings.customNet.node')+$t('settings.customNet.priK')">
-                                    <el-input v-model.trim="item.privateKey" :disabled="createLoading">
+            <div class="padd" v-else>
+                <p class="title">
+                    <span class="tab">{{$t("settings.customNet.createNet")}}</span>
+                </p>
+                <div>
+                    <ul class="ul">
+                        <li>
+                            <div class="sub-title border">
+                                <p class="bold">1.{{$t("settings.customNet.block")}}</p>
+                                <p class="indent">{{$t("settings.customNet.blockSubTitle")}}</p>
+                            </div>
+                            <el-form v-show="step==1" class="center" :model="net" ref="net" :rules="rules"  label-width="100px" label-position="left">
+                                <el-form-item prop="name" :label="$t('settings.customNet.netName')">
+                                    <el-input v-model.trim="net.name" :placeholder="$t('settings.customNet.netNameHint')"></el-input>
+                                </el-form-item>
+                                <el-form-item :label="$t('settings.customNet.consensus')">
+                                    <el-select v-model="net.algo" disabled>
+                                        <el-option value="CBFT" label="CBFT"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item prop="interval" :label="$t('settings.customNet.interval')">
+                                    <el-input v-model.trim="net.interval" type="number" class="interval"></el-input>
+                                </el-form-item>
+                                <p class="btn-tab1">
+                                    <el-button type="primary" @click="initBtn">{{$t("settings.customNet.create")}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':step==1?'step1':'','back']" @click="back" :disabled="createLoading">{{$t("settings.customNet.cancel")}}</el-button>
+                                </p>
+                            </el-form>
+                            <div :class="[step>1?'border':'','sub-title']">
+                                <p class="bold">2.{{$t("settings.customNet.createWallet")}}</p>
+                                <p class="indent">{{$t("settings.customNet.coinBaseSubTitle")}}</p>
+                            </div>
+                            <div class="sub-title" v-show="step==1">
+                                <p class="bold">3.{{$t("settings.customNet.nodeaddress")}}</p>
+                                <p class="indent">{{$t("settings.customNet.nodeSubTitle")}}</p>
+                            </div>
+                            <el-form v-show="step==2" class="center" :model="wallet" ref="wallet" :rules="walletRules"  label-width="118px" label-position="left">
+                                <el-form-item prop="name" :label="$t('settings.customNet.walletName')">
+                                    <el-input v-model.trim="wallet.name" :placeholder="$t('settings.customNet.walletName')"></el-input>
+                                </el-form-item>
+                                <el-form-item prop="psw" :label="$t('settings.customNet.password')">
+                                    <el-input v-model.trim="wallet.psw" type="password" :placeholder="$t('wallet.enterNewPsw')"></el-input>
+                                </el-form-item>
+                                <el-form-item prop="pswA" :label="$t('settings.customNet.rePassword')">
+                                    <el-input v-model.trim="wallet.pswA" type="password" :placeholder="$t('wallet.repeatPsw')"></el-input>
+                                </el-form-item>
+                                <p class="btn-tab1">
+                                    <el-button type="primary" @click="initAccount">{{$t("settings.customNet.createAndWrite")}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':step==1?'step1':'','back']" @click="prev" :disabled="createLoading">{{$t("form.back")}}</el-button>
+                                </p>
+                            </el-form>
+                            <div class="sub-title" v-show="step==2">
+                                <p class="bold">3.{{$t("settings.customNet.nodeaddress")}}</p>
+                                <p class="indent">{{$t("settings.customNet.nodeSubTitle")}}</p>
+                            </div>
+                            <div class="sub-title border" v-show="step==3">
+                                <p class="bold">3.{{$t("settings.customNet.nodeaddress")}}</p>
+                                <p class="indent">{{$t("settings.customNet.nodeSubTitle")}}</p>
+                            </div>
+                            <el-form ref="node" v-show="step==3" :model="nodeInfo" :rules="nodeRules"  label-width="124px" label-position="left">
+                                <el-form-item prop="privateKey" :label="$t('settings.customNet.node')+' '+$t('settings.customNet.priK')" class="append-item">
+                                    <el-input v-model.trim="nodeInfo.privateKey" :disabled="createLoading">
                                         <el-button slot="append" class="slot" :disabled="createLoading" @click="generatePrivateKey">{{$t('settings.customNet.generate')}}</el-button>
                                     </el-input>
                                 </el-form-item>
-                                <el-form-item prop="ip" :label="$t('settings.customNet.node')+$t('settings.customNet.IP')">
-                                    <el-input v-model.trim="item.ip" :disabled="createLoading">
+                                <el-form-item prop="ip" :label="$t('settings.customNet.node')+' '+$t('settings.customNet.IP')" class="append-item">
+                                    <el-input v-model.trim="nodeInfo.ip" :disabled="createLoading" placeholder="XXX.XXX.XXX.XXX">
                                         <el-button slot="append" class="slot" :disabled="createLoading" @click="getIp">{{$t('settings.customNet.getIp')}}</el-button>
                                     </el-input>
                                 </el-form-item>
-                                <el-form-item prop="port" :label="$t('settings.customNet.node')+$t('settings.customNet.port')">
-                                    <el-input v-model.trim="item.port" :disabled="createLoading"></el-input>
+                                <el-form-item prop="port" :label="$t('settings.customNet.node')+' '+$t('settings.customNet.port')">
+                                    <el-input v-model.trim="nodeInfo.port" :disabled="createLoading"></el-input>
                                 </el-form-item>
-                            </li>
-                        </el-form>
-
+                                <p class="btn-box-1 btn-tab1">
+                                    <el-button type="primary" @click="create" :loading="createLoading">{{$t("settings.customNet.startNode")}}</el-button>
+                                    <el-button :class="[lang=='zh-cn'?'letterSpace':step==1?'step1':'','back']" @click="back" :disabled="createLoading">{{$t("settings.customNet.cancel")}}</el-button>
+                                </p>
+                            </el-form>
+                        </li>
                     </ul>
                 </div>
-                <p :class="[step==3?'btn-box-1':'','btn-tab1']">
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','back']" @click="back" :disabled="createLoading">{{$t("settings.customNet.cancel")}}</el-button>
-                    <el-button class="init" @click="initBtn" v-if="step==1">{{$t("settings.customNet.create")}}</el-button>
-                    <el-button class="init" @click="initAccount" v-if="step==2">{{$t("settings.customNet.createAndWrite")}}</el-button>
-                    <el-button class="init" @click="create" v-if="step==3" :loading="createLoading">{{$t("settings.customNet.startNode")}}</el-button>
-                </p>
-            </div>
-            <div v-if="tab==2">
-                <ul class="ul" v-if="step==4">
-                    <li class="import import-null" v-show="!file">
-                        <input type="file"
-                               class="file"
-                               id="file"
-                               @change="getFileName"/>
-                        <span class="sub-title">{{$t("settings.customNet.importFiles")}}</span>
-                        <p class="txt">{{$t("settings.customNet.importFilesHint")}}</p>
-                    </li>
-                    <li class="import import-has" v-show="file">
-                        {{file.name}}
-                    </li>
-                </ul>
-                <ul class="ul" v-if="step==5">
-                    <li>
-                        <span class="sub-title">{{$t("settings.customNet.nodeAddress")}}</span>
-                        <el-form ref="conn" :model="conn" :rules="connRules"  label-width="80px" label-position="left">
-                            <el-form-item prop="privateKey" :label="$t('settings.customNet.nodePK')">
-                                <el-input v-model.trim="conn.privateKey"></el-input>
-                            </el-form-item>
-                            <el-form-item prop="ip" :label="$t('settings.customNet.nodeIP')">
-                                <el-input v-model.trim="conn.ip"></el-input>
-                            </el-form-item>
-                            <el-form-item prop="port" :label="$t('settings.customNet.nodePort')">
-                                <el-input v-model.trim="conn.port"></el-input>
-                            </el-form-item>
-                        </el-form>
-                    </li>
-                </ul>
-                <p class="btn-box">
-                    <el-button class="back" @click="back">{{$t("settings.customNet.cancel")}}</el-button>
-                    <el-button class="init" @click="importNodes" v-if="step==4">{{$t("settings.customNet.next")}}</el-button>
-                    <el-button class="init" @click="join" v-if="step==5">{{$t("settings.customNet.addNode")}}</el-button>
-                </p>
             </div>
         </div>
+
 
     </div>
 </template>
@@ -215,7 +192,6 @@
                     parentHash: "0x0000000000000000000000000000000000000000000000000000000000000000"
                 },
                 step:1,
-                tab:1,
                 conn:{
                     ip:'',
                     port:'',
@@ -240,28 +216,11 @@
                     pswA:''
                 },
                 keystore:null,
-                // nodeList:[{
-                //     privateKey:'87787aeee9540ec942629b5cbf3bbcc4c765ec02129943ef7463d2864f188938',
-                //     ip:'10.10.8.214',
-                //     port:'6789'
-                // },{
-                //     publicKey:'3b53564afbc3aef1f6e0678171811f65a7caa27a927ddd036a46f817d075ef0a5198cd7f480829b53fe62bdb063bc6a17f800d2eebf7481b091225aabac2428d',
-                //     ip:'10.10.8.2',
-                //     port:'2345'
-                // },{
-                //     publicKey:'858d6f6ae871e291d3b7b2b91f7369f46deb6334e9dacb66fa8ba6746ee1f025bd4c090b17d17e0d9d5c19fdf81eb8bde3d40a383c9eecbe7ebda9ca95a3fb94',
-                //     ip:'10.10.8.3',
-                //     port:'3456'
-                // },{
-                //     publicKey:'b0971a3670e593ad7a3d5b3983b5d67db827e1fd267688dfef97e27604c1121dc6b8e5ba82a89d6dc552083296df8a7ab41466ab1e47929af69e94efd65df7b3',
-                //     ip:'10.10.8.4',
-                //     port:'4567'
-                // }],
-                nodeList:[{
+                nodeInfo:{
                     privateKey:'',
                     ip:'',
                     port:''
-                }],
+                },
                 file:false,
                 //创建私有链在切换中英文之后，不用computed
                 rules:{
@@ -277,7 +236,7 @@
                         { min: 6, message: this.$t('wallet.enterNewPswHint'), trigger: 'blur' }
                         ],
                     pswA:[
-                        { required: true, message: this.$t('wallet.repeatPsw'), trigger: 'blur' },
+                        { required: true, message: this.$t('form.nonRepPsw'), trigger: 'blur' },
                         { validator: this.checkPswA, trigger: 'blur'}
                     ]
                 },
@@ -359,13 +318,8 @@
                     callback();
                 }
             },
-            selTab(n){
-                this.tab = n;
-                if(n==1){
-                    this.step=1;
-                }else if(n==2){
-                    this.step=4;
-                }
+            prev(){
+                this.step=1;
             },
             back(){
                 console.log(this.fromPath);
@@ -382,7 +336,8 @@
                            console.warn('getCustoms cb');
                            let arr = data.filter((item)=>{
                                return item.name==name;
-                           })
+                           });
+                           console.log('arr------',arr);
                            if(arr.length>0){
                                this.$message.error(this.$t('wallet.netNameRepeat'));
                                return;
@@ -426,19 +381,27 @@
                         //组合state-nodes
                         this.createLoading = true;
                         let stateNodes=[],publicKey,_this = this;
-                        if(this.nodeList.length>0 && this.nodeList[0].privateKey){
-                            publicKey = EthUtil.privateToPublic(new Buffer(this.nodeList[0].privateKey, 'hex')).toString('hex');
-                            this.nodeList[0].publicKey = publicKey;
-                            this.nodeList.forEach((item)=>{
-                                stateNodes.push(item.publicKey)
-                            });
+                        if(this.nodeInfo.privateKey){
+                            publicKey = EthUtil.privateToPublic(Buffer.from(this.nodeInfo.privateKey, 'hex')).toString('hex');
+                            this.nodeInfo.publicKey = publicKey;
+                            stateNodes.push(this.nodeInfo.publicKey);
                             this.jsonData.config.cbft.initialNodes = stateNodes;
                             this.jsonData.timestamp = '0x'+((Math.round(new Date().getTime() / 1000)).toString(16));
                             this.saveJson(this.jsonData).then(()=>{
                                 this.initDir(()=>{
                                     console.log('initDir success');
                                     this.userDataPath = `${Settings.userDataPath}net_custom/chain/${this.net.name}`;
-                                    nodeManager.initChain(this.net.name,this.nodeList[0].port);
+                                    this.updateState(0);
+                                    nodeManager.initChain(this.net.name,this.nodeInfo.port,(num)=>{
+                                        if(num==0){
+                                            this.createLoading = false;
+                                            fsObj.deleteFolder(this.userDataPath,(err)=>{
+                                                if(err){
+                                                    throw err;
+                                                }
+                                            })
+                                        }
+                                    });
                                 });
                             }).catch((e)=>{
                                 this.createLoading = false;
@@ -453,7 +416,6 @@
             saveJson(jsonData){
                 let type = 'custom';
                 return new Promise((resolve, reject)=>{
-                    console.log('path',`${Settings.userDataPath}net_custom/cbft.json`,fs.existsSync(`${Settings.userDataPath}net_custom/cbft.json`));
                     let filePath = path.join(`${Settings.userDataPath}net_${type}`,`${this.net.name}.json`);
                     console.log('filePath---',Settings.userDataPath,filePath);
                     fs.writeFile(filePath, JSON.stringify(jsonData), (err) => {
@@ -475,8 +437,8 @@
                 if(!fs.existsSync(path.join(basePath, `chain/${this.net.name}`))){
                     //创建链目录
                     fs.mkdirSync(path.join(basePath, `chain/${this.net.name}`));
-                    // let cbftJSON = require("../../../static/json/cbft.json");
-                    // fs.writeFileSync(`${basePath}/chain/${this.net.name}/cbft.json`,JSON.stringify(cbftJSON))
+                    let cbftJSON = require("../../../static/json/cbft.json");
+                    fs.writeFileSync(`${basePath}/chain/${this.net.name}/cbft.json`,JSON.stringify(cbftJSON))
                 }
                 if(!fs.existsSync(path.join(basePath, `chain/${this.net.name}/keystore`))){
                     //创建钱包存储目录并保存钱包
@@ -484,10 +446,10 @@
                 }
                 fs.writeFileSync(path.join(basePath, `chain/${this.net.name}/keystore/${this.keystore.address}`), JSON.stringify(this.keystore));
                 // 创建nodekey和static-nodes
-                fs.writeFileSync(path.join(basePath, `chain/${this.net.name}/nodekey`), this.nodeList[0].privateKey);
+                fs.writeFileSync(path.join(basePath, `chain/${this.net.name}/nodekey`), this.nodeInfo.privateKey);
                 fs.writeFileSync(path.join(basePath, `chain/${this.net.name}/static-nodes`), JSON.stringify(this.jsonData.config.cbft.initialNodes));
                 //保存端口
-                fs.writeFileSync(path.join(basePath, `chain/${this.net.name}/port`), this.nodeList[0].port);
+                fs.writeFileSync(path.join(basePath, `chain/${this.net.name}/port`), this.nodeInfo.port);
                 cb();
             },
 
@@ -580,8 +542,8 @@
                 keythereum.create(params,(dk)=>{
                    let privateKey = dk.privateKey,
                        publicKey = EthUtil.privateToPublic(privateKey).toString('hex');
-                    this.nodeList[0].privateKey = privateKey.toString('hex');
-                    this.nodeList[0].publicKey = publicKey;
+                    this.nodeInfo.privateKey = privateKey.toString('hex');
+                    this.nodeInfo.publicKey = publicKey;
                 })
             },
             getIp(){
@@ -597,7 +559,7 @@
                         for(var i=0;i<iface.length;i++){
                             var alias = iface[i];
                             if(alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal){
-                                _this.nodeList[0].ip = alias.address;
+                                _this.nodeInfo.ip = alias.address;
                             }
                         }
                     }
@@ -652,16 +614,36 @@
 </script>
 
 <style lang="less" scoped>
+    .bg{
+        position:relative;
+        z-index:99;
+        height:100%;
+        background-color:#f8fafd;
+    }
     .custom-net{
+        padding:4px;
+        height:100%;
+        &:before{
+             content: '';
+             position: fixed;
+             top: 4px;
+             left: 4px;
+             z-index: 9;
+             width: calc(~"100% - 8px");
+             height: calc(~"100% - 8px");
+             box-shadow: 0 0 5px 2px rgba(203,210,221,0.5);
+         }
         .slot{
+            position:relative;
+            z-index:999;
             width:70px;
             font-size: 12px;
-            color: #525768;
+            color: #fff;
             font-weight: normal;
         }
         .custom-header{
             height:50px;
-            background: url("./images/logoB.svg") no-repeat 20px center;
+            background: url("./images/logoB.svg") no-repeat 20px center #fff;
             box-shadow: inset 0 -1px 0 0 #E4E8EB;
             span{
                 float:right;
@@ -676,8 +658,9 @@
             padding:0 40px;
         }
         .title{
-            margin:14px 0;
-            height:34px;
+            margin:14px 0 20px;
+            height:22px;
+            line-height:22px;
             font-size: 16px;
             color: #24272B;
             letter-spacing: 0.5px;
@@ -687,35 +670,36 @@
                 cursor:pointer;
             }
             .active{
-                color: #18C2E9;
-                border-bottom:solid 3px #18C2E9;
+                color: #0077FF;
+                border-bottom:solid 3px #0077FF;
             }
             .tab{
-                color: #18C2E9;
+                margin-bottom:20px;
+                color: #24272B;
                 font-weight:600;
             }
         }
         .ul{
             >li{
-                position:relative;
-                margin-bottom:24px;
-                padding:26px 0 0 30px;
-                width:500px;
-                border: 1px solid #D3D8E1;
                 border-radius:4px;
                 .sub-title{
-                    position:absolute;
-                    top:-10px;
-                    left:21px;
-                    padding:0 8px;
-                    font-size:14px;
-                    background-color: #fff;
-                    color: #24272B;
-                    letter-spacing: 0.5px;
-                    font-weight:600;
-                }
-                p{
-                    margin-bottom:12px;
+                    margin-bottom:14px;
+                    padding-bottom:14px;
+                    font-size: 12px;
+                    color: #9EABBE;
+                    .bold{
+                        margin-bottom:8px;
+                        font-size: 14px;
+                        color: #24272B;
+                        font-weight:600;
+                        letter-spacing: 0.5px;
+                    }
+                    .indent{
+                        text-indent: 9px;
+                    }
+                    &.border{
+                         border-bottom:solid 1px #D3D8E1;
+                     }
                 }
                 .label{
                     display:inline-block;
@@ -776,7 +760,7 @@
                 font-size:10px;
                 text-align:center;
                 color:#fff;
-                background: #18C2E9;
+                background: #0077FF;
                 border:none;
             }
         }
@@ -824,44 +808,21 @@
             }
             .back{
                 margin-right:123px;
-                color: #18C2E9;
-                border: 1px solid #18C2E9;
-                &:hover{
-                    border-color:#18C2E1;
-                 }
-            }
-            .init{
-                background: #18C2E9;
-                border:none;
-                color:#fff;
-                &:hover{
-                     background:#18C2E1;
-                 }
             }
         }
         .btn-tab1{
-            width:500px;
             text-align: left;
-            margin:30px 0;
+            margin:20px 0 30px;
             .el-button{
                 margin:0;
                 width:186px;
                 height:36px;
+                font-size:14px;
             }
             .back{
-                margin-right:123px;
-                color: #18C2E9;
-                border: 1px solid #18C2E9;
-                &:hover{
-                    border-color:#18C2E1;
-                 }
-            }
-            .init{
-                background: #18C2E9;
-                border:none;
-                color:#fff;
-                &:hover{
-                     background:#18C2E1;
+                margin-left:29px;
+                &.step1{
+                     margin-left:19px;
                  }
             }
         }
@@ -877,6 +838,9 @@
         top:0;
         font-size: 12px;
         color: #525768;
+    }
+    .is-error .interval:after{
+        right:29px;
     }
     .min{
         display: inline-block;
@@ -900,28 +864,41 @@
         -webkit-app-region: no-drag;
     }
     .compolete{
-        text-align:center;
         .title{
-            margin:50px 0 20px;
-            padding-top:48px;
-            height:68px;
+            margin:14px 0 20px;
+            height:22px;
+            line-height:22px;
+            font-size: 16px;
+            color: #24272B;
+            font-weight:600;
+        }
+        .net-name{
+            padding-left:50px;
+            height:40px;
+            line-height:40px;
             font-size: 14px;
-            color: #0BB27A;
-            background: url("./images/icon_complete.svg") no-repeat center top;
+            color: #24272B;
+            letter-spacing: 0.5px;
+            font-weight:600;
+            background: url("./images/icon_complete.svg") no-repeat left center;
         }
         .content{
-            padding:12px 14px 8px;
-            width:580px;
-            margin:0 auto 30px;
+            margin:14px 0 20px;
+            padding-top:15px;
             text-align: left;
-            border: 1px solid #D3D8E1;
-            border-radius: 4px;
+            border-top: 1px solid #D3D8E1;
+            border-bottom: 1px solid #D3D8E1;
             p{
-                margin-bottom:12px;
-                font-size: 12px;
-                color: #22272C;
+                margin-bottom:14px;
+                font-size: 13px;
+                color: #24272B;
+                font-weight:600;
                 .label{
+                    display:inline-block;
+                    width:118px;
+                    font-size: 12px;
                     color: #525768;
+                    font-weight:normal;
                 }
                 .el-button{
                     padding-left:15px;
@@ -935,31 +912,48 @@
             .pub-box{
                 display:flex;
                 .min1{
-                    min-width:58px;
+                    min-width:118px;
                 }
                 .min2{
-                    min-width:104px;
+                    min-width:118px;
                 }
                 .pub{
                     word-break: break-all;
                 }
             }
         }
+        .el-button{
+            width:186px;
+            height:36px;
+            font-size:14px;
+        }
+        .back-up{
+            margin-left:20px;
+        }
     }
 
 </style>
 <style lang="less">
     .custom-net{
+        .el-form-item{
+          margin-bottom:12px;
+        }
         .el-input{
             width: 300px;
             .el-input__inner{
                 font-size:12px;
                 height:40px;
+                background-color: transparent;
             }
+            &.is-disabled .el-input__inner{
+                color: #24272B;
+             }
         }
         .el-form-item__label{
             font-size: 12px;
             color: #24272B;
+            white-space: nowrap;
+            font-weight: 600;
         }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button{
@@ -967,9 +961,25 @@
             margin: 0;
         }
         .el-input-group__append{
-            background: #D3D8E1;
+            background: #4897F6;
             border-radius: 0px 4px 4px 0px;
-            font-family: "微软雅黑","Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+            font-family: "Chinese Quote",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+            &:hover{
+                 background: #0077FF;
+                 .slot{
+                     border:none;
+                 }
+            }
+        }
+        .append-item{
+            .el-form-item__error{
+                left: 231px;
+                top: 10px;
+                padding-left: 78px;
+            }
+        }
+        .el-form-item__error:before{
+            top:2px;
         }
     }
     .el-form-item.is-required .el-form-item__label:before{

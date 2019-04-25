@@ -3,10 +3,14 @@
         <p>{{$t('nodeSync.syncStatus')}} <span v-if="syncing"><i class="el-icon-loading"></i></span></p>
         <p>
             {{$t('nodeSync.Peers')}} :
-            <span v-if="network.type=='test'&&nodeCount==0" class="connecting">Connecting...</span>
+            <span v-if="network.type!=='custom'&&nodeCount==0" class="connecting">Connecting...</span>
             <span v-else class="bold">{{nodeCount}}</span>
         </p>
-        <p>{{$t('nodeSync.Blocks')}} : <span class="bold">{{remainBlock}}</span></p>
+        <p>{{$t('nodeSync.Blocks')}} :
+            <span class="bold connecting" v-if="currentBlock==0 && blockNumber==0">Connecting...</span>
+            <span class="bold" v-else-if="blockNumber>0 && currentBlock==highestBlock">{{$t('nodeSync.compolete')}}</span>
+            <span class="bold" v-else>{{$t('nodeSync.syncing')}}({{currentBlock}}/{{highestBlock}})</span>
+        </p>
         <p v-if="syncing || nodeCount==0">
             <el-progress :stroke-width="14" :percentage="(highestBlock?(currentBlock/highestBlock):0)*100" color="rgb(35,200,239,1)"></el-progress>
         </p>
@@ -29,9 +33,9 @@
                 syncing:false,
                 currentBlock:0,
                 highestBlock:0,
-                remainBlock:0,
                 nodeCount:0,
-                timer:null
+                timer:null,
+                blockNumber:0
             }
         },
         computed:{
@@ -44,19 +48,21 @@
             check(){
                 try{
                     contractService.web3.eth.getSyncing((err,data)=>{
+                        // console.log('getSyncing--->',err,data);
                         if(!err && !!data){
                             this.syncing = true;
                             this.currentBlock = data.currentBlock;
                             this.highestBlock = data.highestBlock;
-                            this.remainBlock = data.currentBlock - data.highestBlock;
                             if(this.currentBlock-this.highestBlock==0){
                                    this.syncing = false;
-                                   this.remainBlock = 0;
-                                   clearInterval(window.syncInterval);
                             }
                         }else{
+                            this.currentBlock = data&&data.currentBlock;
+                            this.highestBlock = data&&data.highestBlock;
                             this.syncing = false;
-                            this.remainBlock = 0;
+                            contractService.web3.eth.getBlockNumber((err,blockNumber)=>{
+                                this.blockNumber = blockNumber;
+                            })
                         }
                     });
                     contractService.web3.net.getPeerCount((error, result)=>{
@@ -83,15 +89,17 @@
 
 <style lang="less" scoped>
     .node-sync{
-        margin-top:10px;
-        padding:10px 20px;
+        margin-top:5px;
+        padding:12px 20px;
         font-size: 12px;
-        color:#fff;
-        border-top:solid 1px #182858;
+        color: #24272B;
+        border-top:solid 1px #ECF1F8;
         p{
             margin-bottom:10px;
             i{
-                font-size:10px;
+                font-size:14px;
+                margin-left: 2px;
+                vertical-align: bottom;
             }
         }
         .bold{
@@ -114,6 +122,7 @@
         }
         .el-progress-bar__outer,.el-progress-bar__inner{
             border-radius:0;
+            background: #0077FF;
         }
     }
 </style>

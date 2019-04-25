@@ -73,7 +73,7 @@ export const tradeAction = {
                                             type:'transfer'
                                         };
                                         //判断交易状态，如果已签名数+剩余未签名数<签名数，该笔交易置为交易失败
-                                        contractService.platONCall(contractService.getABI(1),share.address,'getOwners',share.address,[]).then((owners)=>{
+                                        /*contractService.platONCall(contractService.getABI(1),share.address,'getOwners',share.address,[]).then((owners)=>{
                                             contractService.platONCall(contractService.getABI(1),share.address,'getRequired',share.address).then((required)=>{
                                                 contractService.platONCall(contractService.getABI(1),share.address,'getMultiSigList',share.address,[_arr[8]]).then((multiSigList)=>{
                                                     let ownersList = owners.split(":");
@@ -89,6 +89,18 @@ export const tradeAction = {
                                                     shareTradeList.push(obj);
                                                 });
                                             })
+                                        });*/
+                                        contractService.platONCall(contractService.getABI(1),share.address,'getMultiSigList',share.address,[_arr[8]]).then((multiSigList)=>{
+                                            let ownersList = share.ownersArr;
+                                            let arr = multiSigList.replace(/^\:|\:$/g,'').split(":");
+                                            let confirmList = arr[1].replace(/^\,|\,$/g,'').split(",");
+                                            let rejectList = arr[2]?arr[2].replace(/^\,|\,$/g,'').split(","):[];
+                                            if(ownersList.length - rejectList.length < share.required){
+                                                obj.pending = 0;
+                                                obj.executed = 0;
+                                            }
+                                            count++;
+                                            shareTradeList.push(obj);
                                         });
                                     });
                                 }
@@ -144,15 +156,16 @@ export const tradeAction = {
        })
     },
     //获取当前共享钱包的交易列表
-    getCurShareTradeList({state,commit,rootState,dispatch},num){
+    getCurShareTradeList({ state, commit, rootState, dispatch }, num) {
         return new Promise((resolve, reject)=>{
             let curWallet = rootState.wallet.curWallet;
             dispatch('getWalletByAddress',curWallet).then((curObj)=>{
                 if(!curObj) resolve([]);
                 let shareTradeList=[],count=0;
-                contractService.platONCall(contractService.getABI(1),curObj.address,'getTransactionList',curObj.address,[0,num]).then((result)=>{
+                contractService.platONCall(contractService.getABI(1), curObj.address, 'getTransactionList', curObj.address, [0, num]).then((result) => {
                     if(result=='0x') return;
                     let arr = result.replace(/\:$/g,'').split(":");
+                    // console.log('dddd',arr);
                     if(!/^\s*$/g.test(result)){
                         arr.forEach((item)=>{
                             let _arr=item.split("|"),decodeInput;
@@ -175,22 +188,21 @@ export const tradeAction = {
                                 type:'transfer'
                             };
                             //判断交易状态，如果已签名数+剩余未签名数<签名数，该笔交易置为交易失败
-                            contractService.platONCall(contractService.getABI(1),curObj.address,'getOwners',curObj.address,[]).then((owners)=>{
-                                contractService.platONCall(contractService.getABI(1),curObj.address,'getRequired',curObj.address).then((required)=>{
-                                    contractService.platONCall(contractService.getABI(1),curObj.address,'getMultiSigList',curObj.address,[_arr[8]]).then((multiSigList)=>{
-                                        let ownersList = owners.split(":");
-                                        let arr = multiSigList.replace(/^\:|\:$/g,'').split(":");
-                                        let confirmList = arr[1].replace(/^\,|\,$/g,'').split(",");
-                                        let rejectList = arr[2]?arr[2].replace(/^\,|\,$/g,'').split(","):[];
-                                        obj.required = required;
-                                        if(ownersList.length - rejectList.length < required){
-                                            obj.pending = 0;
-                                            obj.executed = 0;
-                                        }
-                                        count++;
-                                        shareTradeList.push(obj);
-                                    });
-                                })
+                            contractService.platONCall(contractService.getABI(1),curObj.address,'getMultiSigList',curObj.address,[_arr[8]]).then((multiSigList)=>{
+                                let ownersList = curObj.ownersArr;
+                                let arr = multiSigList.replace(/^\:|\:$/g,'').split(":");
+                                let confirmList = arr[1].replace(/^\,|\,$/g,'').split(",");
+                                let rejectList = arr[2]?arr[2].replace(/^\,|\,$/g,'').split(","):[];
+                                // console.log('dddd',owners,'\n==>',required,'\n==>',multiSigList);
+                                // console.log('dddd',curObj);
+
+                                // obj.required = required;
+                                if(ownersList.length - rejectList.length < curObj.required){
+                                    obj.pending = 0;
+                                    obj.executed = 0;
+                                }
+                                count++;
+                                shareTradeList.push(obj);
                             });
                         });
                         let timer = setInterval(()=>{
@@ -200,6 +212,7 @@ export const tradeAction = {
                                     let value2 = b['tradeTime'];
                                     return value2 - value1;
                                 });
+                                // console.log("cccc",aaa);
                                 clearInterval(timer);
                                 resolve(shareTradeList)
                             }
@@ -215,15 +228,16 @@ export const tradeAction = {
             if(window.vueVm.$route.path== "/o-wallet-share-detail"){
                 //共享钱包详情页，size比较特殊，要保证首屏待确认的全部加载，已完成的加载20条
                 let pendings=[],compoletes=[];
-                dispatch('getTransactionCount').then((count)=>{
-                    if(count<1){
+                dispatch('getTransactionCount').then((count) => {
+                    if(count<1||count =='0x'){
                         resolve({
                             total:0,
                             list:[],
                             pendings:[]
                         });
                     }else{
-                        dispatch('getCurShareTradeList',count).then((shareTradeList)=>{
+                        dispatch('getCurShareTradeList', count).then(
+                            (shareTradeList) => {
                             pendings = shareTradeList.filter((item)=>{
                                 return item.pending==1;
                             });

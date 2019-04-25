@@ -1,14 +1,17 @@
 <template>
     <div class="setting">
        <p class="title">{{$t("settings.network")}}</p>
-       <el-select v-model="netType" @change="changeNet">
+       <el-select v-model="netType" @change="changeNet" :placeholder="$t('wallet.selectHint')">
            <el-option value="main" :label="$t('settings.mainNet')" :disabled="true"></el-option>
-           <el-option value="test" :label="$t('settings.testNet')"></el-option>
+           <el-option value="amigo" :label="$t('settings.testNet')"></el-option>
+           <el-option value="batalla" :label="$t('settings.bataNet')"></el-option>
+           <!--<el-option v-if="testMode" value="test" :label="$t('settings.innerNet')"></el-option>-->
+           <!--<el-option v-if="testMode" value="innerdev" :label="$t('settings.innerdevNet')"></el-option>-->
            <el-option v-for="custom in customs" :label="custom.name" :value="'custom_'+custom.name"></el-option>
            <el-option value="创建私有链" :label="$t('settings.priNet')"></el-option>
        </el-select>
         <p class="title">{{$t("settings.lang")}}</p>
-        <el-select v-model="language" @change="changeLang">
+        <el-select v-model="language" @change="changeLang" :placeholder="$t('wallet.selectHint')">
             <el-option value="zh-cn" :label="$t('settings.zh')"></el-option>
             <el-option value="en" :label="$t('settings.en')"></el-option>
         </el-select>
@@ -16,16 +19,20 @@
         <p class="des-txt">{{$t("settings.path")}}:{{currentPath}}<el-button @click="modifyPath">{{$t("settings.change")}}</el-button></p>
         <!--<input type="file" id="id" name="image" class="getImgUrl_file" @change="preview($event)">-->
 
-        <!-- <p class="title">{{$t("settings.about")}}</p> -->
-        <!--<p :class="[lang=='en'?'txt-en':'','des-txt']">{{$t("settings.system")}}V1.0.0 <el-button>{{$t("settings.check")}}</el-button></p>-->
+        <p class="title">{{$t("settings.about")}}</p>
+        <p :class="[lang=='en'?'txt-en':'','des-txt']">{{$t("settings.system")}}V{{version}}<el-button @click="checkUpdate" :disabled="updateDisabled">{{$t("settings.check")}}</el-button></p>
         <!--<p class="des-txt">{{$t("settings.applyTest")}} <el-button @click="apply">{{$t("settings.apply")}}</el-button></p>-->
         <p class="title">{{$t("settings.community")}}</p>
         <p class="icons">
-            <span class="p" @click="openUrl('https://t.me/PlatONHK')"></span>
-            <span class="w" @click="openWechatPic()"></span>
-            <span class="g" @click="openUrl('https://github.com/PlatONnetwork')"></span>
-            <span class="we" @click="openUrl('https://twitter.com/PlatON_Network')"></span>
-            <span class="f" @click="openUrl('https://www.facebook.com/PlatONNetwork/')"></span>
+            <span class="plane" @click="openUrl('https://t.me/PlatONHK')"></span>
+            <span class="wechat" @click="openWechatPic()"></span>
+            <span class="github" @click="openUrl('https://github.com/PlatONnetwork')"></span>
+            <span class="weite" @click="openUrl('https://twitter.com/PlatON_Network')"></span>
+            <span class="facebook" @click="openUrl('https://www.facebook.com/PlatONNetwork/')"></span>
+            <span class="reddit" @click="openUrl('https://www.reddit.com/user/PlatON_Network')"></span>
+            <span class="medium" @click="openUrl('https://medium.com/@PlatON_Network')"></span>
+            <span class="babbitt" @click="openUrl('https://www.chainnode.com/forum/267')"></span>
+            <span class="Money" @click="openUrl('https://bihu.com/people/1215832888')"></span>
         </p>
 
         <loading-component></loading-component>
@@ -47,6 +54,10 @@
     import fs from 'fs';
     import Settings from '@/services/setting'
     import loadingComponent from '@/components/loading/loading';
+    import { ipcRenderer } from "electron";
+    const packageJson = require("@/../package.json");
+    let os = require('os');
+
     export default {
         name: 'setting',
         //实例的数据对象
@@ -56,7 +67,13 @@
                 language:'',
                 currentPath:'',
                 customs:[],
-                showWeChat:false
+                showWeChat:false,
+                showAutpupdater:0,
+                disabled:false,
+                percent:'0.00',
+                updateInfo:'',
+                version:packageJson.build.buildVersion,
+                downloadPath:''
             }
         },
         //数组或对象，用于接收来自父组件的数据
@@ -65,7 +82,11 @@
         },
         //计算
         computed: {
-            ...mapGetters(['network','lang','netLoading','chainName'])
+            ...mapGetters(['network','lang','netLoading','chainName','testMode']),
+            updateDisabled(){
+                const bool=/win/.test(os.platform())
+                return !bool
+            }
         },
         //方法
         methods: {
@@ -84,7 +105,7 @@
                     });
                 }else if(this.netType=='main'){
                     return;
-                }else if(this.netType=='test'){
+                }else if(this.netType=='test' || this.netType=='amigo' || this.netType=='batalla' || this.netType=='innerdev'){
                     //连接主网络
                     // this.updateLoading(true);
                     nodeManager.stop('_node').then(()=>{
@@ -92,7 +113,7 @@
                         this.$router.push({
                             path:'/',
                             query:{
-                                type:'test'
+                                type:this.netType
                             }
                         })
                     })
@@ -217,7 +238,10 @@
                         _this.customs = arr;
                     }
                 })
-            }
+            },
+            checkUpdate(){
+                this.$root.$emit('checkUpdateVersion')
+            },
         },
         //生命周期函数
         created() {
@@ -265,18 +289,17 @@
 
 <style lang="less" scoped>
     .setting{
-        // margin-top:-60px;
-        // margin-left:11px;
         padding:7px 22px;
-        margin: -60px 10px 0 10px;
-        height:calc(~"100% - 66px");
+        margin: 0 10px;
+        height:calc(~"100% - 70px");
         background-color: #fff;
-        border-radius:10px;
+        border-radius:4px;
         color: #525768;
         font-size:12px;
         .title{
             margin-top:14px;
             color: #24272B;
+            font-weight: 600;
         }
         .el-select{
             margin-top:10px;
@@ -286,10 +309,10 @@
             .el-button{
                 padding:0;
                 margin-left:10px;
-                width:60px;
-                height:24px;
-                line-height:24px;
-                background: #18C2E9;
+                width:72px;
+                height:30px;
+                line-height:30px;
+                background: #0077FF;
                 border-radius: 4px;
                 color:#fff;
                 border:none;
@@ -298,7 +321,7 @@
         }
         .txt-en{
             .el-button{
-                width: 118px;
+                width: 134px;
             }
         }
     }
@@ -307,25 +330,44 @@
         span{
             margin-right:14px;
             display:inline-block;
-            width:28px;
-            height:28px;
+            width:33px;
+            height:33px;
             cursor:pointer;
         }
-        .f{
-            background: url("./images/facebook.svg") no-repeat center center;
+        .bg-icon(@icon,@iconHover){
+            background: url(@icon) no-repeat center center;
+            &:hover{
+                 background: url(@iconHover) no-repeat center center;
+             }
         }
-        .w{
-            background: url("./images/wechat.svg") no-repeat center center;
+        .plane{
+            .bg-icon("./images/plane.svg","./images/plane copy.svg")
         }
-        .p{
-            background: url("./images/plane.svg") no-repeat center center;
+        .wechat{
+            .bg-icon("./images/wechat.svg","./images/wechat copy.svg")
         }
-        .g{
-            background: url("./images/github.svg") no-repeat center center;
+        .github{
+            .bg-icon("./images/github.svg","./images/github copy.svg")
         }
-        .we{
-            background: url("./images/weite.svg") no-repeat center center;
+        .weite{
+            .bg-icon("./images/weite.svg","./images/weite copy.svg")
         }
+        .facebook{
+            .bg-icon("./images/facebook.svg","./images/facebook copy.svg")
+        }
+        .reddit{
+            .bg-icon("./images/reddit.svg","./images/reddit copy.svg")
+        }
+        .medium{
+            .bg-icon("./images/medium.svg","./images/medium copy.svg")
+        }
+        .babbitt{
+           .bg-icon("./images/babbitt.svg","./images/babbitt copy.svg")
+        }
+        .Money{
+            .bg-icon("./images/Money.svg","./images/Money  Copy.svg")
+        }
+
     }
     .show-wechat{
         .modal-content{

@@ -1,41 +1,58 @@
 <template>
     <div class="wrapper"  style="-webkit-app-region: drag" ref="bg">
-        <span class="txt-bg" v-if="initialUse==false">Welcome to Samurai </span>
+        <video src="static/video/bg.mov" height="100.1%" autoplay="autoplay" loop="loop" class="video" muted></video>
+        <!--<span class="txt-bg" v-if="initialUse==false">Welcome to Samurai </span>-->
         <span class="logo"></span>
         <div class="beginCenter" v-if="loadCompolete" style="height:100%">
             <div v-if="initialUse">
                 <div class="content">
-                    <h1>{{$t("settings.networkConfig")}}</h1>
-                    <p>{{$t("settings.networkConfig")}}</p>
-                    <ul class="net-list" style="-webkit-app-region: no-drag">
+                    <!--<h1>{{$t("settings.networkConfig")}}</h1>-->
+                    <p class="title">{{$t("settings.networkConfig")}}</p>
+                    <ul :class="[testMode?'test-mode':'','net-list']" style="-webkit-app-region: no-drag">
                         <li :class="[netType=='main'?'active':'','main']">
                             <h2 class="net-title">{{$t("settings.mainTitle")}}</h2>
-                            <hr>
+                            <p class="net-icon">
+                                <span></span>
+                            </p>
                             <p class="net-content">{{$t("settings.mainContent")}}</p>
+                            <p :class="[lang=='en'?'en-btn':'cn-btn','btn']" style="-webkit-app-region: no-drag">
+                                <el-button class="disabled" :loading="connectLoading&&netType=='main'" :disabled="connectLoading&&netType!='main'">{{$t("settings.joiningNet")}}</el-button>
+                            </p>
+                            <p class="coming">{{$t("settings.comingSoon")}}</p>
                         </li>
-                        <li @click="selNet('test')" :class="[netType=='test'?'active':'']">
+                        <li @click="selNet('test')" :class="[netType=='test'?'active':'','test']">
                             <h2 class="net-title">{{$t("settings.testTitle")}}</h2>
-                            <hr>
+                            <p class="net-icon">
+                                <span></span>
+                            </p>
                             <p class="net-content">{{$t("settings.testContent")}}</p>
+                            <p :class="[lang=='en'?'en-btn':'cn-btn','btn btn-db']" style="-webkit-app-region: no-drag">
+                                <el-button @click="next(1)" :loading="connectLoading&&netType=='amigo'" :disabled="connectLoading&&netType!='amigo'">{{$t("settings.joiningNet1")}}</el-button>
+                                <el-button @click="next(2)" :loading="connectLoading&&netType=='batalla'" :disabled="connectLoading&&netType!='batalla'">{{$t("settings.joiningNet2")}}</el-button>
+                     <!--           <el-button v-if="testMode" @click="next(4)" :loading="connectLoading&&netType=='test'" :disabled="connectLoading&&netType!='test'">{{$t("settings.joiningNet3")}}</el-button>
+                                <el-button v-if="testMode" @click="next(5)" :loading="connectLoading&&netType=='innerdev'" :disabled="connectLoading&&netType!='innerdev'">{{$t("settings.joiningNet4")}}</el-button>-->
+                            </p>
                         </li>
-                        <li @click="selNet('custom')" :class="[netType=='custom'?'active':'']">
+                        <li @click="selNet('custom')" :class="[netType=='custom'?'active':'','private']">
                             <h2 class="net-title">{{$t("settings.priTitle")}}</h2>
-                            <hr>
+                            <p class="net-icon">
+                                <span></span>
+                            </p>
                             <p class="net-content">{{$t("settings.priContent")}}</p>
+                            <p :class="[lang=='en'?'en-btn':'cn-btn','btn']" style="-webkit-app-region: no-drag">
+                                <el-button @click="next(3)" :loading="connectLoading&&netType=='custom'" :disabled="connectLoading&&netType!='custom'">{{$t("settings.createPrivateNet")}}</el-button>
+                            </p>
                         </li>
                     </ul>
-                    <p class="btn-box" style="-webkit-app-region: no-drag">
-                        <el-button @click="next()" :loading="connectLoading">{{$t("settings.joiningNet")}}</el-button>
-                    </p>
                 </div>
             </div>
             <div v-else class="welcome-page">
                 <p class="welcomeP">Welcome to Samurai  </p>
-                <p class="btn-box2"  style="-webkit-app-region: no-drag"><el-button class="enter-button" @click="goToMain()">{{$t("sideBar.enter")}}>></el-button></p>
-                <span class="cur-net">{{network.type=='custom'?chainName:(network.type.toUpperCase()+'-NET')}}</span>
+                <p class="btn-box2"  style="-webkit-app-region: no-drag"><el-button class="enter-button" :disabled="nodeState==0" @click="goToMain()">{{$t("sideBar.enter")}}>></el-button></p>
+                <span class="cur-net" v-if="network && network.type">{{network.type=='custom'?chainName:(network.type=='test'?'':(network.type.slice(0,1).toUpperCase()+network.type.slice(1)))+' Testnet'}}</span>
             </div>
         </div>
-        <div v-else class="loading">
+        <div v-if="!loadCompolete || (nodeState==0 && !initialUse)" class="loading">
             <div class="loading-icon">
                 <span></span>
                 <span></span>
@@ -67,7 +84,7 @@
         //实例的数据对象
         data() {
             return {
-                netType:'test',
+                netType:'amigo',
                 loadCompolete:false,
                 fromPath:'',
                 connectLoading:false,
@@ -81,12 +98,14 @@
         },
         //计算
         computed: {
-            ...mapGetters(['initialUse','network','chainName','isMaximized'])
+            ...mapGetters(['initialUse','network','chainName','isMaximized','testMode','lang','nodeState'])
         },
         beforeRouteEnter(to, from, next){
-            next(vm=>{
-                vm.fromPath=from.path;
-                vm.netType = from.path=='/customNet'?'custom':'test'
+            nodeManager.getSystemPath().then(()=>{
+                next(vm=>{
+                    vm.fromPath=from.path;
+                    vm.netType = from.path=='/customNet'?'custom':'amigo'
+                });
             });
         },
         //方法
@@ -97,12 +116,13 @@
                 if(this.connectLoading) return;
                 this.netType=type;
             },
-            next(){
+            next(num){
                 let _this = this;
                 Settings.saveUserData('type',this.netType);
+                this.netType=num==1?'amigo':num==2?'batalla':num==3?'custom':num==4?'test':num==5?'innerdev':'';
                 if(this.netType=='custom'){
                     this.$router.push('/customNet')
-                }else if(this.netType=='main' || this.netType=='test'){
+                }else if(this.netType=='batalla' || this.netType=='amigo' || this.netType=='test' || this.netType=='innerdev'){
                     this.connectLoading = true;
                     nodeManager.conncetNet(this.netType).then(()=>{
                         this.connectLoading = false;
@@ -158,10 +178,12 @@
                         this.loadCompolete = true;
                     }).catch(()=>{
                         this.loadCompolete = true;
+                    }).finally(()=>{
+                        this.loadCompolete = true;
                     })
-                }else if(localType=='main' || localType=='test'){
+                }else if(localType=='batalla' || localType=='amigo' || localType=='test'|| localType=='innerdev'){
                     //todo  后续注释掉
-                    // contractService.setProvider('http://192.168.9.76:6788','http').then(()=>{
+                    // contractService.setProvider('http://10.10.8.209:6789','http').then(()=>{
                     // // contractService.setProvider('http://127.0.0.1:7793','http').then(()=>{
                     //     this.loadCompolete = true;
                     //     this.updateState(2);
@@ -188,6 +210,8 @@
                         console.log('index 连接测试网络成功');
                     }).catch((e)=>{
                         this.loadCompolete = true;
+                    }).finally(()=>{
+                        this.loadCompolete = true;
                     })
                 }else{
                     this.loadCompolete = true;
@@ -198,9 +222,15 @@
                     if(!exists){
                         let paths={
                             main:Settings.userDataPath+'net_main/keystore/',
-                            test:Settings.userDataPath+'net_test/keystore/',
+                            // test:Settings.userDataPath+'net_test/keystore/',
+                            amigo:Settings.userDataPath+'net_amigo/keystore/',
+                            batalla:Settings.userDataPath+'net_batalla/keystore/',
                             custom:Settings.userDataPath+'net_custom/chain/',
                         };
+                        if(this.testMode){
+                            paths['test']=Settings.userDataPath+'net_test/keystore/';
+                            paths['innerdev']=Settings.userDataPath+'net_innerdev/keystore/';
+                        }
                         Settings.saveUserData('keyPath',JSON.stringify(paths));
                         Settings.setKeyPath(localType);
                     }else{
@@ -249,8 +279,13 @@
         // height:672px;
         height: 100%;
         color:#fff;
-        background:url("./images/maxBg.png") no-repeat center center #112651;
+        // background:url("./images/maxBg.png") no-repeat center center #112651;
         background-size: cover;
+        overflow: hidden;
+    }
+    .video{
+        position:absolute;
+        z-index: 1;
     }
     .custom-header{
         position:absolute;
@@ -275,8 +310,14 @@
         background-size: 12px;
     }
     .loading{
-        padding-top:200px;
+        /*position: relative;*/
+        /*padding-top:200px;*/
+        position: fixed;
+        top:50%;
+        transform: translate(-50%,-90%);
+        left: 50%;
         text-align: center;
+        z-index: 9;
     }
     .txt-bg{
         position:absolute;
@@ -289,6 +330,7 @@
         font-size:44px;
         opacity:0.1;
         letter-spacing: 1.38px;
+        z-index: 3;
     }
     .logo{
         position:absolute;
@@ -297,14 +339,17 @@
         width:119px;
         height:25px;
         background: url("./images/logoW.svg") no-repeat center center;
+        z-index: 9;
     }
     .beginCenter{
+        position: relative;
         display: flex;
         justify-content: center;
         // flex-direction: column;
+        z-index: 9;
     }
     .content{
-        padding:68px 46px 0;
+        padding:62px 46px 0;
         h1{
             top:33px;
             position: absolute;
@@ -313,28 +358,32 @@
             font-size: 44px;
             letter-spacing: 1.38px;
         }
+        .title{
+            font-size: 24px;
+        }
     }
     .net-list{
         margin-top:30px;
         display:flex;
         li{
+            &:hover{
+                background-image: linear-gradient(40deg, rgba(51,62,128,0.9) 0%, rgba(65,93,149,0.9) 100%);
+                &.test .net-icon >span{
+                    background: url('./images/icon_test.svg') no-repeat center center rgba(255,255,255,0.4);
+                }
+                &.private .net-icon >span{
+                    background: url('./images/icon_pri.svg') no-repeat center center rgba(255,255,255,0.4);
+                }
+            }
+            position:relative;
+            padding:30px 0 40px;
             margin-right:24px;
-            width:280px;
-            height:160px;
-            border-radius: 10px;
+            width:260px;
+            height:400px;
             font-size:12px;
             cursor:pointer;
-            border:solid 5px #112651;
-            &:first-of-type{
-                background: url("./images/Card1.png") no-repeat center center;
-             }
-            &:nth-of-type(2){
-                background: url("./images/Card2.png") no-repeat center center;
-             }
-            &:last-of-type{
-                margin-right:0;
-                background: url("./images/Card3.png") no-repeat center center;
-             }
+            background-image: linear-gradient(40deg, rgba(51,62,128,0.7) 0%, rgba(65,93,149,0.7) 100%);
+            border-radius: 4px;
             .title{
                 padding-bottom:6px;
                 margin-bottom:5.5px;
@@ -354,40 +403,116 @@
                 transform-origin:0 0;
             }
             .net-title{
-                font-size: 14px;
+                height:28px;
+                line-height:28px;
+                font-size: 20px;
                 color: #FFFFFF;
-                letter-spacing: 0;
-                margin: 17px 0 0 60px;
+                text-align: center;
+                font-weight: normal;
             }
             .net-content{
-                width: 195px;
-                margin: 0 0 0 60px;
-                font-size: 12px;
+                padding:0 19px;
+                height: 49px;
+                font-size: 13px;
                 color: #FFFFFF;
+                letter-spacing: 0.54px;
+                text-align: center;
+            }
+            .btn{
+                position:absolute;
+                bottom:40px;
+                width:100%;
+                text-align: center;
+                .el-button{
+                    padding:0 15px;
+                    width:auto;
+                    height:36px;
+                    text-align: center;
+                    color:#fff;
+                    font-size:14px;
+                    border:none;
+                    background: #0077FF;
+                    letter-spacing: 0.44px;
+                    &:not(.disabled):hover{
+                         background: #4897F6;
+                    }
+                    &.disabled,&.is-disabled{
+                        opacity: 0.5;
+                        &:hover{
+                             background: #0077FF;
+                             cursor:not-allowed;
+                         }
+                    }
+                }
+            }
+            .btn-db{
+                bottom:2px;
+            }
+            .en-btn{
+                .el-button{
+                    min-width: 190px;
+                }
+            }
+            .cn-btn{
+                .el-button{
+                    min-width: 150px;
+                }
+            }
+            .coming{
+                position:absolute;
+                bottom:15px;
+                width:100%;
+                text-align: center;
+                font-size:10px;
             }
         }
-        hr{
-            width: 203px;
-            margin-right: 9px;
-            opacity: 0.15;
-            background: #FFFFFF;
-        }
         .active{
-            background-image: linear-gradient(40deg, #333E80 0%, #415D95 100%);
-            border:solid 5px #18c2e9;
-            box-shadow:0 0 5px 2px #456492;
+            /*opacity: 0.9;*/
+            background-image: linear-gradient(40deg, rgba(51,62,128,0.9) 0%, rgba(65,93,149,0.9) 100%);
+        }
+        .net-icon{
+            margin:24px 25px 9px;
+            height:150px;
+            text-align: center;
+            border-bottom:solid 1px rgba(255,255,255,0.15);
+            >span{
+                display: inline-block;
+                width:116px;
+                height:116px;
+                border-radius: 116px;
+            }
         }
         .main{
-            opacity: 0.5;
             background-image: linear-gradient(40deg, #333E80 0%, #415D95 100%);
-            cursor:not-allowed;;
+            opacity: 0.5;
+            cursor:not-allowed;
+            .net-icon >span{
+                background: url('./images/icon_main.svg') no-repeat center center rgba(255,255,255,0.1);
+            }
         }
-        .main{
-            opacity: 0.5;
-            background-image: linear-gradient(40deg, #333E80 0%, #415D95 100%);
-            border-radius: 4px;
+        .test{
+            .net-icon >span{
+                background: url('./images/icon_test_2.svg') no-repeat center center rgba(255,255,255,0.1);
+            }
+            &.active .net-icon >span{
+                 background: url('./images/icon_test.svg') no-repeat center center rgba(255,255,255,0.4);
+            }
+        }
+        .private{
+            .net-icon >span{
+                background: url('./images/icon_pri_2.svg') no-repeat center center rgba(255,255,255,0.1);
+            }
+            &.active .net-icon >span{
+                 background: url('./images/icon_pri.svg') no-repeat center center rgba(255,255,255,0.4);
+             }
         }
     }
+    /*.test-mode.net-list{
+        margin-top: 6px;
+        li{
+            height:472px;
+        }
+    }*/
     .btn-box{
         margin-top:80px;
         text-align:center;
@@ -408,19 +533,19 @@
         .el-button{
             width:170px;
             height:40px;
-            background: #EA106E;
-            margin:105px 0 0 0;
+            background: #0077FF;
+            margin:52px 0 0 0;
             color:#fff;
             border:none;
             letter-spacing: 0.44px;
             &:hover{
-                background: #EA107E;
+                background: #0077FF;
              }
         }
     }
     .welcome-page{
         height: 400px;
-        padding: 112px 0 100px 0;
+        padding: 119px 0 100px 0;
         margin: 58px 0 0 0;
         background: url("./images/logo.svg") no-repeat center top;
         background-size:106px 96px;
@@ -436,7 +561,7 @@
             padding:0 15.5px;
             height:28px;
             line-height:28px;
-            border: 1px solid #EA106E;
+            border: 1px solid #0077FF;
             border-radius: 4px;
         }
         .enter-button{
@@ -463,8 +588,10 @@
         background: url("./images/close_white.svg") no-repeat center bottom
     }
     .welcomeP{
-        padding-top: 24px;
-        height: 10px;
+        height:56px;
+        line-height:56px;
+        font-weight:600;
+        letter-spacing: 1.26px;
     }
     .loading-icon{
         width: 80px;
@@ -508,5 +635,17 @@
     }
     .el-button.is-loading:before{
         background-color:transparent;
+    }
+    .btn-db{
+        .el-button{
+            margin-left:0;
+            margin-bottom:10px;
+        }
+    }
+</style>
+<style>
+    .btn-box2 span{
+        margin-bottom: 2px;
+        display: inline-block;
     }
 </style>

@@ -1,31 +1,28 @@
 <template>
-    <div class="contract-list format-style">
+    <div class="contract-list format-style" v-if="loadCompolete">
+        <p class="tabs">
+            <span @click="newContract" :class="[canDeploy?'':'disabled','deploy']">{{$t("contracts.deployCont")}}</span>
+            <span @click="addContract" class="add">{{$t("contracts.watchCont")}}</span>
+        </p>
         <div :class="[contractList&&contractList.length>0?'':'non-wallet','card content']">
-            <div
-                 v-for="(item, index) in contractList"
+            <p v-if="contractList&&contractList.length==0">{{$t("contracts.noContract")}}</p>
+            <div v-for="(item, index) in contractList"
                  :class="[!item.address?'contract-pointer':'','contract-item']"
+                 :style="{marginRight:isMaximized?'9px':'9px'}"
                  :key="item.address"
                  @click="goToDetail(item)">
-                <div class="contract-icon" :class="item.icon"></div>
-                <div class="info">
-                    <p class="bold">{{item.name | sliceName}}</p>
-                    <p class="i-wallet"> <span class="font14 bold">{{item.balance}}</span> <span class="font10">Energon</span></p>
-                    <div class="addr-box">
-                        <p class="addr i-address f12 ">
-                            {{item.address}}
-                        </p>
-                    </div>
+                <div :class="[item.icon,'contract-icon']">{{item.name.slice(0,1).toUpperCase()}}</div>
+                <div class="contract-info">
+                    <p class="name">{{item.name | sliceName}}</p>
+                    <p :class="[isMaximized?'addr-mid':'addr-max','i-address']">
+                        {{item.address?item.address:$t('settings.customNet.creating')}}
+                    </p>
                 </div>
                 <p class="process" v-if="!item.address">
                     <!--<el-progress :stroke-width="14" :percentage="item.processWidth" color="rgb(35,200,239,1)"></el-progress>-->
                     <span :style="{width:item.processWidth+'%'}"></span>
                 </p>
             </div>
-            <div :class="[lang=='en'?'font10':'','add-bottom']">
-                <el-button class="f12 w-80" @click="newContract">{{$t("contracts.deployCont")}}</el-button>
-                <el-button class="f12 w-80 ml-40" @click="addContract" type="primary">{{$t("contracts.watchCont")}}</el-button>
-            </div>
-            <div class="empty"></div>
         </div>
     </div>
 </template>
@@ -39,11 +36,12 @@
             return {
                 contractList:[],
                 OrdList:[],
-
+                loadCompolete:false,
+                canDeploy:false
             }
         },
         computed: {
-            ...mapGetters(['contractListGetter','nodeState','lang','WalletListGetter','totalBalance','nortotalBalance'])
+            ...mapGetters(['contractListGetter','nodeState','lang','WalletListGetter','totalBalance','nortotalBalance','isMaximized'])
         },
         mounted(){
             this.contractListAction().then(()=>{
@@ -51,10 +49,13 @@
             });
         },
         methods: {
-            ...mapActions(['contractListAction','getOrd','getNormalTotalBalance','insertAddress']),
+            ...mapActions(['contractListAction','insertAddress','hasBalOrd']),
             init(){
                 this.contractList = this.contractListGetter;
-                this.getNormalTotalBalance()
+                this.hasBalOrd().then((hasBalOrds)=>{
+                    this.loadCompolete = true;
+                    this.canDeploy = hasBalOrds;
+                });
                 if(this.contractList){
                     this.getBalance();
                 }
@@ -67,25 +68,8 @@
                 if(this.contractList){
                     this.contractList.forEach((item,index)=>{
                         console.log('item.address---',item.address);
-                        if(item.address){
-                            contractService.web3.eth.getBalance(item.address,(err,data)=>{
-                                console.log('hahahh',err,data);
-                                if(err){
-                                    clearInterval(window.contractBalanceTasksTimer);
-                                    return;
-                                }
-                                let balance=contractService.web3.fromWei(data.toString(10), 'ether');
-                                item.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
-                                console.log('item.balance-----',item.balance)
-                                // balance = contractService.web3.toWei(balance)
-                                // item.balance = (Math.floor(Number(balance) * 100) / 100)
-                                _this.$set(_this.contractList,index,item)
-                            });
-                        }
-                        else{
+                        if(!item.address){
                             contractService.web3.eth.getTransactionReceipt(item.hash,(err,data)=>{
-                                // console.log('hash',this.contractList)
-                                // console.log('通过hash得到地址',data)
                                 if(!item.processWidth){
                                     item.processWidth = 30;
                                 }else{
@@ -97,29 +81,16 @@
                                         hash:item.hash,
                                         address:data.contractAddress
                                     });
-                                }else{
-                                    item.balance = '0.00';
                                 }
                                 _this.$set(_this.contractList,index,item);
                             })
                         }
-
-
                     });
                 }
             },
             newContract(){
-                this.getOrd().then((data)=>{
-                    if(data.length == 0){
-                        this.$message.warning({
-                            message:this.$t('contracts.walletEmpty'),customClass:'warn'
-                        })
-                    }else if(this.nortotalBalance == 0){
-                        this.$message.error(this.$t('contracts.balanceEmpty'))
-                    }else{
-                        this.$router.push('/contract-new')
-                    }
-                })
+                if(!this.canDeploy) return;
+                this.$router.push('/contract-new')
             },
             addContract(){
                 this.$router.push('/contract-add')
@@ -164,133 +135,95 @@
 
 <style lang="less" scoped>
     .content{
-        // padding-top:20px;
-        // height:100%;
-        height: calc(~"100% - 66px");
+        height: calc(~"100% - 32px");
         overflow-y: auto;
-        margin: 10px auto 0px;
+        margin: 13px auto 0;
         padding: 20px 15px 0 15px;
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        align-content: flex-start;
+        /*display: flex;*/
+        /*flex-wrap:wrap;*/
+        /*justify-content: flex-start;*/
+        &.non-wallet{
+            p{
+                text-align: center;
+                margin-top: 273px;
+                color: #9EABBE;
+            }
+        }
         .contract-item{
+            width: 236px;
+            height: 76px;
+            display:inline-flex;
+            /*width:31.8%;*/
+            /*flex-grow: 1;*/
+            padding:16px 0 16px 11px;
             position: relative;
-            // width: 230px;
-            width: 32%;
-            // height: 130px;
-            height: 25%;
-            // margin-left: 15px;
+            /*width: 33%;*/
+            /*height: 15%;*/
             margin-bottom: 20px;
-            background: url("./images/icon_contract_list.svg") no-repeat left top #FFFFFF;
-            box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
+            box-shadow: 0 1px 4px 0 #E5E9F2;
             border: 1px solid transparent;
             border-radius: 4px;
-            display: flex;
+            /*display: flex;*/
+            /*&:nth-of-type(3n){
+                margin-right:0!important;
+             }*/
             &:hover{
-                    border: 1px solid #00B6DC;
-                }
-            .contract-icon{
-                width: 68px;
-                height: 130px;
-                background: no-repeat center center;
-                // background: no-repeat center center;
-                background-repeat:no-repeat;
-                background-position: center center;
+                border: 1px solid #0077FF;
             }
-            .contract-icon1{
-                background-image: url('./images/Oval1.png');
-            }
-            .contract-icon2{
-                background-image: url('./images/Oval2.png');
-            }
-            .contract-icon3{
-                background-image: url('./images/Oval3.png');
-            }
-            .contract-icon4{
-                background-image: url('./images/Oval4.png');
-            }
-            .contract-icon5{
-                background-image: url('./images/Oval5.png');
-            }
-            .info{
-                width: 70%;
+            .contract-info{
                 cursor: pointer;
-                p{
-                    width: 100%;
-                    margin-top: 15px;
+                .name{
+                    margin-bottom:9px;
+                    height:17px;
+                    font-weight:600;
+                    font-size:12px;
                 }
-            }
-            .i-wallet{
-                padding-left: 20px;
-                background:url("./images/icon_wallet.svg") no-repeat left center;
             }
             .i-address{
-                padding-left: 20px;
-                background:url("./images/icon_positioning.svg") no-repeat left 1px;
+                padding-left: 16px;
+                font-size: 10px;
+                color: #9EABBE;
+                white-space: nowrap;
+                width: 158px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-break:break-all;
+                background:url("./images/contract_addr.svg") no-repeat left 1px;
+                background-size: 12px 11px;
             }
-            .addr-box{
-                width: 100%;
-                .addr{
-                    display:-webkit-box;
-                    overflow:hidden;
-                    word-break:break-all;
-                    text-overflow:ellipsis;
-                    -webkit-line-clamp:2;
-                    -webkit-box-orient: vertical;
-                }
-            }
-            .font14{
-                    font-size:14px;
-            }
-            .font10{
-                font-size:10px;
-                color: #22272C;
-            }
-            .font12{
-                font-size:12px;
+            .addr-mid{
+                width:163px;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
         .contract-pointer{
             pointer-events: none;
+            background: #ECEFF6;
         }
     }
-    .font10{
-        .el-button{
-            font-size:10px;
+    .deploy{
+       padding-left:22px;
+       background: url("./images/icon_contract.svg") no-repeat 2px center;
+       &:not(.disabled):hover{
+          background: url("./images/icon_contract_2.svg") no-repeat 2px center;
+       }
+    }
+    .add{
+        margin-left:25px;
+        padding-left:22px;
+        background: url("./images/icon_contract_3.svg") no-repeat 2px center;
+        &:hover{
+            background: url("./images/icon_contract_4.svg") no-repeat 2px center;
         }
     }
-    .add-item{
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 100%;
-        height: 100%;
-        padding-left: 16px;
-        margin-left: auto;
-        background: url("./images/contract_Bg.png") no-repeat center;
-        // background-size: 230px 130px;
-        background-size: 100% 100%;
-    }
-    .i-add{
-        height: 40px;
-        line-height: 40px;
-        margin-bottom: 44px;
-    }
-    .contract-add{
-        width: 32%;
-        height: 25%;
-        // margin: 0 0 0 15px;
-        .el-button{
-            width:79px;
-            height:32px;
-            padding:0;
-        }
-    }
-    .empty{
-        width: 32%;
-    }
-    .bold{
-        font:bold;
+    .tabs span{
+        color: #525768;
+        &:hover{
+            color: #0077FF;
+         }
+        &.disabled{
+             color: #9EABBE;
+         }
     }
 </style>

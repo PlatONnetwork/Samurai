@@ -17,7 +17,7 @@ export const contractAction = {
                     if(type=='custom'){
                         walletCate = 'custom_'+rootState.setting.chainName;
                     }
-                    commit('UPDATE_CONTRACT_LIST',retData[walletCate]);
+                    commit('UPDATE_CONTRACT_LIST',retData[walletCate] || []);
                     resolve();
                 }else{
                     reject();

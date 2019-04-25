@@ -34,10 +34,10 @@ class nodeManager {
             platform=os.platform(),
             ipcNode,ipcPath;
         console.log('platform-----',platform);
-        if(netType=='test'){
-            ipcPath = Settings.userDataPath+'net_test/data/platon.ipc'
-        }else{
+        if(netType=='custom'){
             ipcPath = Settings.userDataPath+'net_custom/chain/'+chainName+'/platon.ipc'
+        }else{
+            ipcPath = `${Settings.userDataPath}net_${netType}/data/platon.ipc`
         };
         if(platform=='linux'){
             ipcNode = ipcPath;
@@ -61,7 +61,8 @@ class nodeManager {
                         clearInterval(nodeTimer);
                         resolve(true)
                     }
-                    if(count==50){
+                    console.log(count)
+                    if(count==30){
                         clearInterval(nodeTimer);
                         resolve(false)
                     }
@@ -114,14 +115,14 @@ class nodeManager {
             });
         });
     }
-    initChain(chainName,port){
+    initChain(chainName,port,cb){
 	    //初始化创世区块
         console.log('initChain');
         console.warn('cwd',this.getExePath());
         let _this = this,
             userDataPath = Settings.userDataPath+'net_custom/';
-        console.warn(`${userDataPath}${chainName}.json`);
-        var chainProc = spawn.exec(`\.${nodePath.sep}platon --datadir "${userDataPath}chain/${chainName}" init ${userDataPath}${chainName}.json`, {
+        console.warn(`${userDataPath}${chainName}.json`,`\.${nodePath.sep}platon --datadir "${userDataPath}chain/${chainName}" init "${userDataPath}${chainName}.json"`);
+        var chainProc = spawn.exec(`\.${nodePath.sep}platon --datadir "${userDataPath}chain/${chainName}" init "${userDataPath}${chainName}.json"`, {
             cwd: _this.getExePath(),
             encoding: 'arrayBuffer'
         }, function (error, stdout, stderr) {
@@ -130,6 +131,7 @@ class nodeManager {
             }else{
                 alert(window.vueVm.$i18n.t('wallet.initFailed'))
                 console.warn(2,error)
+                cb(0);
             }
         });
         chainProc.on('error', function (error) {
@@ -146,12 +148,13 @@ class nodeManager {
 	    return new Promise((resolve, reject)=>{
 	        this.stop('_node').then(()=>{
                 //启动主节点
-                console.log('startMainNode');
+                console.log('startMainNode',chainName);
                 let _this = this,
                     userDataPath = Settings.userDataPath+'net_custom/';
-                console.warn('cwd--->',_this.getExePath());
+                let innertime=chainName=='test'?'--innertime 1555467771154':''
+                console.warn('cwd--->', _this.getExePath());
                 // var nodeProc = spawn.exec(`platon -identity "${chainName}" --rpc --datadir ${userDataPath}chain/${chainName} --port 16789 --rpcport ${port} --rpcapi "db,eth,net,web3,miner,admin,personal" --rpcaddr 0.0.0.0 --verbosity 0  --gcmode=archive console \n`, {
-                var nodeProc = spawn.exec(`\.${nodePath.sep}platon -identity "${chainName}" --rpc --datadir ${userDataPath}chain/${chainName} --port 26793 --rpcport ${port} --rpcapi "db,eth,net,web3,miner,admin,personal" --rpcaddr 0.0.0.0 --verbosity 0  --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5 --gcmode=archive console \n`, {
+                var nodeProc = spawn.exec(`\.${nodePath.sep}platon -identity "${chainName}" --rpc --datadir "${userDataPath}chain/${chainName}" --port 26793 --rpcport ${port} --rpcapi "db,eth,net,web3,miner,admin,personal" --rpcaddr 0.0.0.0 --verbosity 0 ${innertime} --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5 --gcmode=archive console \n`, {
                     cwd: _this.getExePath(),
                     encoding: 'arrayBuffer',
                     maxBuffer: 500000 * 1024,
@@ -211,41 +214,42 @@ class nodeManager {
   //初始化测试网络
   initNet(){
 	  return new Promise((resolve, reject)=>{
+	      resolve();
           //初始化创世区块
-          let _this = this,
-              userDataPath = Settings.userDataPath+'net_test/',
-              hasInit = fs.readFileSync(`${userDataPath}init`,{encoding:'utf8'});
-          console.warn('hasInit',hasInit,hasInit==1);
-          if(hasInit==1){
-              resolve();
-          }else{
-              console.log('initNet');
-              // var chainProc = spawn.exec(`platon --datadir ${userDataPath}data init ${userDataPath}data/platon.json`, {
-              var chainProc = spawn.exec(`\.${nodePath.sep}platon --datadir ${userDataPath}data init ${userDataPath}data/platon.json`, {
-                  cwd: _this.getExePath(),
-                  encoding: 'arrayBuffer'
-              }, function (error, stdout, stderr) {
-                  if(!error){
-                      //删除之前链上发起的存在本地的交易
-                      store.dispatch('deleteTxn');
-                      fs.writeFileSync(`${Settings.userDataPath}net_test/init`,1);
-                      resolve();
-                  }else{
-                      alert(window.vueVm.$i18n.t('wallet.initFailed'))
-                      console.log('init net error',error);
-                      reject();
-                  }
-              });
-              chainProc.on('error', function (error) {
-                  console.log('error----->', new TextDecoder("GB2312").decode(error));
-              });
-              chainProc.stdout.once('data', function (data) {
-                  console.log('stdout ----->', new TextDecoder("GB2312").decode(data));
-              });
-              chainProc.stderr.on('data', function (data) {
-                  console.log('stderr---->', new TextDecoder("GB2312").decode(data));
-              });
-          }
+          // let _this = this,
+          //     userDataPath = Settings.userDataPath+'net_test/',
+          //     hasInit = fs.readFileSync(`${userDataPath}init`,{encoding:'utf8'});
+          // console.warn('hasInit',hasInit,hasInit==1);
+          // if(hasInit==1){
+          //     resolve();
+          // }else{
+          //     console.log('initNet');
+          //     // var chainProc = spawn.exec(`platon --datadir ${userDataPath}data init ${userDataPath}data/platon.json`, {
+          //     var chainProc = spawn.exec(`\.${nodePath.sep}platon --datadir "${userDataPath}data" init ${userDataPath}data/platon.json`, {
+          //         cwd: _this.getExePath(),
+          //         encoding: 'arrayBuffer'
+          //     }, function (error, stdout, stderr) {
+          //         if(!error){
+          //             //删除之前链上发起的存在本地的交易
+          //             store.dispatch('deleteTxn');
+          //             fs.writeFileSync(`${Settings.userDataPath}net_test/init`,1);
+          //             resolve();
+          //         }else{
+          //             alert(window.vueVm.$i18n.t('wallet.initFailed'))
+          //             console.log('init net error',error);
+          //             reject();
+          //         }
+          //     });
+          //     chainProc.on('error', function (error) {
+          //         console.log('error----->', new TextDecoder("GB2312").decode(error));
+          //     });
+          //     chainProc.stdout.once('data', function (data) {
+          //         console.log('stdout ----->', new TextDecoder("GB2312").decode(data));
+          //     });
+          //     chainProc.stderr.on('data', function (data) {
+          //         console.log('stderr---->', new TextDecoder("GB2312").decode(data));
+          //     });
+          // }
       });
 
   }
@@ -258,10 +262,11 @@ class nodeManager {
                     console.log('conncetNet-->startMainNode--->',type);
                     let _this = this,
                         userDataPath = Settings.userDataPath+'net_'+type+'/',
-                        nodeId = this.getTestNode();
-                    console.log('nodeId',nodeId,_this.getExePath());
-                    // var conncetProc = spawn.exec(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir ${userDataPath}data --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 --bootnodes=${nodeId} --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --gcmode=archive --wasmlog wasm.log console \n`, {
-                    var conncetProc = spawn.exec(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir ${userDataPath}data --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --gcmode=archive --wasmlog wasm.log console \n`, {
+                        nodeId = this.getTestNode(),
+                        net= type=='amigo'?'testnet':type=='batalla'?'betanet':type=='test'?'innertestnet':type=='innerdev'?'innerdevnet':'';
+                    let innertime=type=='test'?'--innertime 1555467771154':''
+                    console.log('nodeId', nodeId, _this.getExePath());
+                    var conncetProc = spawn.exec(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir "${userDataPath}data" --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 ${innertime} --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --${net} --gcmode=archive --wasmlog wasm.log console \n`, {
                         cwd: _this.getExePath(),
                         encoding: 'arrayBuffer',
                         maxBuffer: 500000 * 1024,
@@ -269,7 +274,7 @@ class nodeManager {
                         if(!error){
                             console.log('启动成功')
                         }else{
-                            console.warn(2,error)
+                            console.warn(error)
                         }
                     });
                     conncetProc.on('error', function (error) {
@@ -278,21 +283,23 @@ class nodeManager {
                     });
                     conncetProc.stdout.once('data', function (data) {
                         console.log('stdout ----->', new TextDecoder("GB2312").decode(data));
-                        _this.isConnect('test').then((isConn)=>{
+                        _this.isConnect(type).then((isConn)=>{
                             if(isConn){   //节点已启动
                                 // conncetProc.stdin.write('miner.start() \n');
-                                contractService.setProvider('','ipc','test').then(()=>{
+                                contractService.setProvider('','ipc',type).then(()=>{
                                     _this.changeNetState(2,false,type,'','26793');
                                     store.dispatch('updateLoading',false);
+                                    resolve();
                                 }).catch((err)=>{
                                     _this.changeNetState(0,true,type,'','26793');
-                                    store.dispatch('updateLoading',false);
+                                    reject();
+                                    // store.dispatch('updateLoading',false);
                                 })
-                                resolve();
                             }else{    //节点未启动
                                 _this.changeNetState(0,true,type,'','26793');
-                                alert(window.vueVm.$i18n.t('wallet.initFailed'));
                                 reject();
+                                store.dispatch('updateLoading',false);
+                                alert(window.vueVm.$i18n.t('wallet.initFailed'));
                             }
                         });
                     });
@@ -318,6 +325,41 @@ class nodeManager {
         const app = require('electron').remote.app;
         console.warn('getExePath--->app.getPath(exe)',app.getPath('exe'));
         return process.env.NODE_ENV === 'development' ? 'src/services/platon-exe' : nodePath.join(app.getPath('exe'), '..', '/platon_exe');
+    }
+
+    getSystemPath(){
+	    return new Promise((resolve, reject)=>{
+
+            let os=require('os'),
+                platform=os.platform(),
+                command,reg;
+            console.log('platform-----',platform);
+            if(platform=='linux'){
+                command = 'echo $PATH',
+                    reg = /\:test[\:|\s+]?/;
+            }else{
+                command = 'set path',
+                    reg = /;test;/;
+            }
+
+            console.log('getSystemPath');
+            var pathProc = spawn.exec(command, {}, function (error, stdout, stderr) {
+                if(error){
+                    console.warn('has data--->',error)
+                }
+            });
+            pathProc.stdout.once('data', function (data) {
+                console.log('has data--->',data);
+                // if(data && data.match(reg)){
+                if(platform=='linux' || (data && data.match(reg))){
+                    store.dispatch('updataTeseMode',true);
+                    resolve();
+                }else{
+                    store.dispatch('updataTeseMode',false);
+                    resolve();
+                }
+            })
+        });
     }
 }
 

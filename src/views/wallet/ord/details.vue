@@ -1,27 +1,39 @@
 <template>
     <div class="wallet-detail format-style">
-        <div class="card wallet-detail-wrapper">
-            <div :class="[wallet.icon?wallet.icon:'icon-bg','wallet-icon-1']"></div>
+        <div class="wallet-detail-wrapper">
+            <div class="wallet-icon" :class="[wallet.icon?wallet.icon:'icon-bg']">
+                {{wallet.account&&wallet.account.slice(0,1).toUpperCase()}}
+            </div>
             <div class="wallet-detail-info">
-                <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">{{wallet.account | sliceName}}</p>
+                <p class="wallet-name" :title="(wallet.account&&wallet.account.length>32)?wallet.account:''">
+                    <!-- {{wallet.account | sliceName}} -->
+                    <rename :oldName="wallet.account" @changeName="changeName" :rule="false"></rename>
+                </p>
                 <p class="balance">
                     <span class="wallet-name">{{balance}} </span>Energon
-                    <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
+                    <!-- <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh> -->
                 </p>
-                <p class="address">{{wallet.address}}</p>
+                <p class="address" ref="address">
+                    {{wallet.address}}
+                    <el-tooltip class="item" effect="dark" offset="0" :content="clipboarMsg" placement="top">
+                        <i class="icon-copy" @click="doCopy2"  @mouseleave="mouseLeave" ref="copy-i"></i>
+                    </el-tooltip>
+                </p>
+
             </div>
             <ul class="wallet-operate">
-                <li class="send" @click="handleSend">
+                <refresh @refreshBalance="refreshValue" :parentAddress="wallet.address"></refresh>
+                <!-- <li class="send" @click="handleSend">
                     <span>{{$t('wallet.send')}}</span>
                 </li>
                 <li class="receive"  @click="handleAccept">
                     <span>{{$t('wallet.accept')}}</span>
-                </li>
+                </li> -->
                 <li class="copy"
                     @click="doCopy">
                     <span>{{$t('wallet.copyAddress')}}</span>
                 </li>
-                <el-popover placement="bottom"
+                <el-popover placement="bottom" popper-class="more-popper"
                             trigger="click">
                     <p class="pop lightBlack" @click="exportKeystore">{{$t('wallet.exportKeystore')}}</p>
                     <p class="pop lightBlack" @click="showPriKey">{{$t('wallet.viewPrivate')}}</p>
@@ -33,12 +45,26 @@
                 </el-popover>
             </ul>
         </div>
-        <div class="wallet-trade-wrapper">
-            <div class="trade-con">
-                <tradeList-component  ref="child2" :pageNum="pageSize" pageFrom="ordDetail"></tradeList-component>
-            </div>
+        <ul class="tab-list clearfix">
+            <li @click="changeTab(1)" :class="{'select':select==1}">
+                <i class="icon-record"></i>
+                {{$t('wallet.record')}}
+            </li>
+            <li @click="changeTab(2)" :class="{'select':select==2}">
+                <i class="icon-send"></i>
+                {{$t('wallet.send')}}
+            </li>
+            <li @click="changeTab(3)" :class="{'select':select==3}">
+                <i class="icon-accept"></i>
+                {{$t('wallet.accept')}}
+            </li>
+        </ul>
+        <div :class="[select==1?'':'padd-lt','wallet-trade-wrapper']">
+            <tradeList-component v-if="select==1" ref="child2" :pageNum="pageSize" pageFrom="ordDetail"></tradeList-component>
+            <send-component v-show="select==2" :walletType=1 @initEvent="initEvent"></send-component>
+            <accept-qr-component  v-show="select==3" ></accept-qr-component>
         </div>
-        <div class="modal" v-if="active == 'confirm'">
+        <div class="modal confirm-modal" v-if="active == 'confirm'">
             <div class="modal-main">
                 <div class="modal-title">
                     {{$t('wallet.modify')}}
@@ -48,9 +74,11 @@
                     <p v-if="confirm == 'export'" class="mb-10">{{$t('wallet.importTxt')}}</p>
                     <p v-if="confirm == 'show'" class="mb-10">{{$t('wallet.viewPrivateTxt')}}</p>
                     <p v-if="confirm == 'delete'" class="mb-10">{{$t('wallet.deleteTxt')}}</p>
-                    <p class="mb-10">{{$t('wallet.walletAddress')}}:{{wallet.address}}</p>
+                    <p class="mb-10 bold">{{$t('wallet.walletAddress')}}</p>
+                    <p class="wallet-address bold" :class="{'delete':confirm == 'delete'}">{{wallet.address}}</p>
+                    <p v-if="confirm == 'delete'" class="mb-10 modal-info6">{{$t('wallet.walletDeleteInfo')}}</p>
                     <el-input v-model.trim="password" type="password" :placeholder="$t('wallet.enterPsw')" @input="pswNull=false"></el-input>
-                    <p class="el-form-item__error" v-if="pswNull" style="position:static">{{$t('form.nonPsw')}}</p>
+                    <p class="el-form-item__error error-info" v-if="pswNull" style="position:static">{{$t('form.nonPsw')}}</p>
                 </div>
                 <div class="modal-btn">
                     <el-button @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.cancel')}}</el-button>
@@ -80,7 +108,8 @@
                 </div>
                 <div class="modal-content f12">
                     <p class="mb-10">{{$t('wallet.modifyPswTxt')}}</p>
-                    <p class="mb-10">{{$t('wallet.walletAddress')}}:{{wallet.address}}</p>
+                    <p class="mb-10 bold">{{$t('wallet.walletAddress')}}</p>
+                    <p class="wallet-address bold">{{wallet.address}}</p>
                     <el-form ref="password" :model="form" :rules="formRules">
                         <el-form-item prop="oldPassword">
                             <el-input v-model.trim="form.oldPassword"
@@ -88,6 +117,7 @@
                                       :placeholder="$t('wallet.enterOldPsw')">
                             </el-input>
                         </el-form-item>
+                        <p class="modal-info6">{{$t('wallet.walletBackUpInfo')}}</p>
                         <el-form-item prop="newPassword">
                             <el-input v-model.trim="form.newPassword"
                                       type="password"
@@ -108,7 +138,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal" v-if="isTest">
+        <div class="modal modal-copy diff-modal" v-if="isTest">
             <div class="modal-main">
                 <div class="modal-title">
                    {{$t('wallet.warning')}}
@@ -116,7 +146,7 @@
                 </div>
                 <div class="modal-content f12">
                     <p class="icon-danger"></p>
-                    <p class="mb-10 dan">{{$t('wallet.warningTxt')}}</p>
+                    <p class="mb-10">{{$t('wallet.warningTxt')}}</p>
                 </div>
                 <div class="modal-btn">
                     <el-button @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.cancel')}}</el-button>
@@ -133,13 +163,18 @@
     import fsObj from '@/services/fs-service'
     import {mapGetters, mapActions} from 'vuex';
     import tradeListComponent from '@/components/trade/list';
+    import sendComponent from '@/components/trade/send';
+    import acceptQrComponent from '../accept-qr';
     import refresh from '@/components/refresh/refresh';
     import Settings from '@/services/setting';
     import fs from 'fs';
+    import rename from '@/components/rename';
+
     export default {
         name: "o-wallet-details",
         data() {
             return{
+                clipboarMsg:'Copy to clipboard',
                 wallet: {},
                 tradeList: [],
                 isTest: false,
@@ -166,20 +201,30 @@
                     newPassword2: [
                         {validator: this.checkPass, trigger: 'blur'}
                     ],
-                }
+                },
+                select:1,
+                allWallets:[]
             }
         },
         computed: {
             ...mapGetters(['WalletListGetter', 'network','curWallet','chainName','lang'])
         },
         created(){
+            this.getAllWallets().then(res=>{
+                this.allWallets=res
+            })
             this.WalletListAction(this.network.type);
         },
         mounted(){
             this.init();
+            this.$refs.address.addEventListener('copy',(e)=> {
+                e.preventDefault();
+                e.stopPropagation();
+                this.doCopy();
+            })
         },
         methods: {
-            ...mapActions(['WalletListAction','replaceWallet']),
+            ...mapActions(['WalletListAction','replaceWallet','getAllWallets']),
             init(){
                 let _this = this;
                 let arr = this.WalletListGetter.filter((item)=>{
@@ -189,16 +234,51 @@
                     this.wallet = arr[0];
                     if(this.wallet.address){
                         contractService.web3.eth.getBalance(this.wallet.address,(err,data)=>{
-                            this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                            const {fromWei,toDecimal}=contractService.web3
+                            let balance=fromWei(toDecimal(data), 'ether');
+                            this.balance=balance
+                            // this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
                         });
                         clearInterval(window.balanceInterval);
                         window.balanceInterval = setInterval(_this.refresh,5*1000);
                     }
+                    // document.addEventListener('copy',(e)=> {
+                    //     e.preventDefault();
+                    //     e.stopPropagation();
+                    //     let text = window.getSelection().getRangeAt(0).commonAncestorContainer.data;
+                    //     console.log('触发复制事件---',text);
+                    //     if(text==this.wallet.address){
+                    //         this.doCopy();
+                    //     }
+                    // })
                 }
+            },
+            initEvent(){
+                this.select=1;
+                setTimeout(()=>{
+                    this.$refs.child2.init()
+                },400)
+                this.init();
+            },
+            doCopy2(){
+                this.$copyText(this.wallet.address).then(()=>{
+                    // this.$refs['copy-i'].setAttribute('title','Copied!');
+                    this.clipboarMsg = 'Copied!';
+                });
+            },
+            mouseLeave(){
+                setTimeout(()=>{
+                    this.clipboarMsg = 'Copy to clipboard';
+                },1200)
+
+                // this.$refs['copy-i'].setAttribute('title','Copy to clipboard');
             },
             refresh(){
                 contractService.web3.eth.getBalance(this.wallet.address,(err,data)=>{
-                    this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                    // this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                    const {fromWei,toDecimal}=contractService.web3
+                    let balance=fromWei(toDecimal(data), 'ether');
+                    this.balance=balance
                 });
             },
             selWallet(){
@@ -288,8 +368,26 @@
                                 }
                                 fsObj.WriteFile('walletInfo.json',JSON.stringify(retData),(err) =>{
                                     try{
+
                                         if(fs.existsSync(`${Settings.keyPath}/${this.wallet.address}.json`)){
                                             fs.unlinkSync(`${Settings.keyPath}/${this.wallet.address}.json`);
+                                        }else{
+                                            let paths = fs.readdirSync(Settings.keyPath)
+                                            paths.forEach(path=>{
+                                                const fullPath=`${Settings.keyPath}/${path}`
+                                                let file = fs.statSync(fullPath);
+                                                if(file.isFile()&&path.slice(path.lastIndexOf('.'),path.length)=='.json'){
+                                                    let fileContent = fs.readFileSync(fullPath,{encoding:'utf8'});
+                                                    try{
+                                                        let keyObj = JSON.parse(fileContent);
+                                                        if(keyObj.address===account){
+                                                            fs.unlinkSync(fullPath);
+                                                        }
+                                                    }catch(e){
+                                                        throw e;
+                                                    }
+                                                }
+                                            })
                                         }
                                     }catch(e){
                                         console.log(e)
@@ -359,6 +457,24 @@
             refreshValue(cost){
                 this.balance=cost;
             },
+            changeTab(index){
+                this.select=index
+            },
+            rename(){
+            },
+            changeName(newName){
+                let arr = this.allWallets.filter((item)=>{
+                    return item.account==newName
+                });
+                if(arr.length>0 && arr[0].address!==this.wallet.address){
+                    this.$message.warning(this.$t('wallet.walletNameExists'));
+                }else{
+                    const wallet =Object.assign({},this.wallet,{account:newName})
+                    this.replaceWallet(wallet).then(()=>{
+                        this.wallet.account=newName
+                    });
+                }
+            },
         },
         watch:{
             'curWallet':function(){
@@ -382,7 +498,8 @@
         },
         components:{
             tradeListComponent,
-            refresh
+            refresh,
+            acceptQrComponent,sendComponent,rename
         },
         beforeDestroy() {
             clearInterval(window.balanceInterval);
@@ -397,13 +514,14 @@
 
 <style lang="less" scoped>
     .wallet-detail{
-        background: #f5f5f5;
+        background: #fff;
         .icon-danger{
-            width: 100%;
-            height: 30px;
-            margin-bottom: 18px;
-            background-image: url("../images/icon_warning.svg");
-            background-size: 30px 30px;
+            float: left;
+            width: 20px;
+            height: 20px;
+            margin:0 10px 0 0;
+            background-image: url("../images/10.icon_An_error .svg");
+            background-size: 20px 20px;
             background-repeat: no-repeat;
             background-position: center;
         }
@@ -415,12 +533,16 @@
             cursor:pointer;
         }
         .wallet-trade-wrapper{
-            height:calc(~"100% - 114px");
-        }
-        .trade-con{
-            height: 100%;
+            height:calc(~"100% - 151px");
             overflow-y: auto;
         }
+        .padd-lt{
+            padding: 0 0 0 14px;
+        }
+        // .trade-con{
+        //     height: 100%;
+        //     overflow-y: auto;
+        // }
     }
     .dan{
         color: #F32E25;
@@ -429,7 +551,7 @@
         padding:14px 30px 2px 14px;
         min-height: 109px;
         display: flex;
-        box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
+        // box-shadow: 0 4px 6px 0 rgba(48,48,77,0.05), 0 2px 4px 0 rgba(148,148,197,0.05);
         font-size: 12px;
         color: #24272B;
         .wallet-name{
@@ -450,7 +572,7 @@
             background: url("../images/icon_user.png") no-repeat center center;
             background-size: contain;
         }
-        .wallet-icon-1{
+        .wallet-icon{
             width: 40px;
             height: 40px;
             margin: 21px 12px 0 0;
@@ -466,7 +588,8 @@
         }
         .wallet-operate{
             margin-top:30px;
-            width:210px;
+            width:170px;
+            min-width:170px;
             display:flex;
             justify-content: space-between;
             >li{
@@ -475,21 +598,23 @@
             }
             .send{
                 background: url("../images/icon_send.svg") no-repeat top center;
+                background-size: 20px 20px;
             }
             .receive{
                 background: url("../images/icon_receive.svg") no-repeat top center;
+                background-size: 20px 20px;
             }
             .copy{
                 background: url("../images/icon_copy.svg") no-repeat top center;
+                background-size: 20px 20px;
             }
             .more{
                 padding-top: 32px;
                 cursor:pointer;
                 background: url("../images/icon_more.svg") no-repeat top center;
+                background-size: 20px 20px;
             }
-
         }
-
     }
     .mb-10{
         margin-bottom: 10px;
@@ -505,12 +630,38 @@
        .modal-main{
            width:483px;
             .modal-content{
-                padding:20px;
+                padding:20px 20px;
             }
             .el-input{
                 width:100%;
             }
        }
+       .wallet-address{
+           height: 37px;
+           padding: 0 20px;
+           margin: 0 -20px 14px;
+           line-height: 37px;
+           background: #ECF1F8;
+           &.delete{
+               margin-bottom: 10px;
+           }
+       }
+       .modal-info6{
+           position: relative;
+           padding: 0 0 0 14px;
+            margin: 0 0 10px 0;
+            &::before{
+                position: absolute;
+                content: ' ';
+                top: 0;
+                left: 0;
+                width: 12px;
+                height: 100%;
+                margin: 0 4px 0 0;
+                background: url('../images/icon_Anerror.svg') no-repeat left 3px;
+            }
+            color: #FFBA01;
+        }
     }
     .modify-psw{
         .modal-main{
@@ -528,29 +679,118 @@
             }
         }
     }
-    // .cancel,.sureBtn{
-    //     font-weight: 900;
-    // }
+   .tab-list{
+        margin: 0 14px;
+        border-top: 1px solid #D3D8E1;
+       i{
+           margin:  0 5px 0 0;
+           float: left;
+           width: 16px;
+           height: 20px;
+           background-repeat: no-repeat;
+           background-position: center 1px;
+       }
+       .icon-record{
+           background-image: url("../images/18.icon_Transactions2.svg")
+       }
+       .icon-send{
+           background-image: url("../images/18.icon_Send.svg")
+       }
+       .icon-accept{
+           background-image: url("../images/18.icon_Receive.svg")
+       }
+       >li{
+           margin: 14px 30px 0 0;
+           padding: 0 0 2px;
+           float: left;
+           font-size: 12px;
+           cursor: pointer;
+           border-bottom: 2px solid #fff;
+       }
+       li:hover,.select{
+            color: #0077FF;
 
+            .icon-record{
+                background-image: url("../images/18.icon_Transactions.svg")
+            }
+            .icon-send{
+                background-image: url("../images/18.icon_Send2.svg")
+            }
+            .icon-accept{
+                background-image: url("../images/18.icon_Receive2.svg")
+            }
+        }
+        .select{
+            font-weight: 600;
+            border-bottom: 2px solid #0077FF;
+        }
+    }
+    .modal.modal-copy{
+        .modal-main {
+            .modal-content {
+                padding: 20px 20px 60px;
+            }
+        }
+    }
 </style>
 <style lang="less">
+    .el-tooltip__popper{
+        width: 118px;
+        text-align: center;
+    }
     .wallet-detail{
         .modify-psw{
             .el-form-item{
                 margin-bottom:10px;
             }
             .el-form-item__error{
+                padding-left:15px;
                 position:static;
+                &::before{
+                    top: auto;
+                    bottom: 0;
+                    left: 0px;
+                }
             }
+        }
+        .confirm-modal{
+            .error-info{
+                padding-left: 15px;
+                &::before{
+                    top: auto;
+                    left: 20px;
+                }
+            }
+        //     .el-form-item__error{
+        //         padding-left:15px;
+        //         position:static;
+        //         &::before{
+        //             bottom: 0;
+        //             left: 0px;
+        //         }
+        //     }
         }
     }
     .el-popover{
-        min-width: 126px;
-        left:832px !important;
+        top:149px!important;
+        left:unset!important;
+        right:30px;
+        padding:0;
+        min-width: 130px;
+        border-radius:4px;
+        p{
+            height:37px;
+            line-height:37px;
+        }
     }
-    .popper__arrow{
-        left:92px !important;
+    .more-popper{
+        .popper__arrow{
+            left:95px!important;
+        }
     }
+    // .popper__arrow{
+    //     left:55px
+    // }
 </style>
 
 

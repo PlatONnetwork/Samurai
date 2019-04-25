@@ -1,17 +1,24 @@
 <template>
-    <div class="contract-list format-style">
+    <div class="contract-list format-style contract-detail">
         <div class="card content">
-            <div class="contract-info">
-                <div class="contract-icon" :class="contract.icon"></div>
+            <div class="contract-info" v-if="!foldTop">
+                <div class="contract-icon" :class="contract.icon">{{contract.name&&contract.name.slice(0,1).toUpperCase()}}</div>
                 <div class="contract-detail-info">
-                    <p class="contract-name" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}}</p>
-                    <p class="balance">
-                        <span class="contract-name">{{balance}}</span> <span class="gray">Energon</span>
-                        <refresh @refreshBalance="refreshValue" :parentAddress="contract.address"></refresh>
+                    <p @click="rename" :title="(contract.name&&contract.name.length>36)?contract.name:''">
+                        <rename :oldName="contract.name" @changeName="changeName" :rule="false"></rename>
                     </p>
-                    <p class="address">{{contract.address}}</p>
+                    <p class="balance">
+                        <span class="important-txt">{{balance}}</span> <span class="gray">Energon</span>
+                    </p>
+                    <p class="address">
+                        {{contract.address}}
+                        <el-tooltip class="item" effect="dark" offset="40" :content="clipboarMsg" placement="top">
+                            <i class="icon-copy" @click="doCopy2"  @mouseleave="mouseLeave" ref="copy-i"></i>
+                        </el-tooltip>
+                    </p>
                 </div>
                 <ul class="wallet-operate">
+                    <refresh @refreshBalance="refreshValue" :parentAddress="contract.address"></refresh>
                     <li class="copy"
                         @click="doCopy">
                         <span>{{$t('contracts.copy')}}</span>
@@ -22,9 +29,12 @@
                     </li>
                 </ul>
             </div>
-            <div class="abi-info">
-                <div class="lt">
-                    <p class="title">{{$t('contracts.executeCont')}}</p>
+            <div :class="[foldTop?'position-handle':'','abi-info']" @mousewheel="wheel($event)" ref="abi-info">
+                <div :class="[foldTop?'padT':'','lt']">
+                    <p class="main-title title">
+                        <span>{{$t('contracts.executeCont')}}</span>
+                    </p>
+                    <p class="func">{{$t('contracts.function')}}</p>
                     <el-select :placeholder="$t('contracts.selectFunc')" v-model="fun" @change="funChange" class="marB14 marR30">
                         <el-option v-for="abi in abiArr" :key="abi.name" :value="abi.name" :label="abi.name"></el-option>
                     </el-select>
@@ -34,52 +44,58 @@
                                 <el-input :placeholder="input.type" v-model.trim="input.value"></el-input>
                             </el-form-item>
                         </el-form>
-                        <p>{{$t("contracts.executeFrom")}}</p>
-                        <el-select v-model="wallet">
-                            <el-option v-for="ord in ordWalletList" :key="ord.address" :value="ord.address" :label="ord.account"></el-option>
+                        <p class="title font12">{{$t("contracts.executeType")}}</p>
+                        <el-select v-model="tradeType" :placeholder="$t('wallet.selectHint')">
+                            <el-option v-for="type in tradeTypes" :key="type.code" :value="type.code" :label="type.label"></el-option>
+                        </el-select>
+                        <p class="title font12 marT14">{{$t("contracts.executeFrom")}}</p>
+                        <el-select v-model="wallet" :placeholder="$t('wallet.selectHint')">
+                            <el-option v-for="ord in ordWalletList" :key="ord.address" :value="ord.address" :label="(ord.account.length>16?ord.account.slice(0,16)+'...':ord.account)+'--'+ord.balance+' Energon'"></el-option>
                         </el-select>
                     </div>
                     <p class="btn-box">
-                        <el-button v-if="funBody" @click="confirm" :class="[lang=='en'?'':'letterSpace']">{{$t("contracts.execute")}}</el-button>
+                        <el-button type="primary" v-if="funBody" @click="confirm" :class="[lang=='en'?'':'letterSpace']">{{$t("contracts.execute")}}</el-button>
                     </p>
                 </div>
-                <div class="rSide" v-if="abiInfo.length>0">
-                    <i class="icon-close" @click="closeSide"></i>
-                    <div class="right-contract-name">
-                        <span class="contract-name" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}} - </span>
-                        <span>
-                            <span class="contract-name">{{balance}}</span> <span class="contract-name">Energon</span>
+                <div class="function-result">
+                    <div class="rSide" v-if="abiInfo.length>0">
+                        <i class="icon-close" @click="closeSide"></i>
+                        <div class="right-contract-name">
+                            <span class="important-txt" :title="(contract.name&&contract.name.length>36)?contract.name:''">{{contract.name | sliceName}} - </span>
+                            <span>
+                            <span class="important-txt">{{balance}}</span> <span class="important-txt">Energon</span>
                         </span>
+                        </div>
                     </div>
-
+                    <ul class="r-ul-info" v-for="item in abiInfo" :key="item.index">
+                        <li class="rinfo">{{item}}</li>
+                    </ul>
                 </div>
-                <ul class="r-ul-info" v-for="item in abiInfo" :key="item.index">
-                    <li class="rinfo">{{item}}</li>
-                </ul>
                 <!-- <div style="clear:both;"></div> -->
             </div>
         </div>
 
         <!--查看接口文件弹窗-->
-        <div class="modal abi-modal" v-if="showABIModal">
+        <div class="modal confirm abi-modal diff-modal" v-if="showABIModal">
             <div class="modal-main">
                 <div class="modal-title">
                     {{$t("contracts.contractInterface")}}
                     <span class="modal-close" @click="handleCancel"></span>
                 </div>
                 <div class="modal-content f12">
-                    <p class="abiView">{{contract.abi}}</p>
-                    <!-- <textarea class="abiView" :value="contract.abi" readonly></textarea> -->
+                    <div class="abiView-box">
+                        <p class="abiView">{{contract.abi}}</p>
+                    </div>
                 </div>
                 <div class="modal-btn">
-                    <el-button type="primary" @click="copyContract" :class="[lang=='en'?'':'letterSpace']">{{$t('contracts.copyContract')}}</el-button>
+                    <el-button @click="copyContract" :class="[lang=='en'?'':'letterSpace']">{{$t('contracts.copyContract')}}</el-button>
                     <el-button type="primary" @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.sure')}}</el-button>
                 </div>
             </div>
         </div>
 
         <!--复制地址警告-->
-        <div class="modal" v-if="isTest">
+        <div class="modal confirm is-test diff-modal" v-if="isTest">
             <div class="modal-main">
                 <div class="modal-title">
                     {{$t('wallet.warning')}}
@@ -87,7 +103,7 @@
                 </div>
                 <div class="modal-content f12">
                     <p class="icon-danger"></p>
-                    <p class="mb-10 danger">{{$t('wallet.warningContTxt')}}</p>
+                    <p class="mb-10">{{$t('wallet.warningContTxt')}}</p>
                 </div>
                 <div class="modal-btn">
                     <el-button @click="handleCancel" :class="[lang=='en'?'':'letterSpace']">{{$t('form.cancel')}}</el-button>
@@ -105,18 +121,22 @@
                 </div>
                 <div class="modal-content f12">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt"><span class="bold">0.00</span> Energon</span></p>
-                        <p>From<span class="txt">{{keyObject.address}}</span></p>
-                        <p>To<span class="txt">{{contract.address}}</span></p>
+                        <p>
+                            {{$t('contracts.executeFrom')}}
+                            <span class="txt">
+                                <span :class="[keyObject.icon,'trade-wallet-icon']">{{keyObject.account?keyObject.account.slice(0,1).toUpperCase():keyObject.address.slice(2,3)}}</span>
+                                {{keyObject.account || keyObject.address}}
+                            </span>
+                        </p>
                         <p>{{$t("wallet.fee")}}<span class="txt"><span class="bold">{{gas}}</span> Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input :placeholder="$t('wallet.input')+(keyObject.account)+' '+$t('wallet.walletPsw')" type="password" v-model.trim="psw"></el-input>
+                        <el-input :placeholder="$t('wallet.input')+(keyObject.account)+$t('wallet.walletPsw')" type="password" v-model.trim="psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showFunModal=false">{{$t('form.cancel')}}</el-button>
-                    <el-button type="primary" @click="exec">{{$t('form.sure')}}</el-button>
+                    <el-button @click="showFunModal=false" :disabled="executing">{{$t('form.cancel')}}</el-button>
+                    <el-button type="primary" @click="exec" :disabled="!psw" :loading="executing">{{executing?$t('form.submiting'):$t('form.submit')}}</el-button>
                 </div>
             </div>
         </div>
@@ -128,11 +148,13 @@
     import keyManager from '@/services/key-manager';
     import contractService from '@/services/contract-servies';
     import refresh from '@/components/refresh/refresh';
+    import rename from '@/components/rename';
     var fs = require("fs");
     export default {
         name: 'contractDetail',
         data () {
             return {
+                clipboarMsg:'Copy to clipboard',
                 contract:{},
                 balance:0,
                 isTest:false,
@@ -153,37 +175,51 @@
                 constant:'',
                 hash:'',
                 params:[],
-                abiInfo:[]
+                abiInfo:[],
+                tradeType:2,
+                foldTop:false,
+                executing:false,
+                contractNameList:[]
             }
         },
         computed: {
-            ...mapGetters(['network','lang'])
+            ...mapGetters(['network','lang','contractListGetter']),
+            //2 普通交易  5 MPC交易  6 VC交易
+            tradeTypes:function(){
+                return [{
+                    code:2,
+                    label:this.$t('contracts.ordTx')
+                },{
+                    code:5,
+                    label:this.$t('contracts.mpcTx')
+                }]
+            }
         },
         mounted(){
-            this.contract = this.$route.query?this.$route.query:null;
-            // if(this.contract.abi){
-            //     const MyContract = contractService.web3.eth.contract(JSON.parse(this.contract.abi));
-            //     const contract = MyContract.at(this.contract.address);
-            //
-            // }
-            contractService.web3.eth.getGasPrice((err,gasPrice)=>{
-                if(err){
-                    throw err;
-                }
-                this.gasPrice = gasPrice;
+            this.contractListAction().then(()=>{
+                this.init();
             });
-            this.abiArr = this.contract.abi?JSON.parse(this.contract.abi):[];
-            this.getOrd().then((data)=>{
-                this.getBalance(JSON.parse(JSON.stringify(data)));
-            });
-            // this.refresh();
-            window.balanceInterval = setInterval(this.refresh,5*1000);
-            contractService.web3.eth.getBalance(this.contract.address,(err,data)=>{
-                this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
-            });
+
         },
         methods: {
-            ...mapActions(['getOrd','saveTractRecord']),
+            ...mapActions(['getOrd','saveTractRecord','insertAddress','contractListAction']),
+            init(){
+                this.contract = this.$route.query?this.$route.query:null;
+                contractService.web3.eth.getGasPrice((err,gasPrice)=>{
+                    if(err){
+                        throw err;
+                    }
+                    this.gasPrice = gasPrice;
+                });
+                this.abiArr = this.contract.abi?JSON.parse(this.contract.abi):[];
+                this.getOrd().then((data)=>{
+                    this.getBalance(JSON.parse(JSON.stringify(data)));
+                });
+                window.balanceInterval = setInterval(this.refresh,5*1000);
+                contractService.web3.eth.getBalance(this.contract.address,(err,data)=>{
+                    this.balance=contractService.web3.fromWei(data.toString(10), 'ether');
+                });
+            },
             getBalance(list){
                 let _this = this,arr=[];
                 list.forEach((item,index)=>{
@@ -197,8 +233,44 @@
                 });
                 this.ordWalletList = arr;
             },
+            changeName(newName){
+                let arr = this.contractListGetter.filter((item)=>{
+                    return item.name==newName
+                });
+                if(arr.length>0 && arr[0].address!==this.contract.address){
+                    this.$message.warning(this.$t('contracts.contNameRepeat'));
+                }else{
+                    this.insertAddress({
+                        hash:this.contract.hash,
+                        name:newName
+                    }).then(()=>{
+                        this.contract.name = newName;
+                    })
+                }
+            },
             goBack(){
                 this.$router.push('/contract')
+            },
+            doCopy2(){
+                this.$copyText(this.contract.address).then(()=>{
+                    this.clipboarMsg = 'Copied!';
+                });
+            },
+            mouseLeave(){
+                setTimeout(()=>{
+                    this.clipboarMsg = 'Copy to clipboard';
+                },1200)
+            },
+            wheel(e){
+                console.log('wheel event',this.$refs['abi-info']);
+                if(e.deltaY>0){
+                    this.foldTop = true;
+                }else{
+                    this.foldTop = false;
+                }
+            },
+            rename(){
+
             },
             doCopy(){
                 if(this.network.type=='main'){
@@ -268,27 +340,6 @@
                         if(error) throw error;
                         this.gas = contractService.web3.fromWei(2000000*result,"ether")
                     });
-
-                    // const MyContract = contractService.web3.eth.contract(JSON.parse(this.contract.abi));
-                    // const myContractInstance = MyContract.at(this.contract.address);
-                    // let params=[];
-                    // this.inputs.forEach((item)=>{
-                    //     params.push(item.value)
-                    // });
-                    // const platOnData = myContractInstance[this.fun].getPlatONData(...params);
-                    // contractService.web3.eth.estimateGas({
-                    //     "to":this.contract.address,
-                    //     // "from":this.keyObject.address,
-                    //     "data":platOnData
-                    // },(err,data)=>{
-                    //     if(err){
-                    //         throw err;
-                    //     }
-                    //     contractService.web3.eth.getGasPrice((error,result)=>{
-                    //         if(error) throw err;
-                    //         this.gas = contractService.web3.fromWei(data*result,"ether")
-                    //     });
-                    // })
                 }
 
             },
@@ -313,7 +364,8 @@
                         console.log(' this.params----', this.params);
                         // abi中的constant参数为false时是交易类的，返回hash。为true时是call查询，返回结果
                         if(this.constant == 'false'){
-                            contractService.platONSendTransaction(JSON.parse(this.contract.abi),this.contract.address,this.fun,JSON.stringify(this.params),keyObject.address,priKey,false,false,false,true,2).then((data)=>{
+                            this.executing = true;
+                            contractService.platONSendTransaction(JSON.parse(this.contract.abi),this.contract.address,this.fun,JSON.stringify(this.params),keyObject.address,priKey,false,false,false,true,this.tradeType).then((data)=>{
                                 console.log('hash-->result--->',data.hash);
                                 this.hash = data.hash
                                 let obj={
@@ -329,14 +381,23 @@
                                 };
                                 this.abiInfo.push(obj.hash)
                                 this.saveTractRecord(obj).then(()=>{
-                                    this.showFunModal = false;
+                                    this.$message.success(this.$t('trade.transactionSent'));
+                                    setTimeout(()=>{
+                                        this.executing = false;
+                                        this.showFunModal = false;
+                                    },3000);
                                 })
                             })
                         }else {
+                            this.executing = true;
                             console.log('选择的函数为：',this.fun)
                             contractService.platONCall(JSON.parse(this.contract.abi),this.contract.address,this.fun,keyObject.address,this.params).then((data)=>{
-                                this.abiInfo.push(data)
-                                this.showFunModal = false;
+                                this.abiInfo.push(data);
+                                this.$message.success(this.$t('trade.transactionSent'));
+                                setTimeout(()=>{
+                                    this.executing = false;
+                                    this.showFunModal = false;
+                                },3000);
                             })
                         }
                     });
@@ -381,45 +442,54 @@
             }
         },
         components:{
-            refresh
+            refresh,
+            rename
         }
     }
 </script>
 
 <style lang="less" scoped>
+    .function-result{
+        position: absolute;
+        width: 380px;
+        right: 10px;
+    }
+    .icon-danger{
+        float: left;
+        width: 20px;
+        height: 20px;
+        margin:0 10px 0 0;
+        background-image: url("./images/10.icon_An error .svg");
+        background-size: 20px 20px;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    .is-test.modal .modal-main .modal-content{
+        padding:20px 20px 74px;
+        color: #24272B;
+    }
     .content{
-        padding:14px 0 14px 14px;
+        padding:0;
         height:100%;
         font-size: 12px;
         color: #525768;
     }
+    .padT{
+        padding-top:40px;
+    }
     .contract-info{
-        padding-right:30px;
-        padding-bottom:2px;
+        margin:0 14px;
+        padding:14px 0 2px;
         display:flex;
         border-bottom:solid 1px #D3D8E1;
     }
     .contract-icon{
+        margin-top:21px;
         margin-right:12px;
         width:40px;
-        background: no-repeat center;
+        min-width:40px;
     }
-    .contract-icon1{
-        background-image: url('./images/Oval1.png');
-    }
-    .contract-icon2{
-        background-image: url('./images/Oval2.png');
-    }
-    .contract-icon3{
-        background-image: url('./images/Oval3.png');
-    }
-    .contract-icon4{
-        background-image: url('./images/Oval4.png');
-    }
-    .contract-icon5{
-        background-image: url('./images/Oval5.png');
-    }
-    .contract-name{
+    .important-txt{
         font-size: 14px;
         color: #24272B;
         font-weight: 600;
@@ -430,7 +500,7 @@
     }
     .address{
         padding-left:18.2px;
-        background:url("./images/icon_positioning.svg") no-repeat left center;
+        background:url("../../../static/images/contract-addr.svg") no-repeat left center;
     }
     .gray{
         font-size: 10px;
@@ -444,45 +514,72 @@
     }
     .wallet-operate{
        padding-top:22px;
-       width:123px;
+       display: flex;
+       width:191px;
+       min-width:191px;
         >li{
             padding-top:32px;
             display:inline-block;
-            width:48px;
         }
         .copy{
+            margin-left:30px;
             text-align: center;
             background: url("./images/icon_copy.svg") no-repeat top center;
+            background-size: 20px;
         }
         .abi{
             margin-left:23px;
             background: url("./images/icon_contract .svg") no-repeat top center;
+            background-size: 20px;
         }
     }
     .lt{
-        width: 330px;
+        width: 337px;
         float: left;
     }
     .abi-info{
-        // display:flex;
-        // justify-content: space-between;
+        position: relative;
+        padding:0 14px 14px;
         width: 770px;
-        height:440px;
-        padding:14px 0;
-        overflow-y: auto;
+        /*height:440px;*/
+        height:calc(~"100% - 110px");
+        /*overflow-y: auto;*/
         .title{
             margin-bottom:10px;
             font-size: 14px;
             color: #24272B;
             letter-spacing: 0.5px;
+            font-weight:600;
+        }
+        .main-title{
+            margin-bottom:14px;
+            /*width:100%;*/
+            height:34px;
+            line-height:43px;
+            font-size: 12px;
+            color: #0077FF;
+            background-color:#fff;
+            >span{
+                padding:0 0 3px 20px;
+                background: url("./images/57.icon_perform.svg") no-repeat left 0.9px;
+                border-bottom:solid 2px #0077FF;
+            }
         }
         .fun-body{
             padding-right:30px;
             .el-form{
-                max-height: 250px;
-                overflow-y: auto;
+                /*max-height: 250px;*/
+                /*overflow-y: auto;*/
                 height: auto;
             }
+        }
+    }
+    .position-handle{
+        height:calc(~"100% - 65px");
+        .main-title{
+            position:fixed;
+            top:64px;
+            z-index:999;
         }
     }
     .marB14{
@@ -491,10 +588,12 @@
     .marR30{
         margin-right:30px;
     }
+    .marT14{
+        margin-top:14px;
+    }
     .btn-box{
         padding-right:30px;
-        margin-top:30px;
-        text-align: right;
+        margin:17px 0 7px;
     }
     .abi-modal{
         .modal-content{
@@ -510,11 +609,10 @@
             width:483px;
             font-size: 12px;
             .modal-content{
-                padding:12px;
+                padding:12px 0;
                 .confirm-content{
                     padding:14px 10px;
-                    // width: 490px;
-                    height:126px;
+                    height:auto;
                     background: #ECEFF6;
                     p{
                         color: #24272B;
@@ -536,50 +634,45 @@
                     padding-left:10px;
                 }
                 .inputb{
-                    margin:10px 10px 0;
+                    /*margin:10px 10px 0;*/
                     .el-input{
                         width:100%;
                     }
                 }
             }
             .modal-btn{
-                padding-top:7.5px;
-                line-height:1;
-                height:48.5px;
                 button{
-                    width:79px;
-                    height:32px;
+                    padding:0 20px;
+                    min-width:79px;
+                    width:auto;
                     font-size:12px;
                 }
             }
         }
     }
     .rSide{
-        position: relative;
+        /*position: relative;*/
+        margin-top:14px;
         width: 380px;
         height: 35px;
-        // right: 30px;
-        left: 362px;
+        /*left: 362px;*/
         background:rgba(24,194,233,0.1);
-        // background-color: #18C2E9;
-        // opacity:0.1
     }
     .r-ul-info{
-        // margin-top: 16px;
-        width: 408px;
+        width: 380px;
         float: right;
     }
     .rinfo{
         width: 380px;
         height: auto;
-        padding: 0 5px 0 0;
+        padding: 0 5px 10px 0;
         margin:0 23px 0 0;
         word-break: break-all;
         background:rgba(24,194,233,0.1);
     }
     .icon-close{
         position: absolute;
-        top: -7px;
+        top: 6px;
         right: -4px;
         display: block;
         width: 15px;
@@ -594,14 +687,39 @@
     .rinfo{
         padding-left: 14px;
     }
-    .abiView{
+    .abiView-box{
+        padding: 8px 3px 8px 0;
+        height: 100%;
         background: #ECEFF6;
+        overflow: auto;
+    }
+    .abiView{
+        padding: 0 20px;
         font-size: 12px;
         color: #24272B;
+        height: 100%;
         letter-spacing: 0.43px;
+        overflow: auto;
     }
     .bold{
         font-weight: bold;
+    }
+    .func{
+        margin-bottom:10px;
+        color: #24272B;
+        font-weight: 600;
+    }
+    .font12{
+        font-size:12px!important;
+    }
+    .contract-detail{
+        overflow-y: auto;
+        background: #fff;
+        &.format-style{
+            .card{
+                box-shadow:none;
+            }
+         }
     }
 </style>
 
@@ -612,6 +730,11 @@
         }
         .el-form-item{
             margin-bottom:14px;
+        }
+    }
+    .contract-detail{
+        .el-form-item__label{
+            font-weight: 600;
         }
     }
 

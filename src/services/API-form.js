@@ -3,13 +3,13 @@
  */
 import reg from '@/config/reg-config'
 
-console.log(window.vueVm.$i18n.t('form.USERNAME'))
+// console.log(window.vueVm.$i18n.t('form.USERNAME'))
 class formService {
   constructor() {
     this.userName = function(val){
       return this.check(reg.USERNAME, window.vueVm.$i18n.t('form.nonRepPsw'), val)
     };
-    
+
     this.nonRepPsw = function(val){
       return this.check(reg.USERNAME, window.vueVm.$i18n.t('form.nonRepPsw'), val)
     };

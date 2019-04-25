@@ -9,7 +9,8 @@ export default {
         pageLoading:false,
         totalBalance:0,
         norTotalBalance:0,
-        initParams:{}
+        initParams: {},
+        shareWalletList:[],//联名钱包列表
     },
     actions:WalletAction,
     getters: WalletGetter,

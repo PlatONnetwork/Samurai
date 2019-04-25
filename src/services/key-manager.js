@@ -54,6 +54,7 @@ const keyManager = {
             this.createDk(function (_err, dk) {
                 err = _err;
                 if (!err) {
+                    console.log("privateKey",dk);
                     keythereum.dump(password, dk.privateKey, dk.salt, dk.iv, options, function (keyObject) {
                         if (keyObject) {
                             keyObject.account = account;
@@ -103,6 +104,7 @@ const keyManager = {
                                 priKeyInvalid = false;
                                 keyObject.account = account;
                                 keyObject.address = '0x' + keyObject.address;
+                                keyObject.publicKey = EthUtil.privateToPublic(new Buffer(priKey, 'hex')).toString('hex');
                             } else {
                                 err = 2;
                             }
@@ -144,14 +146,13 @@ const keyManager = {
         if (content) {
             try{
                 let parseObj = JSON.parse(content);
-                if(parseObj.account){
+                /*if(parseObj.account){
                     delete parseObj.account
-                }
+                }*/
                 content = JSON.stringify(parseObj)
             }catch(e){
                 throw e;
             }
-            console.log('content',content);
             if(myBrowser()=="IE"){
                 var OW = window.open('', "_blank", "");
                 var DD = new Date();
@@ -171,7 +172,6 @@ const keyManager = {
                 a.innerHTML = 'testing';
                 a.style.display = 'none';
                 document.body.appendChild(a);
-                console.info(a);
                 a.click();
                 setTimeout(function(){
                     document.body.removeChild(a);
@@ -223,7 +223,8 @@ const keyManager = {
                         privateKey:privateKey,
                         address:content.address,
                         mobile:content.mobile,
-                        email:content.email
+                        email:content.email,
+                        publicKey:EthUtil.privateToPublic(new Buffer(privateKey, 'hex')).toString('hex')
                     };
                     cb(err,userObj);
                 }else{
@@ -241,8 +242,8 @@ const keyManager = {
         };
         var _this = this;
         this.verifypsw(content,password,function(err,userObj){
-            console.warn('verifypsw',err,userObj);
             if(err==0){
+                content.publicKey = userObj.publicKey;
                 cb(err,content);
             }else{
                 cb(err,null);
@@ -317,7 +318,11 @@ const keyManager = {
      */
     recover2(keyObject,password,type,cb){
         // console.warn('recover2--->',keyObject);
-        this._insetRecover(keyObject,password,type,cb)
+        try{
+            this._insetRecover(keyObject,password,type,cb)
+        }catch(e){
+            cb(-100)
+        }
     },
     _insetRecover(keyObject,password,type,cb){
         var keyObjectCrypto, iv, salt, ciphertext, algo;
@@ -404,7 +409,6 @@ const keyManager = {
     },
     //重置密码
     resetPassword(account,address,oldPassword, newPassword, cb) {
-        console.warn('resetPassword-->',account,address,oldPassword, newPassword);
         var _this = this,err=0,keyObject;
         if(!this.checkAvailable(address)){
             if(!isFunction(cb)){
@@ -425,14 +429,12 @@ const keyManager = {
         }
         if (isFunction(cb)) {
             self.recover(address,oldPassword,'buf', function (err_gp, privateKey) {
-                console.info('recover',oldPassword,privateKey);
                 if (privateKey) {
                     self.createDk(function (err_dk, dk) {
                         if (dk) {
                             if (!err_dk) {
                                 keythereum.dump(newPassword, privateKey, dk.salt, dk.iv, options, function (newKeyObject) {
                                     if (newKeyObject) {
-                                        console.warn(newPassword,privateKey,newKeyObject);
                                         var newKey = deepClone(newKeyObject);
                                         newKey.publicKey = EthUtil.privateToPublic(new Buffer(privateKey, 'hex')).toString('hex');
                                         newKey.account = keyObject.account;

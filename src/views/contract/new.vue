@@ -2,8 +2,8 @@
     <div class="contract-new format-style">
         <div class="card content">
             <el-form :model="newContract" :rules="rules" ref="newContract" label-position="top" :placeholder="$t('contracts.fromHint')">
-                <el-form-item :label="$t('contracts.from')" prop="fromS">
-                    <el-select v-model="fromW.address" @change="selWallet()" :disabled="fromW.address?false:true" :placeholder="$t('contracts.fromHint')">
+                <el-form-item :label="$t('contracts.from')">
+                    <el-select v-model="fromW.address" @change="selWallet()" :style="{pointerEvents:fromW.address?'auto':'none'}" :placeholder="$t('contracts.fromHint')">
                         <el-option
                                 v-for="item in wallets"
                                 :key="item.address"
@@ -12,22 +12,13 @@
                         </el-option>
                     </el-select>
                 </el-form-item>
-                <!-- <el-form-item :label="$t('contracts.amount')" prop="value">
-                    <el-input v-model.trim="newContract.value" type="number" :placeholder="$t('contracts.amountHint')">
-                        <el-button class="append" slot="append" @click="sendAll">ALL</el-button>
-                    </el-input>
-                    <span>{{$t("contracts.wantSend")}}
-                        <span class="EnergonCount">{{newContract.value || 0}}</span>
-                        Energon
-                    </span>
-                </el-form-item> -->
                 <el-form-item :label="$t('contracts.watchContract.contName')" prop="name">
                     <el-input v-model.trim="newContract.name" :placeholder="$t('contracts.watchContract.nameHint')">
                     </el-input>
                 </el-form-item>
                 <el-form-item :label="$t('contracts.contByte')">
                     <el-upload
-                            class="upload-bin"
+                            :class="[contByteEmpty?'empty':'','upload-bin']"
                             drag
                             action="https://jsonplaceholder.typicode.com/posts/"
                             accept= ".wasm"
@@ -39,13 +30,11 @@
                         <i class="icon-upload" ref="uploadbin"></i>
                         <!-- 去掉拖拽提示 -->
                         <div v-if="uploaded" class="el-upload__text"><em>{{$t("contracts.import")}} .wasm {{$t("contracts.file")}}</em></div>
-                        <!-- <div v-if="uploaded" class="el-upload__text"><em>{{$t("contracts.import")}}</em>\{{$t("contracts.drag")}}</div> -->
                     </el-upload>
                     <el-input v-if='false' v-model.trim="newContract.bin" type="textarea"></el-input>
-                    <!-- <input type="file" @change="getBin"> -->
-                    <p v-if='contByteEmpty' class="contByte">{{$t('contracts.contByteEmpty')}}</p>
+                    <p v-if='contByteEmpty' class="contByte el-form-item__error">{{$t('contracts.contByteEmpty')}}</p>
                 </el-form-item>
-                <el-form-item :label="$t('contracts.contABI')" prop="abi">
+                <el-form-item :label="$t('contracts.contABI')" prop="abi" :class="[lang=='en'?'en':'cn','abi-item']">
                     <el-upload
                             class="import2"
                             action="https://jsonplaceholder.typicode.com/posts/"
@@ -57,23 +46,15 @@
                     </el-upload>
                     <el-input class="abiInput"
                             v-model.trim="newContract.abi"
-                            type="textarea" :rows="4"
+                            type="textarea" :rows="5"
                             :placeholder="$t('contracts.contABIHint')"
-                            :autosize="{minRows: 4,maxRows:6}"
-                            resize="none"
-                            @blur="onchangeGetGas()">
+                            :autosize="{minRows: 5,maxRows:6}"
+                            resize="none">
                     </el-input>
                 </el-form-item>
-                <el-form-item :label="$t('contracts.selectFee')">
-                    <span class="send-slider">
-                        <fee-slider @sel="selFee" :estimateGas="gas"></fee-slider>
-                    </span>
-                </el-form-item>
             </el-form>
-            <p class="total">
-                <span class="EnergonCount">{{$t("contracts.total")}} ：{{add(newContract.value-0,sendTranscation.gas-0)}}&nbsp;Energon</span>
-                <el-button type="primary" @click="confirm" :class="[lang=='en'?'':'letterSpace']">{{$t("contracts.deploy")}}</el-button>
-                <!-- <el-button type="primary" @click="confirm" :disabled="!newContract.value">{{$t("contracts.deploy")}}</el-button> -->
+            <p class="deploy-btn">
+                <el-button type="primary" @click="confirm" :class="[lang=='en'?'':'letterSpace']" :disabled="!newContract.abi || !newContract.bin || !newContract.name">{{creating?$t("contracts.deploying"):$t("contracts.deploy")}}</el-button>
             </p>
         </div>
         <div class="modal confirm" v-if="showConfirm">
@@ -84,21 +65,21 @@
                 </div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt"><span class="bold">{{newContract.value}}</span>&nbsp;Energon</span></p>
-                        <p>From<span class="txt">{{fromW.address}}</span></p>
-                        <p>To<span class="txt">{{newContract.name}}</span></p>
+                        <p>{{$t('contracts.createCont.from')}}
+                            <span class="txt">
+                                <i :class="['trade-wallet-icon',keyObj.icon]">{{keyObj.account.slice(0,1).toUpperCase()}}</i>
+                                {{fromW.account}}
+                            </span>
+                        </p>
                         <p>{{$t("wallet.fee")}}<span class="txt"><span class="EnergonCount">{{sendTranscation.gas}}</span>&nbsp;Energon</span></p>
                     </div>
-                    <!-- 更多功能 -->
-                    <!-- <p @click="confirmShowMore=!confirmShowMore" class="more">{{$t("wallet.advance")}} <i class="el-icon-arrow-down"></i></p>
-                    <p v-if="confirmShowMore">{{newContract.input}}</p> -->
                     <p class="inputb">
                         <el-input :placeholder="$t('wallet.input')+fromW.account+$t('wallet.walletPsw')" type="password" v-model.trim="newContract.psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button class="cancel" @click="showConfirm=false">{{$t("form.cancel")}}</el-button>
-                    <el-button @click="send" type="primary" :disabled="creating">{{$t("form.submit")}}</el-button>
+                    <el-button @click="showConfirm=false" :disabled="creating">{{$t("form.cancel")}}</el-button>
+                    <el-button @click="send" type="primary" :disabled="!newContract.psw" :loading="creating">{{creating?$t("form.submiting"):$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -120,10 +101,10 @@
             return {
                 newContract:{
                     name:'',
-                    fromS:'',
                     value:0,
                     bin:'',
                     abi:'',
+                    psw:''
                 },
                 // gas:0.01,
                 wallets:[],
@@ -137,7 +118,7 @@
                 showConfirm:false,
                 confirmShowMore:false,
                 balance:0,
-                gas: null,
+                gas: 250000000,
                 gasPrice: 0,
                 // gas:null,
                 calcContract: '',
@@ -147,28 +128,51 @@
                 obj:{},
                 creating:false,
                 contByteEmpty:false,
-                address:''
+                address:'',
+                contractNameList:[],
+                keyObj:{}
             }
         },
         computed: {
-            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','lang']),
+            ...mapGetters(['network', 'WalletListGetter','curWallet','chainName','lang','contractListGetter']),
              rules(){
                 return{
-                    name:
-                        [{required: true, message: this.$t('contracts.contNameEmpty'), trigger: 'blur'},],
-                    bin:
-                        [{validator: this.checkBin, trigger: 'blur,change'}],
-                    abi:
-                        [{required: true, message: this.$t('contracts.contABIEmpty'), trigger: 'blur,change'},]
+                    name: [
+                            {required: true, message: this.$t('contracts.contNameEmpty'), trigger: 'blur'},
+                            {validator: this.checkName, trigger: 'blur,change'}
+                        ],
+                    abi: {required: true, message: this.$t('contracts.contABIEmpty'), trigger: 'blur'},
+                    bin: [
+                            {required: true, message: this.$t('contracts.contByteEmpty'), trigger: 'blur'},
+                        ],
                 }
             }
 
         },
         created(){
-            this.init();
+            this.contractListAction().then(()=>{
+                if(this.contractListGetter.length==0){
+                    this.contractNameList=[];
+                }else{
+                    this.contractNameList = this.contractListGetter.map((item)=>{
+                        return item.name
+                    });
+                }
+                this.init();
+            });
         },
         mounted(){
-
+            this.$refs.uploadBg.$el.addEventListener('click',()=>{
+                this.$nextTick(()=>{
+                    setTimeout(()=>{
+                        if(!this.newContract.bin){
+                            this.contByteEmpty = true;
+                        }else{
+                            this.contByteEmpty = false;
+                        }
+                    },1000);
+                });
+            })
         },
         watch:{
             'wallets':function(val){
@@ -176,10 +180,16 @@
                     let wallet = this.wallets[0];
                     this.fromW.account = wallet.account;
                     this.fromW.address = wallet.address;
+                    this.keyObj = this.wallets[0];
                     contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
                         this.balance =  contractService.web3.fromWei(data.toString(10), 'ether');
                         // this.balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
                     })
+                }
+            },
+            'bin':function(val){
+                if(val){
+                    this.contByteEmpty = false;
                 }
             }
         },
@@ -191,19 +201,11 @@
                 this.wallets=[];
                 this.getBalOrd().then((data)=>{
                         data.forEach((item)=>{
-                            contractService.web3.eth.getBalance(item.address,(err,data)=>{
-                                let balance = contractService.web3.fromWei(data.toString(10), 'ether');
-                                balance = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
-                                item.balance = balance;
-                                console.log(balance)
-                                if(balance>0){
-                                    item.account = item.account.length>16?(item.account.slice(0,16)+'...'):item.account;
-                                    _this.wallets.push(item);
-                                    _this.wallets.sort((a,b)=>{
-                                        return a['createTime'] - b['createTime'];
-                                    });
-                                }
-                            })
+                            item.account = item.account.length>16?(item.account.slice(0,16)+'...'):item.account;
+                            _this.wallets.push(item);
+                            _this.wallets.sort((a,b)=>{
+                                return a['createTime'] - b['createTime'];
+                            });
                         })
                     }
                 )
@@ -211,52 +213,13 @@
             add(arg1,arg2){
                 return mathService.add(arg1,arg2);
             },
-            getGas(){
-                return new Promise((resolve, reject)=>{
-                    if(this.newContract.value && this.fromW.address && this.newContract.abi){
-                        this.calcContract = contractService.web3.eth.contract(this.newContract.abi)
-                        let platONData = this.calcContract.new.getPlatONData(this.newContract.bin)
-                        contractService.web3.eth.estimateGas({
-                            "from":this.fromW.address,
-                            "data":platONData
-                            // "value": contractService.web3.toHex(this.newContract.value)
-                        },(err,data)=>{
-                            if(err){
-                                reject(err)
-                            }
-                            resolve(250000000);
-                        })
-                    }
-                });
-            },
-            onchangeGetGas(){
-                // this.getGas().then((gas)=> {
-                //     console.log(gas)
-                //     this.gas = gas;
-                //     this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*gas;
-                //     // this.showConfirm = false;
-                //     // this.newContract.psw='';
-                // }).catch((e)=>{
-                //     throw e;
-                // })
-                this.gas = 250000000;
-                this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*this.gas;
-            },
-            selFee(fee){
-                var BigNumber = require('bignumber.js');
-                this.gasPrice=contractService.web3.toWei(fee,"ether");
-                // if(this.gas){
-                //     this.sendTranscation.gas = mathService.mul(250000000,fee);
-                // }
-                this.sendTranscation.gas = mathService.mul(250000000,fee);
-                this.onchangeGetGas()
-            },
             selWallet(){
                 let fromW = this.fromW;
                 let arr = this.wallets.filter((item)=>{
                     return item.address==fromW.address;
                 });
                 this.fromW.account = arr.length>0?arr[0].account:'';
+                this.keyObj = arr.length>0?arr[0]:{};
                 contractService.web3.eth.getBalance(this.fromW.address,(err,data)=>{
                     if(err){
                         throw err;
@@ -275,25 +238,19 @@
                         console.log('abi的值为------>',this.checkAbi(this.newContract.abi))
                         console.log(/\[|\]/g.test(this.newContract.abi))
                         if(!this.checkAbi(this.newContract.abi) || !/\[|\]/g.test(this.newContract.abi)){
-                            this.$message.error(this.$t('contracts.contABIinvalid'));
+                            this.$message.warning(this.$t('contracts.contABIinvalid'));
                         }else if(this.abiList.length>0 && !this.abiList[0].hasOwnProperty('inputs') && /\[|\]/g.test(this.newContract.abi)){
-                            this.$message.error(this.$t('contracts.contABIinvalid'));
+                            this.$message.warning(this.$t('contracts.contABIinvalid'));
                             return;
                         }else if(this.newContract.bin == ''){
-                            this.$message.error(this.$t('contracts.contByteEmpty'));
+                            this.$message.warning(this.$t('contracts.contByteEmpty'));
                         }else{
-                            // this.getGas().then((gas)=> {
-                            //     this.gas = gas;
-                            //     this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*gas;
-                            //     this.showConfirm = true;
-                            //     this.newContract.psw='';
-                            // }).catch((e)=>{
-                            //     throw e;
-                            // })
-                            // this.gas = 250000000;
-                            // this.sendTranscation.gas = contractService.web3.fromWei(this.gasPrice,"ether")*this.gas;
-                            this.showConfirm = true;
-                            this.newContract.psw='';
+                            contractService.web3.eth.getGasPrice((err,gasPrice)=>{
+                                console.log('获取gasPrice--->',err,gasPrice);
+                                this.sendTranscation.gas = contractService.web3.fromWei(gasPrice,"ether")*this.gas;
+                                this.showConfirm = true;
+                                this.newContract.psw='';
+                            });
                         }
                     } else {
                         console.log('error submit!!');
@@ -331,13 +288,19 @@
             //         callback();
             //     }
             // },
+            checkName(rule, value, callback){
+                if (value === '') {
+                    callback(new Error(this.$t('contracts.contNameEmpty')));
+                } else if (this.contractNameList.indexOf(value)!==-1){
+                    callback(new Error(this.$t('contracts.contNameRepeat')));
+                } else {
+                    callback();
+                }
+            },
             getBin(file,fileList){
-                // this.file = event.target.files;
-
                 this.newContract.bin = fs.readFileSync(file.raw.path);   // 使用readFileSync转换为buffer格式
                 this.$refs.uploadbin.style.background="url("+require('./images/icon_imported_file.svg')+") no-repeat center center";
                 this.$refs.uploadBg.$children[0].$children[0].$el.style.background="#ECEFF6";
-                // this.$refs.uploadBg.style.background="#ECEFF6"
                 this.uploaded = false;
 
                 let index1=file.name.lastIndexOf(".");
@@ -366,7 +329,6 @@
                     this.newContract.abi = Abidata
                 });
                 console.log('get abi')
-                this.onchangeGetGas();
             },
             send(){
                 let _this = this;
@@ -404,18 +366,24 @@
                                 };
 
                                 this.saveTractRecord(trxobj).then(()=>{
-                                    _this.showConfirm = false;
-                                    this.obj = {}
-                                    this.creating = false;
-                                    _this.$router.push('/contract')
+                                    _this.obj = {};
+                                    _this.$message.success(this.$t('trade.transactionSent'));
+                                    setTimeout(()=>{
+                                        _this.showConfirm = false;
+                                        _this.creating = false;
+                                        _this.$router.push('/contract')
+                                    },3000);
                                 })
                                 console.log(deployResult,'---deployResult')
                             });
-                        }),err=>{
+                        }).catch((err)=>{
                             this.creating = false;
-                            this.$message.error(this.$t('contracts.deployFail'));
-                            console.log(err)
-                        }
+                            if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
+                                window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
+                            }else{
+                                this.$message.error(this.$t('contracts.deployFail'));
+                            }
+                        })
                     });
                 })
             },
@@ -428,17 +396,8 @@
                         hash:result.hash,
                         balance:'0.00',
                         abi:this.newContract.abi,
-                        icon:'contract-icon'+Math.floor((Math.random()*5)+1)
-
+                        icon:'contract-icon'+Math.floor((Math.random()*4)+1)
                     };
-                    // if(transactionId){
-                    //     Object.assign(tradeObj,{
-                    //         transactionId:transactionId,
-                    //         required:this.fromW.required,
-                    //         admin:this.fromW.adminAddress
-                    //     })
-                    // }
-
                     console.log(contObj,"开始存储")
                     this.updateContractInfo(contObj).then(()=>{
                         resolve(contObj)
@@ -452,12 +411,7 @@
                     let balance=contractService.web3.fromWei(data.toString(10), 'ether');
                     this.newContract.value = (Math.floor(Number(balance) * 100) / 100).toFixed(2);
                 });
-            },
-            // ondragstart(event){
-            //     console.log(event)
-            //     $event.preventDefault()
-            //     ipcRenderer.send('ondragstart', 'E:/WorkingData/WalletClientPc021/wallet-client-pc/src/services/demo')
-            // }
+            }
         },
         filters:{
 
@@ -478,24 +432,12 @@
         display:block;
         width:445px;
     }
-    .total{
-        position: absolute;
-        bottom:15px;
-        // width:740px;
-        width:90%;
-        height: 60px;
-        line-height:60px;
-        border-top:solid 1px #D3D8E1;
-    .el-button{
-        position:absolute;
-        right:20px;
-        top: 18px;
-    }
+    .deploy-btn{
+        margin-top:20px;
     }
     .import2{
         position: absolute;
-        top: -30px;
-        // right: 18px;
+        top: -33px;
         left: 596px;
         width: 80px;
         height: 35px;
@@ -504,16 +446,17 @@
         display: inline-block;
         width: 30px;
         height: 30px;
-        margin: 2px 5px 0 50px;
+        margin: 3px 5px 0 8px;
         background:url("./images/icon_import1.svg") no-repeat center;
+        z-index:999;
     }
     .import2-icon-text{
         width: 123px;
         height: 35px;
         background:url("./images/icon_import2.svg") no-repeat 4px;
-        font-family: PingFangHK-Regular;
+        font-family: "Chinese Quote",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
         font-size: 12px;
-        color: #18C2E9;
+        color: #0077FF;
         letter-spacing: 0.43px;
     }
     .el-upload__text{
@@ -524,10 +467,9 @@
         width:483px;
         font-size: 12px;
         .modal-content{
-            padding:12px;
+            padding:12px 0;
         .confirm-content{
             padding:14px 10px;
-            height:126px;
             background: #ECEFF6;
         p{
             color: #24272B;
@@ -549,21 +491,24 @@
         padding-left:10px;
     }
     .inputb{
-        margin:10px 10px 0;
-    .el-input{
-        width:100%;
-    }
+        padding: 0 12px;
+        margin:30px 10px 20px;
+        .el-input{
+            width:100%;
+        }
     }
     }
     .modal-btn{
         padding-top:7.5px;
         line-height:1;
         height:48.5px;
-    button{
-        width:79px;
-        height:32px;
-        font-size:12px;
-    }
+        button{
+            padding:0 20px;
+            width:auto;
+            min-width:79px;
+            height:32px;
+            font-size:12px;
+        }
     }
     }
     }
@@ -586,12 +531,45 @@
 </style>
 <style lang="less">
     .contract-new{
-    .el-textarea{
-        width:700px;
-    }
-    .el-form-item{
-        margin-bottom:14px;
-    }
+        .el-textarea{
+            width:700px;
+        }
+        .el-form-item{
+            margin-bottom:14px;
+        }
+        .el-upload-dragger .el-upload__text{
+            font-size:12px;
+        }
+        .el-upload-list__item{
+            font-size:12px;
+        }
+        .el-form-item__label{
+            font-weight: 600;
+        }
+        .el-upload-list__item-name [class^=el-icon]{
+            visibility: hidden;
+        }
+        .el-upload-list__item:first-child{
+            margin-top:14px;
+        }
+        .abi-item{
+            .el-form-item__error{
+                padding-left: 611px;
+                position: relative;
+                left: 0;
+                top: 0;
+                &:before{
+                    left:679px;
+                    top:-21px;
+                 }
+            }
+            &.en .el-form-item__error{
+                 padding-left: 550px;
+             }
+        }
+        .upload-bin.empty .el-upload-dragger{
+            border-color:#ff4949
+        }
     }
     .upload-bin,.el-upload-dragger,.el-upload{
         height: 40px;
@@ -612,14 +590,8 @@
     .el-upload-list{
         position: absolute;
         top: -5px;
-        left: 83px;
+        left: 18px;
         text-align: center;
-    }
-    .contract-new .el-form-item__error {
-        position: static;
-    }
-    .el-textarea__inner{
-        height: 52px;
     }
     .abiInput{
         resize: none;

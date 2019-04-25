@@ -17,9 +17,12 @@
                 oldNum:''
             }
         },
-        props:(['placeholder']),
+        props:(['placeholder','typeInt','inputVal']),
         computed: {
             inpNum () {
+                if(this.inputVal){
+                    this.oldNum = this.inputVal;
+                }
                 return this.oldNum
             }
         },
@@ -28,9 +31,13 @@
         },
         methods: {
             change (event) {
-                let val = event.target.value.trim();
-                // 只能是正整数或空,可根据需求修改正则
-                if (/^[0-9]+\.?\d*$|^$/.test(val) && !/^0{2,}/.test(val)) {
+                let val = event.target.value.trim(),patt;
+                if(this.typeInt){
+                    patt=new RegExp("^[1-9]+[0-9]*$|^$");
+                }else{
+                    patt=new RegExp("^[0-9]+\.?\\d*$|^$");
+                }
+                if (patt.test(val) && !/^0{2,}/.test(val)) {
                     this.oldNum = val
                 } else {
                     event.target.value = this.oldNum

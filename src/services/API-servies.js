@@ -8,6 +8,7 @@
 
 import Http from 'axios'
 import API from '@/config/API-config'
+import ContractServies from './contract-servies'
 
 Http.defaults.headers.post['Content-Type'] = "application/json;charset=utf-8";
 
@@ -28,6 +29,10 @@ class ApiService {
         this.file = {
             upload: this.uploadFile.bind(this, API.FILE.upload),//文件上传
         };
+        this.node = {
+            getCandidateTicketCount: this.post.bind(this, 'getCandidateTicketCount'),
+            getTicketCountByTxHash: this.post.bind(this, 'getTicketCountByTxHash'),
+        }
 
         this.interceptorsOfReq();
         this.interceptorsOfRes();
@@ -36,7 +41,7 @@ class ApiService {
     get(url, params) {
         if(params) {
             url += encodeParams(params);
-            url += `&sessionid=${localStorage.sessionid}&userID=${localStorage.user? JSON.parse(localStorage.user).userID :''}`;
+            // url += `&sessionid=${localStorage.sessionid}&userID=${localStorage.user? JSON.parse(localStorage.user).userID :''}`;
         }
         return Http.get(url).then(res => res.data);
     }
@@ -44,8 +49,8 @@ class ApiService {
     post(url, params) {
         typeof params === 'undefined' ? params = {} : '';
         localStorage.sessionid ? params.sessionid = localStorage.sessionid : '';
-        params.userID = localStorage.user ? JSON.parse(localStorage.user).userID : '';;
-        return Http.post(url, params).then(res => res.data);
+        // params.userID = localStorage.user ? JSON.parse(localStorage.user).userID : '';;
+        return Http.post(API.FILE_BASE+'-'+ContractServies.cid+'/api/'+url, params).then(res => res.data);
     }
 
     interceptorsOfReq() {

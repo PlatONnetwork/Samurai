@@ -1,7 +1,7 @@
 <template>
     <div class="trade-list format-style new-list">
         <div class="trade-header">
-            <span :class="[lang=='en'?'sel-en':'','wallet-sel']">
+            <span class="wallet-sel">
                 <sel-self :optionVs="wallets" :defaultSel="wallet" @back="selAWallet"></sel-self>
             </span>
             <!-- <el-select v-model="type" @change="selType">
@@ -39,7 +39,8 @@
                 numIndex:1,
                 showLoadMore:true,
                 shareTradeList:[],
-                pageSize:20
+                pageSize:20,
+                noData:false,
             }
         },
         computed:{
@@ -120,14 +121,18 @@
 </script>
 
 <style lang="less" scoped>
+
     .trade-list{
         .trade-header{
             display: flex;
+            position:relative;
+            top:-6px;
+            height:16px;
             p{
                 height: 50px;
                 line-height: 50px;
                 font-size: 16px;
-               margin-right: 15px;
+                margin-right: 15px;
             }
             .el-select{
                 margin-right:30px;
@@ -141,30 +146,23 @@
             cursor:pointer;
         }
         .trade-con{
+            margin-top:6px;
             width:100%;
-            height: calc(~"100% - 36px");
+            height: calc(~"100% - 23px");
             overflow-y: auto;
             overflow-x: hidden;
+            background-color:#fff;
+            border-radius: 4px;
         }
         .wallet-sel{
             padding-left:6px;
-            margin-top: 1px;
         }
     }
     .new-list{
-        margin-top: -74px;
         .trade-header{
             display: block;
             .wallet-sel{
                 float: left;
-                margin-left: -38px;
-            }
-        }
-    }
-    .new-list{
-        .trade-header{
-            .sel-en{
-                margin-left: -94px;
             }
         }
     }
@@ -187,11 +185,12 @@
                 background-color: transparent;
             }
         }
+        .no-data{
+            margin-top:150px;
+            font-size: 12px;
+            color: #9EABBE;
+            text-align: center;
+        }
     }
-    .no-data{
-        margin-top:150px;
-        text-align: center;
-        font-size: 12px;
-        color: #9EABBE;
-    }
+
 </style>

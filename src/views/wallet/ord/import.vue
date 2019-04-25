@@ -1,28 +1,28 @@
 <template>
     <div class="wallet-import format-style">
-        <div class="wallet-header tabs fr">
-            <span :class="{selected: curIndex == 1}"
+        <ul class="wallet-header-list clearfix">
+            <li :class="{selected: curIndex == 1}"
                    @click="toggleWay(1)">{{$t("wallet.hex")}}
-            </span>
-            <span :class="{selected: curIndex == 2}"
-                  @click="toggleWay(2)">Keystore(.json)
-            </span>
-            <span :class="{selected: curIndex == 3}"
+            </li>
+            <li :class="{selected: curIndex == 2}"
+                  @click="toggleWay(2)">{{$t('wallet.keystoreJson')}}
+            </li>
+            <li :class="{selected: curIndex == 3}"
                   @click="toggleWay(3)">{{$t("wallet.mnemonicPhrase")}}
-            </span>
-        </div>
-        <div class="clearfloat"></div>
+            </li>
+        </ul>
         <div class="card wallet-content">
             <el-form v-show="curIndex == 1"
                      ref="byPriKey"
                      :model="byPriKey"
-                     :rules="byPriKeyRule">
-                <el-form-item prop="account">
-                    <el-input :placeholder="$t('wallet.walletName')"
+                     :rules="byPriKeyRule"
+                    label-position="top">
+                <el-form-item prop="account" :label="$t('wallet.walletName')">
+                    <el-input :placeholder="$t('wallet.individualWalletName')"
                               v-model.trim="byPriKey.account">
                     </el-input>
                 </el-form-item>
-                <el-form-item prop="priKey">
+                <el-form-item prop="priKey" :label="$t('wallet.walletPrivate')" class="textarea">
                     <el-input type="textarea"
                               :placeholder="$t('wallet.inputPKHint')"
                               :rows="4"
@@ -31,39 +31,41 @@
                               v-model.trim="byPriKey.priKey">
                     </el-input>
                 </el-form-item>
-                <div class="warn">
-                    <i class="el-icon-warning"></i>{{$t("wallet.pleaseRememberPassword")}}
-                </div>
-                <el-form-item prop="password">
+                <el-form-item prop="password" :label="$t('wallet.password')" class="password">
+                    <div class="warn">
+                        <i class="el-icon-warning"></i>{{$t("wallet.pleaseRememberPassword")}}
+                    </div>
                     <el-input type="password"
                               :placeholder="$t('wallet.enterNewPsw')"
                               v-model.trim="byPriKey.password">
                     </el-input>
                 </el-form-item>
-                <el-form-item prop="passwordConfirm">
+                <el-form-item prop="passwordConfirm" :label="$t('wallet.rePsw')">
                     <el-input type="password"
                               :placeholder="$t('wallet.repeatPsw')"
                               v-model.trim="byPriKey.passwordConfirm">
                     </el-input>
                 </el-form-item>
                 <div class="ben">
-                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary"
-                               :class="[lang=='en'?'':'letterSpace','fr']"
+                               :class="[lang=='en'?'':'letterSpace','']"
                                @click="importByPriKey">{{$t("wallet.import")}}
                     </el-button>
+                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                 </div>
             </el-form>
             <el-form v-show="curIndex == 2"
                      ref="byKeyStore"
                      :model="byKeyStore"
-                     :rules="byKeyStoreRule">
-                <el-form-item prop="account">
-                    <el-input :placeholder="$t('wallet.walletName')"
+                     :rules="byKeyStoreRule"
+                     label-position="top">
+                <el-form-item prop="account" :label="$t('wallet.walletName')">
+                    <el-input :placeholder="$t('wallet.individualWalletName')"
                               v-model.trim="byKeyStore.account">
                     </el-input>
                 </el-form-item>
-                <span v-show="hasRead" class="file-box">
+                <el-form-item :label="$t('wallet.keystore')">
+                    <span v-show="hasRead" class="file-box">
                     {{$t("wallet.browse")}}
                         <input type="file"
                                class="file"
@@ -71,7 +73,9 @@
                                accept=".json"
                                @change="getFileName"/>
 
-                </span><span v-show="hasRead" class="f12">{{$t("wallet.unselectedFile")}}</span>
+                    </span>
+                    <span v-show="hasRead" class="f12">{{$t("wallet.unselectedFile")}}</span>
+                </el-form-item>
                 <el-form-item v-show="!hasRead">
                     <span class="document icon-left"></span>
                     <el-input class="input-file" disabled v-model.trim="fileName"></el-input>
@@ -79,7 +83,7 @@
                     <span class="document icon-right" @click="stop"></span>
                     <span v-show="!hasRead"  class="line"></span>
                 </el-form-item>
-                <el-form-item prop="password">
+                <el-form-item prop="password" :label="$t('wallet.password')">
                     <el-input v-model.trim="byKeyStore.password"
                               type="password"
                               onpaste="return false"
@@ -90,12 +94,12 @@
                     </el-input>
                 </el-form-item>
                 <div class="ben">
-                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary"
-                               :class="[lang=='en'?'':'letterSpace','fr']"
+                               :class="[lang=='en'?'':'letterSpace','']"
                                @click="importByKeystore">
                         {{$t("wallet.import")}}
                     </el-button>
+                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                 </div>
 
             </el-form>
@@ -103,13 +107,14 @@
             <el-form v-show="curIndex == 3"
                      ref="byAssitant"
                      :model="byAssitant"
-                     :rules="byAssitantRule">
-                <el-form-item prop="account">
-                    <el-input :placeholder="$t('wallet.walletName')"
+                     :rules="byAssitantRule"
+                     label-position="top">
+                <el-form-item prop="account" :label="$t('wallet.walletName')">
+                    <el-input :placeholder="$t('wallet.individualWalletName')"
                               v-model.trim="byAssitant.account">
                     </el-input>
                 </el-form-item>
-                <el-form-item prop="assitant">
+                <el-form-item prop="assitant" :label="$t('wallet.mnemonic')" class="textarea">
                     <el-input type="textarea"
                               :placeholder="$t('wallet.inputPhraseHint')"
                               :rows="4"
@@ -118,27 +123,27 @@
                               v-model.trim="byAssitant.assitant">
                     </el-input>
                 </el-form-item>
-                <div class="warn">
-                    <i class="el-icon-warning"></i>{{$t("wallet.pleaseRememberPassword")}}
-                </div>
-                <el-form-item prop="password">
+                <el-form-item prop="password" :label="$t('wallet.password')" class="password">
+                    <div class="warn">
+                        <i class="el-icon-warning"></i>{{$t("wallet.pleaseRememberPassword")}}
+                    </div>
                     <el-input type="password"
                               :placeholder="$t('wallet.enterNewPsw')"
                               v-model.trim="byAssitant.password">
                     </el-input>
                 </el-form-item>
-                <el-form-item prop="passwordConfirm">
+                <el-form-item prop="passwordConfirm" :label="$t('wallet.rePsw')">
                     <el-input type="password"
                               :placeholder="$t('wallet.repeatPsw')"
                               v-model.trim="byAssitant.passwordConfirm">
                     </el-input>
                 </el-form-item>
                 <div class="ben">
-                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                     <el-button type="primary"
-                               :class="[lang=='en'?'':'letterSpace','fr']"
+                               :class="[lang=='en'?'':'letterSpace','']"
                                @click="importByAssit">{{$t("wallet.import")}}
                     </el-button>
+                    <el-button @click="cancel" :class="[lang=='en'?'':'letterSpace']">{{$t("form.cancel")}}</el-button>
                 </div>
             </el-form>
         </div>
@@ -150,6 +155,8 @@
     import importByMnemonic from '@/services/by-mnemonic'
     import fsObj from '@/services/fs-service'
     import {mapGetters, mapActions} from 'vuex';
+    const EthUtil = require('ethereumjs-util');
+
     export default {
         account: "o-wallet-import",
         data() {
@@ -177,15 +184,16 @@
                     passwordConfirm: ''
 
                 },
+                allWallets:[]
             }
         },
         computed: {
             ...mapGetters(['WalletListGetter', 'network','lang']),
             byPriKeyRule(){
                 return {
-                    account:{required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
+                    account:{required: true, validator:this.checkAccount, trigger: 'blur'},
                     priKey: [
-                        {required: true, message: this.$t('wallet.PKRequired'), trigger: 'blur'},
+                        {required: true, validator:this.checkAccount, trigger: 'blur'},
                         {min: 64, max:64, message: this.$t('wallet.PKlength'),trigger: 'blur'}
                     ],
                     password:[
@@ -199,7 +207,7 @@
             },
             byKeyStoreRule(){
                 return{
-                    account:{required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
+                    account:{required: true, validator:this.checkAccount, trigger: 'blur'},
                     password:[
                         {required: true, message: this.$t('form.nonPsw'), trigger: 'blur'}
                     ]
@@ -208,7 +216,7 @@
             byAssitantRule(){
                 return{
                     account: [
-                        {required: true, message: this.$t('wallet.walletNameRequired'), trigger: 'blur'},
+                        {required: true, validator:this.checkAccount, trigger: 'blur'},
                     ],
                     assitant: [
                         {required: true, message: this.$t('wallet.PhraseRequired'), trigger: 'blur'},
@@ -223,8 +231,13 @@
                 }
             }
         },
+        created() {
+            this.getAllWallets().then(res=>{
+                this.allWallets=res
+            })
+        },
         methods: {
-            ...mapActions(['WalletListAction','updateWalletInfo']),
+            ...mapActions(['WalletListAction','updateWalletInfo','getAllWallets']),
             checkPass(rule, value, callback){
                 if (value === '') {
                     callback(new Error(this.$t('form.nonRepPsw')));
@@ -240,6 +253,18 @@
                 } else if (value !== this.byAssitant.password){
                     callback(new Error(this.$t('form.disMatch')));
                 } else {
+                    callback();
+                }
+            },
+            checkAccount(rule, value, callback){
+                if(!value){
+                    callback(new Error( this.$t('wallet.walletNameRequired')))
+                }else{
+                    this.allWallets.map(item=>{
+                        if(value==item.account){
+                            callback(new Error( this.$t('wallet.walletNameExists')))
+                        }
+                    })
                     callback();
                 }
             },
@@ -301,7 +326,6 @@
                 this.$refs['byKeyStore'].validate((valid)=>{
                     if(valid){
                         let file = document.getElementById('file').files[0];
-                        console.warn('file',file);
                         if(!file){
                             this.$message.error(this.$t('wallet.fileRequired'));
                             return;
@@ -317,7 +341,7 @@
                                 try{
                                     let dataToObj = JSON.parse(data.toString().replace(/\n\r/g,''));
                                     dataToObj.account = this.byKeyStore.account;
-                                    console.warn('dataToObj--->',dataToObj);
+                                    dataToObj.address.indexOf('0x')!==0&&( dataToObj.address='0x'+dataToObj.address)
                                     keyManager.importKey(
                                         dataToObj,
                                         this.byKeyStore.password,
@@ -378,7 +402,7 @@
                 if(flag){
                     keyObj.address = '0x'+keyObj.address.replace(/^0x/,'');
                     keyObj.createTime = new Date().getTime();
-                    keyObj.icon = 'wallet-icon'+Math.floor((Math.random()*5)+1);
+                    keyObj.icon = 'wallet-icon'+Math.floor((Math.random()*4)+1);
                     let backUpObj = JSON.parse(JSON.stringify(keyObj));
                     let type = this.network.type;
                     this.updateWalletInfo(keyObj).then(()=>{
@@ -400,29 +424,32 @@
 <style lang="less" scoped>
     .wallet-import{
         .wallet-content{
-            height: 530px;
-            margin: 10px auto;
-            padding-top: 30px;
+            height: calc(100% - 5px);
+            margin: 8px 0 0 0;
+            padding-top: 14px;
             .el-form{
-                width: 300px;
-                margin: 0 auto;
+                width: 580px;
+                margin: 0 14px ;
             }
             .el-button{
-                width:79px;
+                width:80px;
                 height:32px;
                 padding:0;
                 font-size:12px;
+            }
+            .el-button+.el-button {
+                margin-left: 40px;
             }
         }
         .file-box{
             position: relative;
             margin-right:8px;
             margin-bottom:9px;
-            width: 60px;
-            height: 24px;
-            line-height: 24px;
+            width: 76px;
+            height: 30px;
+            line-height: 30px;
             display: inline-block;
-            background: #18C2E9;
+            background: #0077FF;
             border-radius: 4px;
             text-align: center;
             font-size: 10px;
@@ -430,7 +457,7 @@
             letter-spacing: 1px;
         }
         .ben{
-            margin-top:30px;
+            margin-top:20px;
         }
         .file{
             height: 60px;
@@ -450,19 +477,19 @@
         .icon-left{
             left:14px;
             top:12px;
-            background: url("../images/icon_file.svg") no-repeat center center;
+            background: url("../images/13.icon_file.svg") no-repeat center center;
             background-size: 16px 16px;
         }
         .icon-right{
             top:12px;
-            right: 14px;
+            left: 272px;
             cursor:pointer;
             background: url("../images/icon_delete.svg") no-repeat center center;
             background-size: 16px 16px;
         }
         .icon-size{
             top:0;
-            left:224px;
+            left:234px;
             height:40px;
             line-height:40px;
             opacity: 0.5;
@@ -473,9 +500,10 @@
             width: 0;
             height: 2px;
             position: absolute;
-            top: 40px;
+            left: 0;
+            top: 39px;
             display: inline-block;
-            background: #18C2E9;;
+            background: #0077FF;
             animation: loading 3s;
             animation-fill-mode: forwards;
         }
@@ -488,22 +516,40 @@
             }
         }
         .warn{
-            margin:-2px 0 10px;
+            margin:-2px 0 0;
             font-size: 12px;
             color: #F5A623;
             white-space: nowrap;
         }
     }
-
+    .wallet-header-list{
+        >li{
+            float: left;
+            margin: 0 20px 0;
+            padding: 0 0 5px 0;
+            cursor: pointer;
+            &:hover{
+                color: #0077FF;
+            }
+            &.selected{
+                color: #0077FF;
+                border-bottom:solid 2px #0077FF;
+                /*font-weight: 600;*/
+            }
+        }
+    }
 </style>
 <style lang="less">
     .wallet-import{
+        .el-form-item__label{
+            font-weight:600;
+        }
         .el-form-item{
             margin-bottom:12px;
         }
-        .el-form-item__error{
-            position:static;
-        }
+        // .el-form-item__error{
+        //     position:static;
+        // }
         .input-file{
             .el-input__inner{
                 padding-left:43px;
@@ -521,11 +567,23 @@
             background: #fff;
         }
         .el-textarea .el-textarea__inner{
-            font-family: "Arial";
+            font-family: "Chinese Quote",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
             color: #1f2d3d;
             font-size:12px;
         }
-
+        .el-form-item.is-required .el-form-item__label:before{
+            content:'';
+        }
+        .password{
+            .el-form-item__error{
+                top:45px;
+            }
+        }
+        .textarea{
+            .el-form-item__error{
+                top:32px;
+            }
+        }
     }
 
 </style>

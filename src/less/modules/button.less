@@ -1,0 +1,48 @@
+//默认按钮
+.el-button{
+  padding:0;
+  width:79px;
+  height:32px;
+  line-height:27px;
+  font-size: 12px;
+  font-weight:600;
+  font-family: "Chinese Quote",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+.el-button.el-button--primary{
+  color: #fff;
+  border: 1px solid #0077FF;
+  &:not(.is-disabled):hover{
+    background: #4897F6;
+    border-color:#4897F6;
+  }
+  &:not(.is-disabled):active{
+    background: #0D6CDA;
+    border-color:#0D6CDA;
+  }
+  &.is-disabled{
+    color:#fff;
+    opacity: 0.5;
+    background: #0077FF;
+  }
+  &:focus{
+    background: #0D6CDA;
+  }
+}
+
+.el-button--default{
+  color: #0077FF;
+  border: 1px solid #0077FF;
+  &:hover{
+    border: 1px solid #4897F6;
+  }
+  &.is-disabled{
+    opacity: 0.5;
+    border: 1px solid #0077FF;
+    &:hover{
+      color: #0077FF;
+      opacity: 0.5;
+      border: 1px solid #0077FF;
+    }
+  }
+}
+

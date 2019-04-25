@@ -19,7 +19,8 @@ export default {
       lang:'',
       netLoading:false,   //网络切换过程过渡效果展示
       chainName:'',
-      isMax:true
+      isMax:true,
+      testMode:false
 
   },
   actions:settingAction,
