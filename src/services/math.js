@@ -5,6 +5,7 @@ import { Decimal } from 'decimal.js';
 
 Decimal.set({ toExpNeg: -99 })
 Decimal.set({ toExpPos: 99 })
+Decimal.set({ precision: 20 })
 
 export default {
 	/**

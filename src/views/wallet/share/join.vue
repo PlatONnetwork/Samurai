@@ -1,17 +1,18 @@
 <template>
     <div class="wallet-join format-style">
       <div class="card">
-          <el-form :model="newWallet" :rules="rules" ref="newWallet" class="join-form">
-              <el-form-item prop="account">
+          <el-form :model="newWallet" :rules="rules" ref="newWallet" class="join-form"
+          label-position="top">
+              <el-form-item prop="account" :label="$t('wallet.walletName')">
                   <el-input v-model.trim="newWallet.account" :placeholder="$t('wallet.sharedWalletName')"></el-input>
               </el-form-item>
-              <el-form-item prop="address">
+              <el-form-item prop="address" :label="$t('wallet.walletAddress')">
                   <el-input v-model.trim="newWallet.address" :placeholder="$t('wallet.enterSharedAddr')"></el-input>
               </el-form-item>
           </el-form>
           <p class="btn-box">
-              <el-button :class="[lang=='en'?'':'letterSpace','cancel']" @click="goBack">{{$t("form.cancel")}}</el-button>
               <el-button :class="[lang=='en'?'':'letterSpace','add']" type="primary" @click="add()">{{$t('wallet.addShare')}}</el-button>
+              <el-button :class="[lang=='en'?'':'letterSpace']" @click="goBack">{{$t("form.cancel")}}</el-button>
           </p>
       </div>
     </div>
@@ -39,6 +40,7 @@
                 //     ],
                 //     address: {validator: this.checkAddress, trigger: 'blur,change'}
                 // },
+                allWallets:[]
             }
 
         },
@@ -47,7 +49,7 @@
             rules(){
                 return{
                     account: [
-                        {required: true, message: this.$t('wallet.nonSharedName'), trigger: 'blur,change'},
+                        {required: true, validator:this.checkAccount, trigger: 'blur,change'},
                     ],
                     address: {validator: this.checkAddress, trigger: 'blur,change'}
                 }
@@ -59,14 +61,32 @@
                 this.ordWalletList = data;
             })
         },
+        created() {
+            this.getAllWallets().then(res=>{
+                this.allWallets=res
+            })
+        },
         methods: {
-            ...mapActions(['WalletListAction','updateWalletInfo','getOrd','getShare','getOrdByAddress','getWalletByAddress']),
+            ...mapActions(['WalletListAction','updateWalletInfo','getOrd','getShare','getOrdByAddress','getWalletByAddress','getAllWallets']),
             checkAddress(rule, value, callback){
                 if (value === '') {
                     callback(new Error(this.$t('wallet.nonSharedAddr')));
                 } else if (!/(0x)[0-9a-fA-F]{40}$/g.test(value)){
                     callback(new Error(this.$t('wallet.inVaildSharedAddr')));
                 } else {
+                    callback();
+                }
+            },
+            checkAccount(rule, value, callback){
+                if(!value){
+                    callback(new Error( this.$t('wallet.walletNameRequired')))
+                }else{
+
+                    this.allWallets.map(item=>{
+                        if(value==item.account){
+                            callback(new Error( this.$t('wallet.walletNameExists')))
+                        }
+                    })
                     callback();
                 }
             },
@@ -111,7 +131,7 @@
                                             address:this.newWallet.address,
                                             state:1,
                                             createTime:new Date().getTime(),
-                                            icon:'wallet-icon'+Math.floor((Math.random()*5)+1)
+                                            icon:'wallet-icon'+Math.floor((Math.random()*4)+1)
                                         };
                                         contractService.platONCall(contractService.getABI(1),this.newWallet.address,'getRequired',this.newWallet.address).then((required)=>{
                                             keyObj.required = required;
@@ -163,32 +183,46 @@
 
 <style lang="less" scoped>
     .card{
-        padding-top: 40px;
+        // padding-top: 40px;
         height:100%;
     }
     .join-form{
-        width: 300px;
-        margin: 0 auto;
+        padding-top: 14px;
+        width: 500px;
+        margin: 0 14px ;
     }
     .btn-box{
-        width: 300px;
-        margin: 30px auto 0;
-        .add{
-            float:right;
+        // width: 300px;
+        margin: 20px 14px 0;
+        // .add{
+        //     float:right;
+        // }
+        .el-button{
+            width:80px;
+            height:32px;
+            padding:0;
+            font-size:12px;
         }
+        .el-button+.el-button {
+            margin-left: 40px;
+        }
+
     }
 
 </style>
 <style lang="less">
     .wallet-join{
+        .el-form-item__label{
+            font-weight:600;
+        }
         .el-form-item{
             margin-bottom:14px;
         }
-        .el-form-item__label{
-            padding:0 12px 8px 0;
+        .el-form-item.is-required .el-form-item__label:before{
+            content:'';
         }
-        .el-form-item__error{
-            position:static;
-        }
+        // .el-form-item__error{
+        //     position:static;
+        // }
     }
 </style>

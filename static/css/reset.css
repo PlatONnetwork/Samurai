@@ -2,8 +2,10 @@ html,body{
 	margin: 0;
 	height: 100%;
 	width: 100%;
-	font-family: "微软雅黑","Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
-	font-size: 14px;
+	/*font-family: "微软雅黑","Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;*/
+	font-family: "Chinese Quote",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif!important;
+    font-size: 14px;
+    color: #24272B;
 }
 *{
     box-sizing:border-box;

@@ -1,6 +1,7 @@
 <template>
     <div class="refresh">
         <i :class="[rotate?'Rotation':'','refresh-button']" @click="refresh"></i>
+        <span class="refresh-text">{{$t('wallet.refresh')}}</span>
     </div>
 </template>
 
@@ -20,13 +21,15 @@ export default {
         ...mapGetters(['network'])
     },
     mounted() {
-        
+
     },
     methods: {
         refresh(){
             this.rotate = true;
             contractService.web3.eth.getBalance(this.parentAddress,(err,data)=>{
-                this.wBalance=contractService.web3.fromWei(data.toString(10), 'ether');
+                // this.wBalance=contractService.web3.fromWei(data.toString(10), 'ether');
+                 const {fromWei,toDecimal}=contractService.web3
+                this.wBalance=fromWei(toDecimal(data), 'ether');
                 if(this.wBalance){
                     setTimeout(()=>{
                         this.rotate = false;
@@ -39,7 +42,7 @@ export default {
             });
             // this.$emit('refreshBalance',this.wBalance);
         },
-        
+
     },
     filters:{
 
@@ -54,16 +57,22 @@ export default {
 
 <style lang="less" scoped>
     .refresh{
-        display:inline-block;
+        display: flex;
+        // display:inline-block;
+        flex-direction: column;
     }
     .refresh-button{
+        margin: 0 auto;
         display:inline-block;
-        width:14px;
-        height:14px;
+        width:23px;
+        height:23px;
         vertical-align: middle;
         cursor:pointer;
-        background: url("./images/controls.svg") no-repeat center center;
-        background-size: contain;
+        background: url("./images/refresh.svg") no-repeat center center;
+        background-size: 20px 20px;
+    }
+    .refresh-text{
+        padding: 8px 0 0;
     }
     @keyframes rotation{
         from {-webkit-transform: rotate(0deg);}

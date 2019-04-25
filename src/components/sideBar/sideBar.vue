@@ -1,10 +1,12 @@
 <template>
     <div class="side-bar">
        <el-menu class="menu" default-active="1" @select="handleSelect">
-               <el-menu-item v-for="(item, index) in menu" :style="{color: item.icon? 'inherint': '#fff',opacity:item.parent?'1':'0.6'}"
-                        @click.native="changeRoute(item.path)" :index="index + ''" :key='index' disabled >
-                   <i v-if="item.icon" class="iconfont" :class="item.icon"></i> {{item.name}}
-               </el-menu-item>
+            <el-menu-item v-for="(item, index) in menu"
+                    :key='index'
+                    :style="{color: item.icon? 'inherint': '#24272B',opacity:item.parent?'1':'0.6',pointerEvents:item.parent?'none':'auto',fontWeight:item.parent?'600':'normal'}"
+                    @click.native="changeRoute(item.path)" :index="index + ''">
+                    <i v-if="item.icon" class="iconfont" :class="item.icon"></i> {{$t(item.name)}}
+            </el-menu-item>
        </el-menu>
     </div>
 </template>
@@ -23,29 +25,33 @@
             ...mapGetters(['lang']),
             menu:function(){
                 return [{
-                    name: this.$t('sideBar.main'),
+                    name: 'sideBar.main',
                     icon: '',
                     path:'/home',
                     parent:true
                 }, {
-                    name: this.$t('sideBar.wallet'),
+                    name: 'sideBar.wallet',
                     icon: 'icon-wallet',
                     path: '/o-wallet-list'
+                }, {
+                    name: 'sideBar.send',
+                    icon: 'icon-send',
+                    path: '/o-wallet-send'
                 },{
-                    name: this.$t('sideBar.trade'),
+                    name: 'sideBar.trade',
                     icon: 'icon-trade',
                     path: '/trade-list'
                 },{
-                    name: this.$t('sideBar.contract'),
+                    name: 'sideBar.contract',
                     icon: 'icon-contract',
                     path: '/contract'
                  },{
-                    name: this.$t('sideBar.application'),
+                    name: 'sideBar.application',
                     icon: '',
                     path:'',
                     parent:true
                  },{
-                    name: this.$t('sideBar.validatorNode'),
+                    name: 'sideBar.validatorNode',
                     icon: 'icon_vote',
                     path:'/validator-node',
                 },
@@ -82,13 +88,15 @@
                 this.$router.push(path);
             },
             handleSelect(key) {
-                if(key==8 && this.lang=='zh-cn'){
+                if(key==9 && this.lang=='zh-cn'){
                     // 中文wiki
-                    this.openUrl('https://github.com/PlatONnetwork/wiki/wiki/%5BChinese-Simplified%5D-Samurai-%E9%92%B1%E5%8C%85')
+                    // this.openUrl('https://github.com/PlatONnetwork/wiki/wiki/%5BChinese-Simplified%5D-Samurai-%E9%92%B1%E5%8C%85')
+                    this.openUrl('https://developer.platon.network/#/?lang=zh')
                 }
-                else if(key==8 && this.lang=='en'){
+                else if(key==9 && this.lang=='en'){
                     // 英文文wiki
-                    this.openUrl('https://github.com/PlatONnetwork/wiki/wiki/%5BEnglish%5D-Samurai-Wallet')
+                    // this.openUrl('https://github.com/PlatONnetwork/wiki/wiki/%5BEnglish%5D-Samurai-Wallet')
+                    this.openUrl('https://developer.platon.network/#/?lang=en')
                 }
             },
             openUrl(url){
@@ -102,9 +110,9 @@
 <style lang="less" scoped>
     .side-bar{
         width: 100%;
-        .menu{
-            background-color: #071649;
-        }
+        // .menu{
+        //     background-color: #071649;
+        // }
         .icon{
             display:block;
             width:100%;
@@ -134,31 +142,38 @@
             padding-left:28.5px;
             background: url("./images/icon_vote.svg") no-repeat left center;
         }
+        .icon-send{
+            padding-left:28.5px;
+            background: url("./images/icon_Send.svg") no-repeat left center;
+        }
     }
 
 </style>
 <style lang="less">
     .side-bar{
         .el-menu{
-            background: #071649;
+            background: #fff;
+        }
+        .is-active{
+            font-weight:600!important;
         }
         .el-menu-item{
             height: 40px;
             line-height: 40px;
             font-size: 12px;
-            color:#fff;
-            opacity:0.6;
+            color:#9EABBE;
+            opacity:1!important;
             border-left: 2px solid transparent;
             &:hover{
-                background: #182858;
+                background: #ECF1F8;
             }
         }
         .el-menu-item.is-active {
             opacity:1!important;
-            color: #fff;
-            background: #112561;
-            border-left: 2px solid #23C8EF;
-
+            color: #24272B;
+            background: #ECF1F8;
+            border-left: 2px solid #0077FF;
+            font-weight:600;
         }
     }
 </style>

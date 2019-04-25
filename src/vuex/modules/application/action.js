@@ -6,7 +6,8 @@ const fileNameQuit='nodeQuitList.json';
 var Http = require('axios');
 var APIConfig = require('@/config/API-config');
 import fs from 'fs';
-
+import MathService from '@/services/math';
+import Vue from 'vue';
 export const appAction = {
     getCityByIp({state,commit,rootState},ip){
         return new Promise((resolve, reject)=>{
@@ -30,10 +31,15 @@ export const appAction = {
     //获取节点竞选列表
     candidateList(){
         return new Promise((resolve, reject)=>{
-            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'CandidateList',contractService.appContractAddress,[]).then((data)=>{
-                let arr=[];
+            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetCandidateList',contractService.appContractAddress,[]).then((data)=>{
+                let arr=[],concatArr=[];
                 try{
-                    arr = JSON.parse(data);
+                    concatArr = JSON.parse(data);
+                    let v = JSON.parse(JSON.stringify(data))
+                    console.log('concatArr---',JSON.stringify(v));
+                    let a = concatArr[0]?concatArr[0]:[];
+                    let b = concatArr[1]?concatArr[1]:[];
+                    arr = a.concat(b);
                     arr.sort(function(a,b){
                         if(a.Deposit==b.Deposit){
                             return a.blockNumber - b.blockNumber;
@@ -63,11 +69,160 @@ export const appAction = {
                     });
                     resolve(arr);
                 }catch(e){
-                    console.log(e)
+                    console.log(e);
                     resolve([])
                 }
             })
         });
+    },
+    //获取节点竞选列表--排序
+    getCandidateListByGroup({state,commit,dispatch}){
+        return new Promise((resolve, reject)=>{
+            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetCandidateList',contractService.appContractAddress,[]).then((data)=>{
+                console.warn('定位1',data)
+                let arr = JSON.parse(data),count=0;
+                // console.log(arr);
+                arr.forEach((item,index)=>{
+                    count++;
+                    dispatch('getTPrice',{list:item,idx:index}).then((tItem)=>{
+                        console.warn('定位2',count,arr.length)
+                        Vue.set(arr,index,tItem);
+                        if(count==arr.length){
+                            dispatch('getOutNodes').then((outNodes)=>{
+                                console.warn('定位3',outNodes)
+                                let concatData = arr[0].concat(outNodes).concat(arr[1]),count2=0;
+                                if(concatData.length>0){
+                                    concatData.forEach((item,index)=>{
+                                        count2++;
+                                        let Extra;
+                                        try {
+                                            Extra = JSON.parse(item.Extra);
+                                            if(Extra && Extra.nodePortrait){
+                                                if(isNaN(Extra.nodePortrait)){
+                                                    let rdNumber = Math.floor(Math.random()*(42-1+1)+1);
+                                                    Extra.nodePortrait = rdNumber<10?'0'+rdNumber:rdNumber;
+                                                }else{
+                                                    Extra.nodePortrait = Number(Extra.nodePortrait)<10?'0'+Number(Extra.nodePortrait):Number(Extra.nodePortrait);
+                                                }
+                                            }else{
+                                                let rdNumber = Math.floor(Math.random()*(42-1+1)+1);
+                                                Extra.nodePortrait = rdNumber<10?'0'+rdNumber:rdNumber;
+                                            }
+                                            item.Extra = JSON.parse(JSON.stringify(Extra));
+                                        }
+                                        catch(err) {
+                                            console.log('catch extra----',err);
+                                        }
+                                        finally {
+                                            console.log('count----',count2,concatData.length);
+                                            console.log('concatData-----',concatData);
+                                            if(count2==concatData.length){
+                                                resolve(concatData);
+                                            }
+                                        }
+                                    });
+                                }else{
+                                    resolve([])
+                                }
+                            });
+                        }
+                    })
+                });
+            })
+        })
+    },
+    //获取不在候选池的验证节点
+    getOutNodes({state,commit,dispatch}){
+        return new Promise((resolve, reject)=>{
+            dispatch('verifiersNodeList').then((verList)=>{
+                console.log('verList----',verList);
+                if(verList.length==0){
+                    resolve([])
+                }else{
+                    dispatch('candidateList').then((nodeList)=>{
+                        console.log('nodeList----',nodeList);
+                        if(nodeList.length==0){
+                            resolve(verList)
+                        }else{
+                            let cidList = nodeList.map((item)=>{
+                                    return item.CandidateId
+                                }),outList;
+                            outList = verList.filter((a)=>{
+                                return cidList.indexOf(a.CandidateId)==-1
+                            });
+                            outList.forEach((o)=>{
+                                o.outSideNode = true;  //外部节点标识
+                                o.ticketsCount = 0;   //掉榜的节点有效票数为0
+                                o.verNode = true;
+                            });
+                            resolve(outList);
+                        }
+                    })
+                }
+            })
+        })
+    },
+    //获取得票总价
+    getTPrice({state,commit,dispatch},obj){
+        return new Promise((resolve, reject)=>{
+            let arr = obj.list;
+            if(arr.length==0){
+                resolve([]);
+            }
+            let idArr = arr.map((item)=>{
+                return item.CandidateId
+            });
+            contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetTicketPrice',contractService.voteContractAddress).then((ticketPrice)=>{
+               let tPrice = contractService.web3.fromWei(ticketPrice,"ether");
+                dispatch('GetBatchCandidateTicketIds',idArr).then((tCountList)=>{
+                    // console.log('tCountList-------',tCountList);
+                    let count=0;
+                    arr.forEach((a)=>{
+                        count++;
+                        if(obj.idx==0){
+                            // 判断节点是否是提名节点 true是提名节点
+                            a.allowed = true;
+                        }else if(obj.idx==1){
+                            a.allowed = false;
+                        }
+                        if(tCountList && tCountList[a.CandidateId]){
+                            a.ticketsCount = tCountList[a.CandidateId];
+                            // 投票的钱
+                            a.voteDep = MathService.mul(tPrice,a.ticketsCount)-0;
+                            // 质押金+投票的钱
+                            a.totalDep = MathService.add(contractService.web3.fromWei(a.Deposit,"ether")-0,a.voteDep)-0;
+                        }else{
+                            a.ticketsCount = 0;
+                            a.voteDep = 0;
+                            a.totalDep = contractService.web3.fromWei(a.Deposit,"ether")-0
+                        }
+                        if(count==arr.length){
+                            arr.sort(function(a,b){
+                                return (b.totalDep-a.totalDep) || (a.BlockNumber-b.BlockNumber);
+                            });
+                            resolve(arr);
+                        }
+                    })
+                })
+            })
+        })
+    },
+
+    //获取候选节点ID列表
+    getCandidateList({state,commit,dispatch}){
+        return new Promise((resolve, reject)=>{
+            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetCandidateList',contractService.appContractAddress,[]).then((data)=>{
+                let arr = JSON.parse(data)[0];
+                if(arr.length>0){
+                    let arrIds = arr.map((item)=>{
+                        return item.CandidateId
+                    });
+                    resolve(arrIds);
+                }else{
+                    resolve([])
+                }
+            })
+        })
     },
     //获取某一个候选节点的排序
     getRanking({state,commit,rootState,dispatch},nodeId){
@@ -75,8 +230,9 @@ export const appAction = {
             dispatch('candidateList').then((list)=>{
                 if(list.length>0){
                     let CandidateIdArr = list.map((item)=>{
-                        return item.CandidateId.replace(/^0x/,'');
+                        return item.CandidateId&&item.CandidateId.replace(/^0x/,'');
                     });
+                    console.log('CandidateIdArr---',CandidateIdArr);
                     if(CandidateIdArr.indexOf(nodeId.replace(/^0x/,''))==-1){
                         resolve(null);
                     }else{
@@ -92,12 +248,21 @@ export const appAction = {
     isExits({state,commit,rootState,dispatch},obj){
         return new Promise((resolve, reject)=>{
             dispatch('candidateList').then((list)=>{
-                let exitArr = list.filter((item)=>{
-                    let id1 = item.CandidateId.replace(/^0x/,'');
-                    let id2 = obj.CandidateId.replace(/^0x/,'');
-                    return id1==id2 || `${item.Host}:${item.Port}`==obj.host
+                let exitUrlArr = list.filter((item)=>{
+                    return `${item.Host}:${item.Port}`==obj.host
                 });
-                resolve(exitArr.length>0)
+                let exitIDArr = list.filter((item)=>{
+                    let id1 = item.CandidateId?item.CandidateId.replace(/^0x/,''):'';
+                    let id2 = obj.CandidateId.replace(/^0x/,'');
+                    return id1==id2;
+                });
+                if(exitUrlArr.length>0){
+                    resolve(1)
+                }else if(exitIDArr.length>0){
+                    resolve(2)
+                }else{
+                    resolve(0)
+                }
             })
         });
     },
@@ -105,20 +270,25 @@ export const appAction = {
     getDepositList({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
             dispatch('candidateList').then((data)=>{
-                let arr=[];
+                console.log('candidateList--',data);
                 if(data.length>0){
-                    data.forEach((item)=>{
-                        arr.push(item.Deposit)
+                    data.map((item)=>{
+                        item.Deposit = contractService.web3.toWei(item.Deposit,"ether");
                     });
-                    arr.sort(function(a,b){
-                        return b-a
+                    dispatch('getTPrice',{list:data,idx:0}).then((vList)=>{
+                        // 返回包含竞选金额的节点列表
+                        resolve(vList);
+                        // let arr = vList.map((a)=>{
+                        //     return a.totalDep
+                        // });
+                        // arr.sort(function(a,b){
+                        //     return b-a
+                        // });
+                        // resolve(arr);
                     });
-                    resolve(arr);
                 }else{
                     resolve([])
                 }
-
-                // resolve(arr);
             })
         });
     },
@@ -192,9 +362,13 @@ export const appAction = {
     },
     getNodeDetail({state,commit,rootState},obj){
         return new Promise((resolve, reject)=>{
-            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'CandidateDetails',obj.Owner,[obj.nodeId]).then((data)=>{
+            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetCandidateDetails',obj.Owner,[obj.nodeId]).then((data)=>{
                 try{
-                    let obj = JSON.parse(data);
+                    let res = JSON.parse(data),obj;
+                    if(res && res.length>0){
+                        obj = res[0]
+                    }
+                    console.log('obj----->',obj);
                     try{
                         obj.Extra = obj.Extra?JSON.parse(obj.Extra):{};
                     }catch(e){
@@ -207,10 +381,10 @@ export const appAction = {
             })
         })
     },
-    // 获取参与当前共识的验证人列表
+    // 获取参与当前共识的验证人的节点ID列表
     verifiersList(){
         return new Promise((resolve, reject)=>{
-            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'VerifiersList',contractService.appContractAddress,[]).then((data)=>{
+            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetVerifiersList',contractService.appContractAddress,[]).then((data)=>{
                 console.log('verifiersList--->',data);
                 try{
                     let arr = JSON.parse(data);
@@ -219,6 +393,44 @@ export const appAction = {
                     }else{
                         const map1 = arr.map(x => x.CandidateId);
                         resolve(map1);
+                    }
+                }catch(e){
+                    resolve([])
+                }
+            })
+        });
+    },
+    // 获取参与当前共识的验证人列表
+    verifiersNodeList(){
+        return new Promise((resolve, reject)=>{
+            console.log('platon call-----','verifiersNodeList');
+            contractService.platONCall(contractService.getABI(2),contractService.appContractAddress,'GetVerifiersList',contractService.appContractAddress,[]).then((data)=>{
+                console.log('verifiersList--->',data);
+                try{
+                    let arr = JSON.parse(data);
+                    if(arr.length==0){
+                        resolve([])
+                    }else{
+                        arr.forEach((item,index)=>{
+                            item.Deposit = contractService.web3.fromWei(item.Deposit,"ether");
+                            try{
+                                item.Extra = JSON.parse(item.Extra);
+                            }catch(e){
+                                item.Extra = {};
+                            }
+                            if(item.Extra && item.Extra.nodePortrait){
+                                if(isNaN(item.Extra.nodePortrait)){
+                                    let rdNumber = Math.floor(Math.random()*(42-1+1)+1);
+                                    item.Extra.nodePortrait = rdNumber<10?'0'+rdNumber:rdNumber;
+                                }else{
+                                    item.Extra.nodePortrait = Number(item.Extra.nodePortrait)<10?'0'+Number(item.Extra.nodePortrait):Number(item.Extra.nodePortrait);
+                                }
+                            }else{
+                                let rdNumber = Math.floor(Math.random()*(42-1+1)+1);
+                                item.Extra.nodePortrait = rdNumber<10?'0'+rdNumber:rdNumber;
+                            }
+                        });
+                        resolve(arr);
                     }
                 }catch(e){
                     resolve([])
@@ -363,9 +575,7 @@ export const appAction = {
                 walletCate = 'custom_'+rootState.setting.chainName;
             }
             quitArr = retData[walletCate] || [];
-            console.log('quitArr-----',quitArr);
             dispatch('candidateList').then((candidateList)=>{
-                console.log('candidateList---',candidateList)
                 let curNodeArr = candidateList.filter((item)=>{
                     return item.CandidateId==nodeId
                 });
@@ -389,6 +599,7 @@ export const appAction = {
     updateJoinNode({state,commit},node){
         state.joinNode = node;
     },
+    //获取最新一条增持、减持质押、退出竞选的交易
     getLastStake({state,commit,dispatch,rootState},type){
         return new Promise((resolve, reject)=>{
             dispatch('getOrdTradeList').then((tradeList)=>{

@@ -752,7 +752,7 @@ export default {
 		confirm: '确定',
 		cancel: '取消'
 	},
-	//orders开始 >>>>>
+	//orders开始
 	//orderType
 	MARKET: 'Market',
 	LIMIT: 'LIMIT',

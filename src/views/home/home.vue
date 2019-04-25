@@ -1,28 +1,42 @@
 <template>
     <div class="wrapper">
-        <div class="left">
-            <div class="logo" style="-webkit-app-region: drag">
-                <!-- Samurai -->
-                <span class="lang"  style="-webkit-app-region: no-drag" @click="changeL">{{lang=='zh-cn'?'中':'EN'}}</span>
+        <div class="container">
+            <div class="left">
+                <div class="logo" style="-webkit-app-region: drag">
+                    <!-- Samurai -->
+                    <span class="lang"  style="-webkit-app-region: no-drag" @click="changeL">{{lang=='zh-cn'?'中':'EN'}}</span>
+                </div>
+                <side-bar></side-bar>
+                <node-sync></node-sync>
+                <span class="net-name" v-if="network && network.type">{{network.type=='custom'?chainName:(network.type=='test'?'':(network.type.slice(0,1).toUpperCase()+network.type.slice(1)))+' Testnet'}}</span>
             </div>
-            <side-bar></side-bar>
-            <node-sync></node-sync>
-            <span class="net-name">{{network.type=='custom'?chainName:(network.type.toUpperCase()+'-NET')}}</span>
-        </div>
-        <div class="right">
-            <v-header>
+            <div class="right">
+                <v-header>
                 <span v-if="headR" class="felx-box">
                     <span class="header icon-back" v-if="flag==='child'" style="-webkit-app-region: no-drag;cursor: pointer;" @click="goBack"></span>
                     <span v-if="path=='/o-wallet-accept'" class="accept">{{title | PathName}}-</span>
-                    <sel-self :optionVs="WalletListGetter" :defaultSel="curWallet" style="-webkit-app-region: no-drag"  @back="selAWallet"></sel-self>
+                    <sel-self @filterWallet="filterWallet" :optionVs="path=='/o-wallet-details'?WalletListGetter:filterShareWallet" :defaultSel="curWallet" style="-webkit-app-region: no-drag"  @back="selAWallet"></sel-self>
                 </span>
-                <span v-else>
+                    <span v-else>
                     <span class="header icon-back" v-if="flag=== 'child'" style="-webkit-app-region: no-drag;cursor: pointer;" @click="goBack"></span>
                     <span class="header dark-black">{{title | PathName}}</span>
-                    <span v-if="path=='/vote-detail'" class="accept">-{{nodeName}}</span>
+                    <span v-if="path=='/vote-detail'" class="accept normal"> - {{nodeName}}</span>
                 </span>
-            </v-header>
-            <router-view></router-view>
+                </v-header>
+                <router-view></router-view>
+                <div class="autpupdater-content" v-if="showAutpupdater">
+                    <p class="autpupdater-title">{{$t('settings.note')}}
+                        <i class="icon-close" @click="showAutpupdater=0"></i>
+                    </p>
+                    <div class="text-content" v-if="showAutpupdater==1">
+                        <span>{{$t('settings.hasUpdate')}}</span>
+                        <el-button type="primary" @click="downloadUpdate" :disabled="disabled">{{$t("settings.updater")}}</el-button>
+                    </div>
+                    <p v-if="showAutpupdater==2">{{$t('settings.noUpdate')}}</p>
+                    <p v-if="showAutpupdater==3">{{percent}}%</p>
+                    <p v-if="showAutpupdater==4">{{updateInfo}}</p>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -36,6 +50,7 @@
     import Settings from '@/services/setting'
     import selSelf from '@/components/select';
     import contractService from '@/services/contract-servies';
+    import { ipcRenderer } from "electron";
 
     export default {
         name: "home",
@@ -51,14 +66,18 @@
                 headR:false,
                 path:'',
                 title:'',
+                filterShareWallet:[],
+                showAutpupdater:0,
+                downloadPath:''
             }
         },
         computed: {
-            ...mapGetters(['network','lang','WalletListGetter','curWallet','chainName','nodeState','nodeName'])
+            ...mapGetters(['network','lang','WalletListGetter','curWallet','chainName','nodeState','nodeName','shareWalletList'])
         },
         watch: {
           $route: function (n, o) {
               // this.title = this.$t(n.name);
+              console.log(n);
               this.path = n.path;
               this.title = n.name;
               this.flag = n.meta.flag;
@@ -72,12 +91,27 @@
               this.WalletListAction(val.type);
           }
         },
+        beforeRouteEnter(to, from, next){
+            nodeManager.getSystemPath().then(()=>{
+                next();
+            });
+        },
         created(){
             // this.title = this.$t(this.$route.name);
             this.title = this.$route.name;
             this.flag = this.$route.meta.flag;
         },
         mounted(){
+            window.addEventListener("online",()=> {
+                this.$message.success(this.$t('wallet.networkConnection'));
+            });
+
+            window.addEventListener("offline",()=> {
+                this.$message.error(this.$t('wallet.networkTimeout'))
+            });
+
+            this.$root.$on('checkUpdateVersion',this.checkUpdate)
+            this.filterShareWallet = this.shareWalletList;
             if(this.nodeState==2)return;
             Settings.init().then(()=>{
                 let localType = Settings.loadUserData('type');
@@ -86,7 +120,7 @@
                 let chainName = Settings.loadUserData('chainName');
                 if(localType=='custom'&&localPort){
                     nodeManager.startNode(chainName,localPort);
-                }else if(localType=='main' || localType=='test'){
+                }else if(localType=='amigo' || localType=='batalla' || localType=='test' || localType=='innerdev'){
                     //todo  后续注释掉
                     // contractService.setProvider('http://10.10.8.209:6789','http').then(()=>{
                     //     this.updateState(2);
@@ -109,6 +143,7 @@
                     })
                 }
             });
+
         },
         methods: {
             ...mapActions(['WalletListAction','changeLang','updateCurWallet','updateState','updateNetSetting']),
@@ -128,6 +163,47 @@
             selAWallet(data){
                 console.warn('selAWallet--->',data);
             },
+            filterWallet(){
+                this.filterShareWallet = this.shareWalletList.filter((item)=>{
+                    return item.processWidth == 100;
+                });
+            },
+            openUrl(url){
+                const shell = require('electron').shell;
+                shell.openExternal(url);
+            },
+            checkUpdate(){
+                console.log('checkUpdateVersion')
+                ipcRenderer.send("checkForUpdate");
+                ipcRenderer.on("message", (event, data) => {
+                    console.log("message",event, data);
+                    this.showAutpupdater=4;
+                    this.updateInfo=data.msg
+                });
+
+                ipcRenderer.on("isUpdateNow", (event,data) => {
+                    console.log(event,data)
+                    this.showAutpupdater=1
+                    // this.downloadPath=`http://192.168.9.85:10080/tools/${data.data.path}`
+                    this.downloadPath=`https://download.platon.network/0.6/${data.data.path}`
+                });
+                ipcRenderer.on("noUpdateNow", (event,data) => {
+                    console.log(event,data)
+                    this.showAutpupdater=2
+                    this.downloadPath=''
+                });
+            },
+            downloadUpdate(){
+                // this.showAutpupdater=3
+                // ipcRenderer.send("downloadUpdate");
+                // ipcRenderer.on("downloadProgress", (event, progressObj) => {
+                //     console.log("downloadProgress",progressObj);
+                //     this.percent=progressObj.percent.toString().substr(0,3)
+                //     this.disabled=true
+                // });
+                this.showAutpupdater=0
+                this.openUrl(this.downloadPath)
+            }
         },
     }
 </script>
@@ -135,21 +211,40 @@
 <style lang="less" scoped>
     @mainColor: #112561;
     .wrapper{
+        padding:4px;
         height:100%;
-        display: flex;
+        &:before{
+             content: '';
+             position: fixed;
+             top: 4px;
+             left: 4px;
+             z-index: 9;
+             width: calc(~"100% - 8px");
+             height: calc(~"100% - 8px");
+             box-shadow: 0 0 5px 2px rgba(203,210,221,0.5);
+         }
+         .container{
+             position:relative;
+             z-index: 99;
+             display: flex;
+             height:100%;
+             overflow:hidden;
+         }
         .left{
-            position:relative;
+            position: relative;
             width: 180px;
+            min-width:180px;
             height: auto;
-            background-color: #071649;
+            background: #fff;
             .logo{
                 width: 100%;
-                height: 63px;
+                height: 60px;
                 box-sizing: border-box;
                 padding:21px 0 21px 49px;
                 color:#fff;
                 font-size:15px;
-                background: url("./images/logoSide.svg") no-repeat 21px 19px @mainColor;
+                border-bottom: 1px solid #ECF1F8;
+                background: url("./images/logoSide.svg") no-repeat 21px 19px;
             }
             .lang{
                 float:right;
@@ -158,32 +253,46 @@
                 height:20px;
                 line-height:20px;
                 text-align:center;
-                background: #18C2E9;
+                background: #0077FF;
                 border-radius: 4px;
                 font-size:12px;
                 cursor:pointer;
             }
             .net-name{
                 position:absolute;
-                left:50%;
-                transform: translatex(-50%);
-                bottom:20px;
-                padding:0 16.5px;
-                max-width:96px;
-                height:28px;
-                line-height:28px;
-                color:#fff;
-                font-size:12px;
-                border: 1px solid #EA106E;
-                border-radius: 4px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+                // left:50%;
+                // transform: translatex(-50%);
+                bottom:0;
+                // padding:0 16.5px;
+                width: 100%;
+                height:30px;
+                line-height:30px;
+                color:#24272B;
+                font-size: 11px;
+                // border: 1px solid #EA106E;
+                // border-radius: 4px;
+                // overflow: hidden;
+                // text-overflow: ellipsis;
+                // white-space: nowrap;
+                background: #D3D8E1;
+                text-align: center;
+                padding: 0 16px;
             }
+        }
+        .net-name:before{
+            content: "";
+            background: url("./images/4.icon_network.svg") no-repeat center 1px;
+            width: 14px;
+            height: 18px;
+            background-size: 14px 14px;
+            display: inline-block;
+            vertical-align: middle;
+
         }
         .right{
             flex: 1;
-            background-color: #f8fafd;
+            background: #F3F8FF;
+            overflow-x:hidden;
             .header{
                 float: left;
                 display: inline-block;
@@ -208,6 +317,44 @@
     .accept{
         position:relative;
         top:7px;
+    }
+    .normal{
+        margin-left:5px;
+        font-weight:normal;
+    }
+    .autpupdater-content{
+        position: absolute;
+        bottom: 6.4%;
+        right: 1.4%;
+        width: 390px;
+        background: #ECF1F8;
+        box-shadow: 0 1px 6px 0 rgba(82,87,104,0.10);
+        border-radius: 4px;
+        padding: 10px 15px;
+        .el-button{
+            width: 60px;
+            height: 24px;
+            line-height: 24px;
+            font-size: 10px;
+            // margin: -8px 0 0 0;
+        }
+        .icon-close{
+            position:absolute;
+            top:5px;
+            right:7px;
+            width:9px;
+            height:9px;
+            cursor:pointer;
+            background: url("./images/close.svg") no-repeat center center;
+            background-size: contain;
+        }
+        .text-content{
+            display: flex;
+            justify-content: space-between;
+        }
+    }
+    .autpupdater-title{
+        padding: 0 0 6px 0;
     }
 
 </style>

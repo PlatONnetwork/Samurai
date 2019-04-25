@@ -12,7 +12,7 @@
 				},
 				{
 					"name": "fee",
-					"type": "uint64"
+					"type": "uint32"
 				},
 				{
 					"name": "host",
@@ -26,7 +26,6 @@
 					"name": "extra",
 					"type": "string"
 				}
-				
 			],
 			"outputs": [
 				{
@@ -47,8 +46,7 @@
 				{
 					"name": "withdraw",
 					"type": "uint256"
-				}
-				
+				}				
 			],
 			"outputs": [
 				{
@@ -98,7 +96,7 @@
 			"type": "function"
 	},
 	{
-			"name": "CandidateWithdrawInfos",
+			"name": "GetCandidateWithdrawInfos",
 			"inputs": [
 				{
 					"name": "nodeId",
@@ -115,13 +113,12 @@
 			"type": "function"
 	},
 	{
-			"name": "CandidateDetails",
+			"name": "GetCandidateDetails",
 			"inputs": [
 				{
-					"name": "nodeId",
+					"name": "nodeIds",
 					"type": "string"
 				}
-				
 			],
 			"outputs": [
 				{
@@ -133,7 +130,7 @@
 			"type": "function"
 	},
 	{
-			"name": "CandidateList",
+			"name": "GetCandidateList",
 			"inputs": [],
 			"outputs": [
 				{
@@ -145,7 +142,7 @@
 			"type": "function"
 	},
 	{
-			"name": "VerifiersList",
+			"name": "GetVerifiersList",
 			"inputs": [],
 			"outputs": [
 				{

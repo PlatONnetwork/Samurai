@@ -60,12 +60,27 @@ class ContractServies {
 		this.isConnected = false; //连接状态
         this.calcContract = '';
         this.appContractAddress='0x1000000000000000000000000000000000000001';
-        this.voteContractAddress='0x100000000000000000000000000000000000002';
+        this.voteContractAddress='0x1000000000000000000000000000000000000002';
+        this.cid='';
 	}
-
+    /**
+     * 获取链ID
+     */
+    getCid(){
+        return new Promise((resolve, reject)=>{
+            this.web3.version.getNetwork((err,res)=>{
+                if (err) {
+                    reject(err);
+                }else{
+                    this.cid = res;
+                    resolve(res);
+                }
+            })
+        });
+    }
     /**
      * 根据不同场景获取ABI
-     * @param type  1,共享钱包合约
+     * @param type  1,共享钱包合约;2,候选人合约;3,投票合约
      */
 	getABI(type){
         let filePath=this.getFilePath();
@@ -78,7 +93,7 @@ class ContractServies {
                 return JSON.parse(fs.readFileSync(`${filePath}/candidateConstract.json`,'utf8'));
                 break;
             case 3:
-                return JSON.parse(fs.readFileSync(`${filePath}/noteConstract.json`,'utf8'));
+                return JSON.parse(fs.readFileSync(`${filePath}/ticketContract.json`,'utf8'));
                 break;
         }
     }
@@ -105,6 +120,7 @@ class ContractServies {
                     // const ipcNode = '\\\\.\\pipe\\platon.ipc';
                     const web3 = new Web3(new Web3.providers.IpcProvider(ipcNode, client));
                     this.web3 = web3;
+                    this.getCid();
                     this.isConnected = true;
                     // this.calcContract = this.web3.eth.contract(DEFAULT_ABI);
                     resolve();
@@ -117,6 +133,7 @@ class ContractServies {
                 try {
                     // console.warn('url-->',url);
                     this.web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+                    this.getCid();
                     // this.initRegisterContract();
                     // console.warn(this.web3.eth.blockNumber);
                     this.isConnected = this.web3.isConnected();
@@ -177,12 +194,12 @@ class ContractServies {
 				};
 				console.warn(params);
 				let tx = new Tx(params);
-				// console.log('tx-->', tx);
+				console.log('tx-->', tx);
 				tx.sign(privateKey);
-
 				let serializedTx = tx.serialize();
+                console.log('serializedTx-->', serializedTx);
 				this.calcContract.deploy('0x' + serializedTx.toString('hex'),(err, myContract)=>{
-					// console.log('myContract', myContract, err);
+					console.log('myContract', myContract, err);
                     if(!err){
                         resolve({hash:myContract.transactionHash});
                     }else{
@@ -248,10 +265,7 @@ class ContractServies {
                         if(!err){
                             resolve({hash:hash});
                         }else{
-                            if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
-                                window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
-                            }
-                            reject({err:err});
+                            reject(err);
                         }
                     }else{
                         if (!err){
@@ -270,9 +284,6 @@ class ContractServies {
                                 }
                             })
                         }else {
-                            if(err.toString().indexOf('insufficient funds for gas * price + value')!==-1){
-                                window.vueVm.$message.warning(window.vueVm.$i18n.t('wallet.cannotTrans2'));
-                            }
                             reject(err);
                         }
                     }
@@ -285,13 +296,13 @@ class ContractServies {
     /**
      * 合约call调用
      * @param ABI  合约ABI
-     * @param contractAddress
+     * @param contractAddress  合约地址
      * @param funName  要调用的方法名
      * @param _from  发起方
      * @param params  funName的入参
      */
     platONCall(ABI,contractAddress,funName,_from,params) {
-        console.log('--platONCall --', ABI,contractAddress,funName,_from,params);
+        console.warn('--platONCall --', ABI,contractAddress,funName,_from,params);
         return new Promise((resolve, reject)=>{
             params = params?params:[];
             const MyContract = this.web3.eth.contract(ABI);
@@ -299,11 +310,11 @@ class ContractServies {
             console.log('--platONCall start--', contract);
             if (!contract) throw new Error(`contract 不能为空`);
             const data = contract[funName].getPlatONData(...params);
-            // console.log({
-            //     from: _from,
-            //     to: contractAddress,
-            //     data: data
-            // });
+            console.log({
+                from: _from,
+                to: contractAddress,
+                data: data
+            });
             this.web3.eth.call({
                 from: _from,
                 to: contractAddress,
@@ -355,7 +366,8 @@ class ContractServies {
                 // gasPrice:'0x'+((gasPrice).toString(16)),
                 gasPrice:this.web3.toHex(gasPrice),
                 to: to,//接受方地址或者合约地址
-                value: '0x'+((value).toString(16)),
+                // value: '0x'+((value).toString(16)),
+                value: this.web3.toHex(value),
                 data: '0xc9880000000000000000'
             };
             try{
@@ -459,8 +471,6 @@ class ContractServies {
         })
     }
 
-
-
     getTransactionByHash(ABI,contractAddress,hash,fn){
         const MyContract = this.web3.eth.contract(ABI);
         const myContractInstance = MyContract.at(contractAddress);
@@ -485,7 +495,7 @@ class ContractServies {
     getFilePath=() =>{
         // return "C:\\Users\\yann_liang\\AppData\\Local\\Programs\\console\\platon_exe"
         const app = require('electron').remote.app;
-        return process.env.NODE_ENV === 'development' ? 'src/services/demo1' : path.join(app.getPath('exe'), '..', '/demo1');
+        return process.env.NODE_ENV === 'development' ? 'src/services/buildInContract' : path.join(app.getPath('exe'), '..', '/buildInContract');
     }
 
 

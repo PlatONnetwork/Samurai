@@ -4,7 +4,7 @@ import fsObj from '@/services/fs-service';
 const fileName='voteList.json';
 var jsSHA = require("jssha");
 import mathService from '@/services/math';
-
+import APIService from '@/services/API-servies';
 
 
 import fs from 'fs';
@@ -57,7 +57,7 @@ export const voteAction = {
         })
 
     },
-    //获取我的投票记录--票ID列表
+    //获取我的投票记录--投票hash列表
     getMyVoteList({state,commit,rootState,dispatch}){
         return new Promise((resolve, reject)=>{
             let type = rootState.setting.network.type;
@@ -72,21 +72,25 @@ export const voteAction = {
                     }
                     let voteList = retData[walletCate];
                     if(voteList && voteList.length>0){
-                        let ticketIds = [],count=0;
-                        voteList.forEach((vote)=>{
-                            dispatch('buildTicketId',vote.txHash).then((ticketId)=>{
-                                console.log('buildTicketId---,cb');
-                                count++;
-                                console.log('ticketId----',ticketId);
-                                if(ticketId){
-                                    ticketIds = ticketIds.concat(ticketId)
-                                }
-                                console.log(count,voteList);
-                                if(count == voteList.length){
-                                    resolve(ticketIds)
-                                }
-                            })
+                        let ticketIds = voteList.map((v)=>{
+                            return v.txHash;
                         });
+                        resolve(ticketIds);
+                        // let ticketIds = [],count=0;
+                        // voteList.forEach((vote)=>{
+                        //     dispatch('buildTicketId',vote.txHash).then((ticketId)=>{
+                        //         console.log('buildTicketId---,cb');
+                        //         count++;
+                        //         console.log('ticketId----',ticketId);
+                        //         if(ticketId){
+                        //             ticketIds = ticketIds.concat(ticketId)
+                        //         }
+                        //         console.log(count,voteList);
+                        //         if(count == voteList.length){
+                        //             resolve(ticketIds)
+                        //         }
+                        //     })
+                        // });
                     }else{
                         resolve([])
                     }
@@ -152,10 +156,13 @@ export const voteAction = {
             let data = fs.readFileSync(`${Settings.userDataPath}${fileName}`,'utf8');
             if(data){
                 let retData = JSON.parse(data)[type] || [];
-                console.log(retData);
+                console.log('retData----->',retData,nodeID);
                 let node = retData.filter((item)=>{
+                    console.log('CandidateId----->',item.CandidateId,item.CandidateId.replace(/^0x/,''));
+                    console.log('nodeID----->',nodeID,nodeID.replace(/^0x/,''));
                     return item.CandidateId.replace(/^0x/,'') == nodeID.replace(/^0x/,'');
                 });
+                console.log('node----->',node);
                 if(node.length>0){
                     resolve(node[0]);
                 }else{
@@ -167,17 +174,30 @@ export const voteAction = {
     //批量获取指定候选人的选票Id的列表
     GetBatchCandidateTicketIds({state,commit,rootState,dispatch},ids){
         return new Promise((resolve, reject)=>{
-            contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetBatchCandidateTicketIds',contractService.voteContractAddress,[ids.join(':')]).then((ticketList)=>{
-                if(ticketList){
-                    try{
-                        let list = JSON.parse(ticketList);
-                        resolve(list);
-                    }catch(e){
-                        console.log('批量获取指定候选人的选票Id的列表失败---',e);
-                        resolve(null)
-                    }
+            let netType = rootState.setting.network.type;
+            APIService.node.getCandidateTicketCount({
+                // "cid":netType=='test'?"203":netType=='amigo'?"103":netType=='batalla'?"104":netType=='innerdev'?"204":'',
+                "cid":contractService.cid,
+                "nodeIds":ids
+            }).then((data)=>{
+                console.log('getCandidateTicketCount------',data);
+                if(data.code==0){
+                    resolve(data.data);
+                }else{
+                    resolve(null)
                 }
             })
+            // contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetBatchCandidateTicketIds',contractService.voteContractAddress,[ids.join(':')]).then((ticketList)=>{
+            //     if(ticketList){
+            //         try{
+            //             let list = JSON.parse(ticketList);
+            //             resolve(list);
+            //         }catch(e){
+            //             console.log('批量获取指定候选人的选票Id的列表失败---',e);
+            //             resolve(null)
+            //         }
+            //     }
+            // })
         })
     },
     //计算选票收益

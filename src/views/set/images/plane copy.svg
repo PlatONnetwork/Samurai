@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="30px" height="30px" viewBox="0 0 30 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.1 (67048) - http://www.bohemiancoding.com/sketch -->
+    <title>plane copy</title>
+    <desc>Created with Sketch.</desc>
+    <g id="plane-copy" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="plane" transform="translate(1.000000, 1.000000)">
+            <circle id="Oval" stroke="#0077FF" stroke-width="0.588235294" cx="14" cy="14" r="14"></circle>
+            <g id="飞机" transform="translate(5.157895, 7.073684)" fill="#4897F6" fill-rule="nonzero">
+                <path d="M14.3230263,12.7857908 L7.79605263,10.7937658 L6.10460526,10.3066503 L0,8.47897729 L17.6842105,0.0158411533 L14.3230263,12.7857908 Z M6.33684211,13.8444064 L6.33684211,10.3316306 L8.48618421,10.941515 L6.33684211,13.8444064 Z" id="Shape"></path>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -15,22 +15,19 @@
                     <p class="danger" v-if="valueNull">{{$t('application.stakeAmountNull')}}</p>
                     <span class="send-txt">{{$t("wallet.wantTo")}} <span class="send-val"><span class="bold">{{payForm.value || 0}}</span>&nbsp;Energon</span></span>
                 </el-form-item>
-                <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.maximumAmount')}}</span><span class="value-txt"><span class="bold">{{depositList.length>0?depositList[0]:(node?node.Deposit:'')}}</span>&nbsp;Energon</span></p>
-                <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.minimumAmount')}}</span><span class="value-txt"><span class="bold">{{depositList.length>0?depositList[depositList.length-1]:(node?node.Deposit:'')}}</span>&nbsp;Energon</span></p>
-                <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.totalAmount')}}</span><span class="value-txt"><span class="bold">{{totalDep}}</span>&nbsp;Energon</span></p>
-                <p><span :class="[lang=='en'?'label-txt-en':'label-txt-cn','label-txt']">{{$t('application.expectedRanking')}}</span><span class="value-txt">{{ranking}}</span></p>
-                <el-form-item  :label="$t('wallet.selectFee')">
-                   <span class="send-slider">
-                       <fee-slider @sel="selFee"  :estimateGas="gas"></fee-slider>
-                   </span>
-                </el-form-item>
-                <p class="btn-box">
-                    <span>{{$t('application.pay')}}：{{total}} Energon</span>
-                    <span class="btns">
-                       <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']"@click="back">{{$t('form.cancel')}}</el-button>
+                <p class="tip">{{$t('application.inCannotBeLess')}}</p>
+                <p><span>{{$t('application.maximumAmount')}}</span>&nbsp;&nbsp;<span class="value-txt"><span class="bold">{{depositList.length>0?depositList[0]:(node?node.Deposit:'')}}</span>&nbsp;Energon</span></p>
+                <p><span>{{$t('application.minimumAmount')}}</span>&nbsp;&nbsp;<span class="value-txt"><span class="bold">{{depositList.length>0?depositList[depositList.length-1]:(node?node.Deposit:'')}}</span>&nbsp;Energon</span></p>
+                <p class="marT30"><span>{{$t('application.totalAmount')}}</span>&nbsp;&nbsp;<span class="value-txt"><span class="bold">{{totalDep}}</span>&nbsp;Energon</span></p>
+                <p><span>{{$t('application.expectedRanking')}}</span>&nbsp;&nbsp;<span class="value-txt bold">{{ranking}}</span></p>
+                <div class="btn-box">
+                    <p class="stake">{{$t('application.stake2')}}</p>
+                    <p class="value">{{payForm.value || 0}} Energon</p>
+                    <p class="btns">
                         <el-button :class="[lang=='zh-cn'?'letterSpace':'']" type="primary" @click="submit" :disabled="!payForm.value">{{$t('form.submit')}}</el-button>
-                    </span>
-                </p>
+                        <el-button :class="[lang=='zh-cn'?'letterSpace':'']"@click="back">{{$t('form.cancel')}}</el-button>
+                    </p>
+                </div>
             </el-form>
         </div>
 
@@ -42,18 +39,22 @@
                 </div>
                 <div class="modal-content">
                     <div class="confirm-content">
-                        <p>{{$t("wallet.amount")}}<span class="txt">{{payForm.value}} Energon</span></p>
-                        <p>From<span class="txt">{{payForm.payWallet}}</span></p>
-                        <p>To<span class="txt">{{contractAddress}}</span></p>
+                        <p>{{$t("application.staked2")}}<span class="txt">{{payForm.value}} Energon</span></p>
+                        <p>{{$t("application.payWallet2")}}
+                            <span class="txt">
+                                <i :class="['trade-wallet-icon',fromWallet.icon]">{{fromWallet.account.slice(0,1).toUpperCase()}}</i>
+                                {{fromWallet.account || payForm.payWallet}}
+                            </span>
+                        </p>
                         <p>{{$t("wallet.fee")}}<span class="txt">{{payForm.fee}} Energon</span></p>
                     </div>
                     <p class="inputb">
-                        <el-input  :disabled="handleLoading" :placeholder="$t('wallet.input')+fromWallet.account+' '+$t('wallet.walletPsw')" type="password" v-model.trim="payForm.psw"></el-input>
+                        <el-input  :disabled="handleLoading" :placeholder="$t('wallet.input')+fromWallet.account+$t('wallet.walletPsw')" type="password" v-model.trim="payForm.psw"></el-input>
                     </p>
                 </div>
                 <div class="modal-btn">
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'','cancel']" @click="showConfirm=false" :disabled="handleLoading">{{$t("form.cancel")}}</el-button>
-                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :loading="handleLoading">{{$t("form.submit")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="showConfirm=false" :disabled="handleLoading">{{$t("form.cancel")}}</el-button>
+                    <el-button :class="[lang=='zh-cn'?'letterSpace':'']" @click="send" type="primary" :loading="handleLoading || !payForm.psw">{{$t("form.submit")}}</el-button>
                 </div>
             </div>
         </div>
@@ -87,7 +88,7 @@
                 depositList:[],
                 ranking:'-',
                 totalDep:0,
-                gas:'',
+                gas:2000000,
                 gasPrice:'',
                 valueNull:false,
                 total:0,
@@ -101,6 +102,8 @@
         },
         mounted(){
             this.node = this.$route.query;
+            this.payForm.value=mathService.mul(this.node.Deposit,0.1);
+            this.getRanking();
             this.getBalOrd(this.node.CandidateId).then((list)=>{
                 if(list.length==0) return;
                 this.wallets = list;
@@ -114,7 +117,6 @@
                 }else{
                     this.ranking = 1;
                 }
-                this.totalDep = this.node.Deposit;
                 this.depositList = data;
                 this.remaining = this.node.Deposit;
                 this.total = (this.payForm.value-0)+this.payForm.fee;
@@ -126,12 +128,6 @@
                 this.getWalletByAddress(this.payForm.payWallet).then((wallet)=>{
                     this.fromWallet = wallet;
                 })
-            },
-            selFee(data){
-                this.gasPrice=data;
-                if(this.gas){
-                    this.payForm.fee = mathService.mul(this.gas,this.gasPrice);
-                }
             },
             back(){
                 this.$router.back();
@@ -159,52 +155,19 @@
                     this.getRanking();
                 });
             },
-            getGas(){
-                return new Promise((resolve, reject)=>{
-                    resolve(2000000);
-                    // try{
-                    //     const MyContract = contractService.web3.eth.contract(contractService.getABI(2));
-                    //     const myContractInstance = MyContract.at(contractService.appContractAddress);
-                    //     let Extra = contractService.web3.toHex(this.node.Extra);
-                    //     let params=[this.node.CandidateId,this.node.Owner,this.node.Fee,this.node.Host,this.node.Port,Extra];
-                    //     console.log('params',params);
-                    //     const platOnData = myContractInstance['CandidateDeposit'].getPlatONData(...params);
-                    //     console.log('platOnData',platOnData);
-                    //     console.log(JSON.stringify({
-                    //         "from":this.payForm.payWallet,
-                    //         "to":contractService.appContractAddress,
-                    //         "data":platOnData,
-                    //         "value":contractService.web3.toHex(contractService.web3.toWei(this.payForm.value,'ether'))
-                    //     }));
-                    //     contractService.web3.eth.estimateGas({
-                    //         "from":this.payForm.payWallet,
-                    //         "to":contractService.appContractAddress,
-                    //         "data":platOnData,
-                    //         "value":contractService.web3.toHex(contractService.web3.toWei(this.payForm.value,'ether'))
-                    //         // "value":Number(contractService.web3.toWei(this.payForm.value,'ether'))
-                    //     },(err,data)=>{
-                    //         console.log('估算gas--->',err,data);
-                    //         if(err){
-                    //             reject(err)
-                    //         }
-                    //         resolve(data);
-                    //     })
-                    // }catch(e){
-                    //     console.log(e)
-                    // }
-
-                });
-            },
             getRanking(val){
-                if(val.length>20){
+                console.log('getRanking----');
+                if(val && val.length>20){
                     const now=val.substring(0,20)
                     val=now
                     this.payForm.value=now
                     this.payFormInputKey=Math.random()
                     this.payFormInputFocus=true
                 }
+                console.log('getRanking--2222--',this.node.Deposit,this.payForm.value);
                 this.valueNull = false;
                 this.totalDep = (this.node.Deposit-0)+(this.payForm.value-0);
+                console.log('this.totalDep-----',this.totalDep);
                 let arr = JSON.parse(JSON.stringify(this.depositList));
                 arr.push(this.totalDep);
                 arr.sort((a,b)=>{
@@ -214,16 +177,12 @@
             },
             changeVal(){
                 if(!this.payForm.value || this.payForm.value==0){
-                    this.payForm.value=null;
-                    this.valueNull = true;
+                    this.payForm.value=mathService.mul(this.node.Deposit,0.1);
+                }else if(Number(this.payForm.value) < Number(mathService.mul(this.node.Deposit,0.1))){
+                    this.payForm.value = mathService.mul(this.node.Deposit,0.1);
                 }else{
                     this.valueNull = false;
                     this.total = (this.payForm.value-0)+this.payForm.fee;
-                    this.getGas().then((gas)=>{
-                        this.gas = gas;
-                    }).catch((e)=>{
-                        // this.$message.error('估算gas值失败')
-                    });
                 }
             },
             send(){
@@ -248,7 +207,9 @@
                             from:this.payForm.payWallet,
                             to:contractService.appContractAddress,
                             type:'increaseStake',
-                            state:0
+                            state:0,
+                            nodeId:this.node.CandidateId,
+                            nodeName:this.node.Extra.nodeName
                         };
                         console.log('increaseStake-----tradeObj---->',tradeObj);
                         this.saveTractRecord(tradeObj).then(()=>{
@@ -313,6 +274,16 @@
             margin:0;
             line-height: 14px;
         }
+        p.tip{
+            margin:10px 0 0;
+            padding-bottom:14px;
+            font-size: 12px;
+            color: #9EABBE;
+            border-bottom:solid 1px #D3D8E1;
+        }
+        .marT30{
+            margin-top:30px;
+        }
         .label-txt{
             display: inline-block;
             color: #525768;
@@ -336,18 +307,19 @@
             bottom:1px;
             margin:0;
             width:calc(~"100% - 40px");
-            height:60px;
-            line-height:60px;
-            border-top:solid 1px #D3D8E1;
             font-size: 14px;
             color: #24272B;
-            font-weight:600;
+            .value{
+                margin-top:10px;
+                color: #120000;
+                font-weight:600;
+            }
             .btns{
-                position:absolute;
-                right:40px;
-                top:0;
+                margin:14px 0 0;
+                padding:14px 0;
+                border-top:solid 1px #D3D8E1;
                 .el-button{
-                    margin-left:40px;
+                    margin-right:30px;
                 }
             }
         }

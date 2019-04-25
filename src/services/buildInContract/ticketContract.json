@@ -4,7 +4,7 @@
 			"inputs": [
 				{
 					"name": "count",
-					"type": "uint64"
+					"type": "uint32"
 				},
 				{
 					"name": "price",
@@ -25,61 +25,27 @@
 			"type": "function"
 	},
 	{
-			"name": "GetTicketDetail",
-			"inputs": [
-				{
-					"name": "ticketId",
-					"type": "string"
-				}	
-			],
-			"outputs": [
-				{
-					"name": "",
-					"type": "string"
-				}
-			],
-			"constant": "true",
-			"type": "function"
-	},
-	{
-			"name": "GetBatchTicketDetail",
-			"inputs": [
-				{
-					"name": "ticketIds",
-					"type": "string"
-				}
-			],
-			"outputs": [
-				{
-					"name": "",
-					"type": "string"
-				}
-			],
-			"constant": "true",
-			"type": "function"
-	},
-	{
-			"name": "GetCandidateTicketIds",
-			"inputs": [
-				{
-					"name": "nodeId",
-					"type": "string"
-				}
-			],
-			"outputs": [
-				{
-					"name": "",
-					"type": "string"
-				}
-			],
-			"constant": "true",
-			"type": "function"
-	},
-	{
-			"name": "GetBatchCandidateTicketIds",
+			"name": "GetCandidateTicketCount",
 			"inputs": [
 				{
 					"name": "nodeIds",
+					"type": "string"
+				}
+			],
+			"outputs": [
+				{
+					"name": "",
+					"type": "string"
+				}
+			],
+			"constant": "true",
+			"type": "function"
+	},
+	{
+			"name": "GetTicketCountByTxHash",
+			"inputs": [
+				{
+					"name": "txHashs",
 					"type": "string"
 				}
 			],

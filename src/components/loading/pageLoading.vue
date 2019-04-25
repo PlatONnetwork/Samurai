@@ -1,8 +1,5 @@
 <template>
-    <div class="modal" v-if="pageLoading">
-        <!-- <div class="modal-main" style="background-color: transparent">
-            <i class="el-icon-loading" style="font-size:80px;"></i>
-        </div> -->
+    <div v-if="pageLoading" class="page-loading">
         <div class="loading">
             <span></span>
             <span></span>
@@ -10,7 +7,9 @@
             <span></span>
             <span></span>
         </div>
+        <p class="load-txt">{{loadTxt}}</p>
     </div>
+
 </template>
 
 <script>
@@ -25,6 +24,7 @@
         computed:{
             ...mapGetters(['pageLoading'])
         },
+        props:(['loadTxt']),
         methods: {
 
 
@@ -33,21 +33,26 @@
 </script>
 
 <style lang="less" scoped>
+    .page-loading{
+        text-align: center;
+        color: #9EABBE;
+    }
+    .load-txt{
+        margin-top:20px;
+    }
     .loading{
-        width: 80px;
+        margin-top:100px;
+        width: 100%;
         height: 40px;
-        margin-top:300px;
-        margin-left: 500px;
-        // margin: 300 auto 0 550px;
-        /* background: #800080 */
+        text-align: center;
     }
     .loading span{
         display: inline-block;
         width: 8px;
         height: 100%;
         border-radius: 4px;
-        background: #FFFFFF;
-        -webkit-animation: load 1s ease infinite;
+        background:  #9EABBE;
+        -webkit-animation: load 0.75s ease infinite;
     }
     @-webkit-keyframes load{
         0% {

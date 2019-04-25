@@ -10,39 +10,44 @@ let specifyPath = ATPPath
 // let mnemonic = "normal dune pole key case cradle unfold require tornado mercy hospital buyer"
 
 const importByMnemonic =function(account,keyWord,password, cb){
-    let ks = lightwallet.keystore;
-    if(!ks.isSeedValid(keyWord)){
-        cb(1,null);
-        return;
-    }
-    ks.createVault({
-        password: password,
-        seedPhrase: keyWord,
-        hdPathString: specifyPath
-    }, function (err, ks) {
-        if (err) {
-            console.log("!!!err:"+err);
-        }else{
-            console.log("ks is:\n"+JSON.stringify(ks));
+    try{
+        let ks = lightwallet.keystore;
+        if(!ks.isSeedValid(keyWord)){
+            cb(1,null);
+            return;
         }
-        ks.keyFromPassword(password, function (err, pwDerivedKey) {
-            if (err) console.log("!!!err:"+err);
-            ks.generateNewAddress(pwDerivedKey, 1);
-            var addr = ks.getAddresses();
-            var privateKey = ks.exportPrivateKey(addr[0], pwDerivedKey);
-            console.log("Address:" + addr[0]);
-            console.log("PrivateKey:" + privateKey);
-            exportPrivitekeyToJson(privateKey,account,password,(data) => {
-                if(data){
-                    cb(0,data)
-                }else{
-                    cb(1,null)
-                }
+        ks.createVault({
+            password: password,
+            seedPhrase: keyWord,
+            hdPathString: specifyPath
+        }, function (err, ks) {
+            if (err) {
+                console.log("!!!err:"+err);
+            }else{
+                console.log("ks is:\n"+JSON.stringify(ks));
+            }
+            ks.keyFromPassword(password, function (err, pwDerivedKey) {
+                if (err) console.log("!!!err:"+err);
+                ks.generateNewAddress(pwDerivedKey, 1);
+                var addr = ks.getAddresses();
+                var privateKey = ks.exportPrivateKey(addr[0], pwDerivedKey);
+                console.log("Address:" + addr[0]);
+                console.log("PrivateKey:" + privateKey);
+                exportPrivitekeyToJson(privateKey,account,password,(data) => {
+                    if(data){
+                        cb(0,data)
+                    }else{
+                        cb(1,null)
+                    }
+
+                });
 
             });
-
         });
-    });
+    }catch(e){
+        cb(1,null);
+    }
+
 }
 
 function exportPrivitekeyToJson(privateKey,account,password,cb){
