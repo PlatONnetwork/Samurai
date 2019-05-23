@@ -237,7 +237,7 @@
             })
         },
         methods: {
-            ...mapActions(['WalletListAction','updateWalletInfo','getAllWallets']),
+            ...mapActions(['WalletListAction','updateWalletInfo','getAllWallets','updateWalletType']),
             checkPass(rule, value, callback){
                 if (value === '') {
                     callback(new Error(this.$t('form.nonRepPsw')));
@@ -407,6 +407,7 @@
                     let type = this.network.type;
                     this.updateWalletInfo(keyObj).then(()=>{
                         fsObj.saveKey(backUpObj.address,JSON.stringify(backUpObj));
+                        this.updateWalletType(1);
                         this.WalletListAction(type);
                         this.$message.success(this.$t('wallet.importSuccess'));
                         this.hasRead = true;

@@ -29,8 +29,8 @@
                             <p :class="[lang=='en'?'en-btn':'cn-btn','btn btn-db']" style="-webkit-app-region: no-drag">
                                 <el-button @click="next(1)" :loading="connectLoading&&netType=='amigo'" :disabled="connectLoading&&netType!='amigo'">{{$t("settings.joiningNet1")}}</el-button>
                                 <el-button @click="next(2)" :loading="connectLoading&&netType=='batalla'" :disabled="connectLoading&&netType!='batalla'">{{$t("settings.joiningNet2")}}</el-button>
-                     <!--           <el-button v-if="testMode" @click="next(4)" :loading="connectLoading&&netType=='test'" :disabled="connectLoading&&netType!='test'">{{$t("settings.joiningNet3")}}</el-button>
-                                <el-button v-if="testMode" @click="next(5)" :loading="connectLoading&&netType=='innerdev'" :disabled="connectLoading&&netType!='innerdev'">{{$t("settings.joiningNet4")}}</el-button>-->
+                                <el-button v-if="testMode" @click="next(4)" :loading="connectLoading&&netType=='test'" :disabled="connectLoading&&netType!='test'">{{$t("settings.joiningNet3")}}</el-button>
+                                <el-button v-if="testMode" @click="next(5)" :loading="connectLoading&&netType=='innerdev'" :disabled="connectLoading&&netType!='innerdev'">{{$t("settings.joiningNet4")}}</el-button>
                             </p>
                         </li>
                         <li @click="selNet('custom')" :class="[netType=='custom'?'active':'','private']">
@@ -78,6 +78,7 @@
     import Settings from '@/services/setting'
     import { ipcRenderer } from 'electron';
     import { url } from 'inspector';
+    let os = require('os');
 
     export default {
         name: 'landing-page',
@@ -88,6 +89,7 @@
                 loadCompolete:false,
                 fromPath:'',
                 connectLoading:false,
+                testMode:false,
                 // isBig: true,
                 // bg:"url('./images/bj.png')"
             }
@@ -98,7 +100,7 @@
         },
         //计算
         computed: {
-            ...mapGetters(['initialUse','network','chainName','isMaximized','testMode','lang','nodeState'])
+            ...mapGetters(['initialUse','network','chainName','isMaximized','lang','nodeState'])
         },
         beforeRouteEnter(to, from, next){
             nodeManager.getSystemPath().then(()=>{
@@ -157,6 +159,7 @@
                 this.changeWindow(this.isMaximized)
             },
             init(){
+                console.log('homedir',os.homedir());
                 let localType,localIp = Settings.loadUserData('ip'),localPort,chainName;
                 if(this.fromPath=='/setting'){
                     let query = this.$route.query;
@@ -245,6 +248,10 @@
         },
         //生命周期函数
         mounted() {
+            const userPath = os.homedir().replace(/\\/g,'/')+'/';
+            if(fs.existsSync(`${userPath}platon_test_mode.json`)){
+                this.testMode = true;
+            }
             Settings.init().then(()=>{
                 this.init();
             })
@@ -507,12 +514,12 @@
              }
         }
     }
-    /*.test-mode.net-list{
+    .test-mode.net-list{
         margin-top: 6px;
         li{
             height:472px;
         }
-    }*/
+    }
     .btn-box{
         margin-top:80px;
         text-align:center;

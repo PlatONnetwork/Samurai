@@ -151,7 +151,7 @@ class nodeManager {
                 console.log('startMainNode',chainName);
                 let _this = this,
                     userDataPath = Settings.userDataPath+'net_custom/';
-                let innertime=chainName=='test'?'--innertime 1555467771154':''
+                let innertime=chainName=='test'?'--innertime 1558339355000':''
                 console.warn('cwd--->', _this.getExePath());
                 // var nodeProc = spawn.exec(`platon -identity "${chainName}" --rpc --datadir ${userDataPath}chain/${chainName} --port 16789 --rpcport ${port} --rpcapi "db,eth,net,web3,miner,admin,personal" --rpcaddr 0.0.0.0 --verbosity 0  --gcmode=archive console \n`, {
                 var nodeProc = spawn.exec(`\.${nodePath.sep}platon -identity "${chainName}" --rpc --datadir "${userDataPath}chain/${chainName}" --port 26793 --rpcport ${port} --rpcapi "db,eth,net,web3,miner,admin,personal" --rpcaddr 0.0.0.0 --verbosity 0 ${innertime} --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5 --gcmode=archive console \n`, {
@@ -264,7 +264,7 @@ class nodeManager {
                         userDataPath = Settings.userDataPath+'net_'+type+'/',
                         nodeId = this.getTestNode(),
                         net= type=='amigo'?'testnet':type=='batalla'?'betanet':type=='test'?'innertestnet':type=='innerdev'?'innerdevnet':'';
-                    let innertime=type=='test'?'--innertime 1555467771154':''
+                    let innertime=type=='test'?'--innertime 1558339355000':''
                     console.log('nodeId', nodeId, _this.getExePath());
                     var conncetProc = spawn.exec(`\.${nodePath.sep}platon -identity "platon" --rpc --datadir "${userDataPath}data" --rpcaddr 0.0.0.0 --port 26793 --rpcport 7793 --rpcapi "db,eth,net,web3,miner,admin,personal" --verbosity 0 ${innertime} --miner.etherbase 0x1b8d5ee48ef3eb772f32f45908935210930a3ee5  --${net} --gcmode=archive --wasmlog wasm.log console \n`, {
                         cwd: _this.getExePath(),

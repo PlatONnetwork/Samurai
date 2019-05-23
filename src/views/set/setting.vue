@@ -5,8 +5,8 @@
            <el-option value="main" :label="$t('settings.mainNet')" :disabled="true"></el-option>
            <el-option value="amigo" :label="$t('settings.testNet')"></el-option>
            <el-option value="batalla" :label="$t('settings.bataNet')"></el-option>
-           <!--<el-option v-if="testMode" value="test" :label="$t('settings.innerNet')"></el-option>-->
-           <!--<el-option v-if="testMode" value="innerdev" :label="$t('settings.innerdevNet')"></el-option>-->
+           <el-option v-if="testMode" value="test" :label="$t('settings.innerNet')"></el-option>
+           <el-option v-if="testMode" value="innerdev" :label="$t('settings.innerdevNet')"></el-option>
            <el-option v-for="custom in customs" :label="custom.name" :value="'custom_'+custom.name"></el-option>
            <el-option value="创建私有链" :label="$t('settings.priNet')"></el-option>
        </el-select>
@@ -73,7 +73,8 @@
                 percent:'0.00',
                 updateInfo:'',
                 version:packageJson.build.buildVersion,
-                downloadPath:''
+                downloadPath:'',
+                testMode:false
             }
         },
         //数组或对象，用于接收来自父组件的数据
@@ -82,7 +83,7 @@
         },
         //计算
         computed: {
-            ...mapGetters(['network','lang','netLoading','chainName','testMode']),
+            ...mapGetters(['network','lang','netLoading','chainName']),
             updateDisabled(){
                 const bool=/win/.test(os.platform())
                 return !bool
@@ -251,6 +252,10 @@
 
         },
         mounted() {
+            const userPath = os.homedir().replace(/\\/g,'/')+'/';
+            if(fs.existsSync(`${userPath}platon_test_mode.json`)){
+                this.testMode = true;
+            }
             this.netType = (this.network.type=='custom')?'custom_'+this.chainName:this.network.type;
             this.language =this.lang;
             // this.currentPath = this.network.type=='custom'?`${Settings.keyPath}${this.chainName}/keystore`:Settings.keyPath;

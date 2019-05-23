@@ -10,6 +10,8 @@ import Http from 'axios'
 import API from '@/config/API-config'
 import ContractServies from './contract-servies'
 
+import store from '@/vuex/store'
+
 Http.defaults.headers.post['Content-Type'] = "application/json;charset=utf-8";
 
 const encodeParams = (params) => {
@@ -47,6 +49,12 @@ class ApiService {
     }
 
     post(url, params) {
+        const networkType = store.state.setting.network.type;
+        if(networkType=='amigo' || networkType=='batalla'){
+            API.FILE_BASE = 'https://aton.platon.network/api'
+        }else{
+            API.FILE_BASE = 'http://192.168.9.190:10061/api'
+        }
         typeof params === 'undefined' ? params = {} : '';
         localStorage.sessionid ? params.sessionid = localStorage.sessionid : '';
         // params.userID = localStorage.user ? JSON.parse(localStorage.user).userID : '';;

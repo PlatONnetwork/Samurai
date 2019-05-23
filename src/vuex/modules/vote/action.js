@@ -175,7 +175,7 @@ export const voteAction = {
     GetBatchCandidateTicketIds({state,commit,rootState,dispatch},ids){
         return new Promise((resolve, reject)=>{
             let netType = rootState.setting.network.type;
-            APIService.node.getCandidateTicketCount({
+            /*APIService.node.getCandidateTicketCount({
                 // "cid":netType=='test'?"203":netType=='amigo'?"103":netType=='batalla'?"104":netType=='innerdev'?"204":'',
                 "cid":contractService.cid,
                 "nodeIds":ids
@@ -186,18 +186,19 @@ export const voteAction = {
                 }else{
                     resolve(null)
                 }
-            })
-            // contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetBatchCandidateTicketIds',contractService.voteContractAddress,[ids.join(':')]).then((ticketList)=>{
-            //     if(ticketList){
-            //         try{
-            //             let list = JSON.parse(ticketList);
-            //             resolve(list);
-            //         }catch(e){
-            //             console.log('批量获取指定候选人的选票Id的列表失败---',e);
-            //             resolve(null)
-            //         }
-            //     }
-            // })
+            })*/
+             contractService.platONCall(contractService.getABI(3),contractService.voteContractAddress,'GetCandidateTicketCount',contractService.voteContractAddress,[ids.join(':')]).then((ticketList)=>{
+                 if(ticketList){
+                     try{
+                         let list = JSON.parse(ticketList);
+                         console.log('GetCandidateTicketCount web3', list)
+                         resolve(list);
+                     }catch(e){
+                         console.log('批量获取指定候选人的选票Id的列表失败---',e);
+                         resolve(null)
+                     }
+                 }
+             })
         })
     },
     //计算选票收益
