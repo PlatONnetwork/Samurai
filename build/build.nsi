@@ -1,10 +1,10 @@
-; ¸Ã½Å±¾Ê¹ÓÃ HM VNISEdit ½Å±¾±à¼­Æ÷Ïòµ¼²úÉú
+; è¯¥è„šæœ¬ä½¿ç”¨ HM VNISEdit è„šæœ¬ç¼–è¾‘å™¨å‘å¯¼äº§ç”Ÿ
 
 !include "LogicLib.nsh"
 
-; °²×°³ÌĞò³õÊ¼¶¨Òå³£Á¿
+; å®‰è£…ç¨‹åºåˆå§‹å®šä¹‰å¸¸é‡
 !define PRODUCT_NAME "Samurai"
-!define PRODUCT_VERSION "0.6.0";
+!define PRODUCT_VERSION "0.6.1";
 !define PRODUCT_PUBLISHER "www.platon.network<support@platon.network>"
 !define PRODUCT_WEB_SITE "https://www.platon.network"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\Samurai.exe"
@@ -13,56 +13,56 @@
 
 SetCompressor lzma
 
-; ------ MUI ÏÖ´ú½çÃæ¶¨Òå (1.67 °æ±¾ÒÔÉÏ¼æÈİ) ------
+; ------ MUI ç°ä»£ç•Œé¢å®šä¹‰ (1.67 ç‰ˆæœ¬ä»¥ä¸Šå…¼å®¹) ------
 !include "MUI.nsh"
 
-; MUI Ô¤¶¨Òå³£Á¿
+; MUI é¢„å®šä¹‰å¸¸é‡
 !define MUI_ABORTWARNING
 !define MUI_ICON "icons\icon.ico"
 !define MUI_UNICON "icons\icon.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "icons\bg.bmp"
 
-; »¶Ó­Ò³Ãæ
+; æ¬¢è¿é¡µé¢
 !insertmacro MUI_PAGE_WELCOME
-; Ğí¿ÉĞ­ÒéÒ³Ãæ
+; è®¸å¯åè®®é¡µé¢
 !define MUI_LICENSEPAGE_CHECKBOX
 !insertmacro MUI_PAGE_LICENSE "softwareLicence.txt"
-; °²×°Ä¿Â¼Ñ¡ÔñÒ³Ãæ
+; å®‰è£…ç›®å½•é€‰æ‹©é¡µé¢
 !insertmacro MUI_PAGE_DIRECTORY
 
-Page custom SetCustom LeaveCustom  ;×Ô¶¨Òå´°¿Ú£¬Ñ¡ÔñÊı¾İÄ¿Â¼
-; °²×°¹ı³ÌÒ³Ãæ
+Page custom SetCustom LeaveCustom  ;è‡ªå®šä¹‰çª—å£ï¼Œé€‰æ‹©æ•°æ®ç›®å½•
+; å®‰è£…è¿‡ç¨‹é¡µé¢
 !insertmacro MUI_PAGE_INSTFILES
-; °²×°Íê³ÉÒ³Ãæ
+; å®‰è£…å®Œæˆé¡µé¢
 !define MUI_FINISHPAGE_RUN "$INSTDIR\Samurai.exe"
 !insertmacro MUI_PAGE_FINISH
 
-; °²×°Ğ¶ÔØ¹ı³ÌÒ³Ãæ
+; å®‰è£…å¸è½½è¿‡ç¨‹é¡µé¢
 !insertmacro MUI_UNPAGE_INSTFILES
 
-; °²×°½çÃæ°üº¬µÄÓïÑÔÉèÖÃ
+; å®‰è£…ç•Œé¢åŒ…å«çš„è¯­è¨€è®¾ç½®
 !insertmacro MUI_LANGUAGE "English"
 !insertmacro MUI_LANGUAGE "SimpChinese"
 
 LangString brandingText ${LANG_ENGLISH} "Install System:"
 LangString brandingText ${LANG_SimpChinese} "Install System:"
 LangString instInfo ${LANG_ENGLISH} "The installer detected that $(^Name) is running. Need to stop and uninstall it to proceed with the new installation. Do you want to uninstall it now?"
-LangString instInfo ${LANG_SimpChinese} "°²×°³ÌĞò¼ì²âµ½ $(^Name) ÕıÔÚÔËĞĞ£¬Äú±ØĞë½«ÆäĞ¶ÔØ²ÅÄÜ½øĞĞÏÂÒ»²½°²×°£¬ÊÇ·ñÏÖÔÚ½øĞĞĞ¶ÔØ£¿"
+LangString instInfo ${LANG_SimpChinese} "å®‰è£…ç¨‹åºæ£€æµ‹åˆ° $(^Name) æ­£åœ¨è¿è¡Œï¼Œæ‚¨å¿…é¡»å°†å…¶å¸è½½æ‰èƒ½è¿›è¡Œä¸‹ä¸€æ­¥å®‰è£…ï¼Œæ˜¯å¦ç°åœ¨è¿›è¡Œå¸è½½ï¼Ÿ"
 LangString selectLocation ${LANG_ENGLISH} "Please select a location to store the block data and the keystore file."
-LangString selectLocation ${LANG_SimpChinese} "ÇëÑ¡Ôñ´æ´¢Çø¿éÊı¾İ¼°KeystoreÎÄ¼şµÄÎ»ÖÃ."
+LangString selectLocation ${LANG_SimpChinese} "è¯·é€‰æ‹©å­˜å‚¨åŒºå—æ•°æ®åŠKeystoreæ–‡ä»¶çš„ä½ç½®."
 LangString UninstInfo ${LANG_ENGLISH} "Are you sure you want to completely remove $(^Name) and all its components?"
-LangString UninstInfo ${LANG_SimpChinese} "ÄúÈ·ÊµÒªÍêÈ«ÒÆ³ı $(^Name) £¬¼°ÆäËùÓĞµÄ×é¼ş£¿"
+LangString UninstInfo ${LANG_SimpChinese} "æ‚¨ç¡®å®è¦å®Œå…¨ç§»é™¤ $(^Name) ï¼ŒåŠå…¶æ‰€æœ‰çš„ç»„ä»¶ï¼Ÿ"
 LangString UninstSuccess ${LANG_ENGLISH} "Has been successfully removed from your computer."
-LangString UninstSuccess ${LANG_SimpChinese} "ÒÑ³É¹¦µØ´ÓÄãµÄ¼ÆËã»úÒÆ³ı¡£"
+LangString UninstSuccess ${LANG_SimpChinese} "å·²æˆåŠŸåœ°ä»ä½ çš„è®¡ç®—æœºç§»é™¤ã€‚"
 LangString closeInfo ${LANG_ENGLISH} "${PRODUCT_NAME} is running, click OK to close."
-LangString closeInfo ${LANG_SimpChinese} "${PRODUCT_NAME} ÕıÔÚÔËĞĞ£¬µã»÷OK¹Ø±Õ."
+LangString closeInfo ${LANG_SimpChinese} "${PRODUCT_NAME} æ­£åœ¨è¿è¡Œï¼Œç‚¹å‡»OKå…³é—­."
 LangString openFileInfo ${LANG_ENGLISH} "Opening leftover data directories(backup before deleting!)"
-LangString openFileInfo ${LANG_SimpChinese} "´ò¿ªÊ£ÓàµÄÊı¾İÄ¿Â¼(É¾³ıÇ°×¢Òâ±¸·İ)"
+LangString openFileInfo ${LANG_SimpChinese} "æ‰“å¼€å‰©ä½™çš„æ•°æ®ç›®å½•(åˆ é™¤å‰æ³¨æ„å¤‡ä»½)"
 
-; °²×°Ô¤ÊÍ·ÅÎÄ¼ş
+; å®‰è£…é¢„é‡Šæ”¾æ–‡ä»¶
 !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS
 !insertmacro MUI_RESERVEFILE_LANGDLL
-; ------ MUI ÏÖ´ú½çÃæ¶¨Òå½áÊø ------
+; ------ MUI ç°ä»£ç•Œé¢å®šä¹‰ç»“æŸ ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "..\dist\${PRODUCT_NAME}-windows-x86_64-${PRODUCT_VERSION}.exe"
@@ -72,7 +72,7 @@ ShowInstDetails show
 ShowUnInstDetails show
 BrandingText "$(brandingText) ${PRODUCT_NAME} ${PRODUCT_VERSION}"
 
-; ¼¤»î°²×°ÈÕÖ¾¼ÇÂ¼£¬¸ÃÈÕÖ¾ÎÄ¼ş½«»á×÷ÎªĞ¶ÔØÎÄ¼şµÄÒÀ¾İ(×¢Òâ£¬±¾Çø¶Î±ØĞë·ÅÖÃÔÚËùÓĞÇø¶ÎÖ®Ç°)
+; æ¿€æ´»å®‰è£…æ—¥å¿—è®°å½•ï¼Œè¯¥æ—¥å¿—æ–‡ä»¶å°†ä¼šä½œä¸ºå¸è½½æ–‡ä»¶çš„ä¾æ®(æ³¨æ„ï¼Œæœ¬åŒºæ®µå¿…é¡»æ”¾ç½®åœ¨æ‰€æœ‰åŒºæ®µä¹‹å‰)
 Section "-LogSetOn"
   LogSet on
 SectionEnd
@@ -130,21 +130,21 @@ FunctionEnd
 
 ;Function .onInstSuccess
 ;  ReadINIStr $0 "$PLUGINSDIR\setup.ini" "Field 2" State
-;   MessageBox MB_OK "´æ´¢PlatONÇø¿éÊı¾İ¼°KeystoreÎÄ¼şµÄ2222Î»ÖÃÎª£º$0"
+;   MessageBox MB_OK "å­˜å‚¨PlatONåŒºå—æ•°æ®åŠKeystoreæ–‡ä»¶çš„2222ä½ç½®ä¸ºï¼š$0"
 ;   FileOpen $1 "C:\test\test.txt" w
 ;   FileWrite $1 'load("test.il" "test")\r$\n'
 ;   FileClose $1
 ; FunctionEnd
 
 Function SetCustom
-; ÅĞ¶Ï¹´Ñ¡µÄ×é¼ş£¬²¢°ÑÎ´¹´Ñ¡×é¼şµÄ°²×°Â·¾¶¿Ø¼şÉèÎª²»¿ÉÓÃ
+; åˆ¤æ–­å‹¾é€‰çš„ç»„ä»¶ï¼Œå¹¶æŠŠæœªå‹¾é€‰ç»„ä»¶çš„å®‰è£…è·¯å¾„æ§ä»¶è®¾ä¸ºä¸å¯ç”¨
   SectionGetFlags ${SecA} $0
   StrCmp $0 0 0 +2
     WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "Flags" ""
-  StrCmp $0 1 0 +2   ; Èç¹û×é¼ş¹´Ñ¡ÁË£¬»¹ĞèÒªÈ¥µô Disabled£¬ÕâÁ½ĞĞ´úÂë²»ÄÜÊ¡ÂÔ
+  StrCmp $0 1 0 +2   ; å¦‚æœç»„ä»¶å‹¾é€‰äº†ï¼Œè¿˜éœ€è¦å»æ‰ Disabledï¼Œè¿™ä¸¤è¡Œä»£ç ä¸èƒ½çœç•¥
     WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "Flags" ""
 
-; Ô¤¶¨Òå×é¼ş°²×°Â·¾¶
+; é¢„å®šä¹‰ç»„ä»¶å®‰è£…è·¯å¾„
   WriteINIStr "$PLUGINSDIR\setup.ini" "Field 2" "State" "$APPDATA\Samurai"
 
   InstallOptions::initDialog /NOUNLOAD "$PLUGINSDIR\setup.ini"
@@ -158,7 +158,7 @@ Function LeaveCustom
 
   ReadINIStr $0 "$PLUGINSDIR\setup.ini" "Field 2" "State"
   StrCmp $0 "" +2
-  ; ÅĞ¶ÏÓÃ»§ÊäÈëµÄÂ·¾¶ÊÇ·ñºÏ·¨¡£
+  ; åˆ¤æ–­ç”¨æˆ·è¾“å…¥çš„è·¯å¾„æ˜¯å¦åˆæ³•ã€‚
 ;   IfFileExists "$0\*" +3
 ;       MessageBox MB_OK|MB_ICONSTOP "Invalid path!"
 ;       Abort
@@ -167,10 +167,10 @@ FunctionEnd
 
 
 /******************************
- *  ÒÔÏÂÊÇ°²×°³ÌĞòµÄĞ¶ÔØ²¿·Ö  *
+ *  ä»¥ä¸‹æ˜¯å®‰è£…ç¨‹åºçš„å¸è½½éƒ¨åˆ†  *
  ******************************/
 
-; ¸ù¾İ°²×°ÈÕÖ¾Ğ¶ÔØÎÄ¼şµÄµ÷ÓÃºê
+; æ ¹æ®å®‰è£…æ—¥å¿—å¸è½½æ–‡ä»¶çš„è°ƒç”¨å®
 !macro DelFileByLog LogFile
   ifFileExists `${LogFile}` 0 +4
     Push `${LogFile}`
@@ -181,10 +181,10 @@ FunctionEnd
 Section Uninstall
   Delete "$INSTDIR\${PRODUCT_NAME}.url"
 
-  ; µ÷ÓÃºêÖ»¸ù¾İ°²×°ÈÕÖ¾Ğ¶ÔØ°²×°³ÌĞò×Ô¼º°²×°¹ıµÄÎÄ¼ş
+  ; è°ƒç”¨å®åªæ ¹æ®å®‰è£…æ—¥å¿—å¸è½½å®‰è£…ç¨‹åºè‡ªå·±å®‰è£…è¿‡çš„æ–‡ä»¶
   !insertmacro DelFileByLog "$INSTDIR\install.log"
 
-  ; Çå³ı°²×°³ÌĞò´´½¨µÄÇÒÔÚĞ¶ÔØÊ±¿ÉÄÜÎª¿ÕµÄ×ÓÄ¿Â¼£¬¶ÔÓÚµİ¹éÌí¼ÓµÄÎÄ¼şÄ¿Â¼£¬ÇëÓÉ×îÄÚ²ãµÄ×ÓÄ¿Â¼¿ªÊ¼Çå³ı(×¢Òâ£¬²»Òª´ø /r ²ÎÊı£¬·ñÔò»áÊ§È¥ DelFileByLog µÄÒâÒå)
+  ; æ¸…é™¤å®‰è£…ç¨‹åºåˆ›å»ºçš„ä¸”åœ¨å¸è½½æ—¶å¯èƒ½ä¸ºç©ºçš„å­ç›®å½•ï¼Œå¯¹äºé€’å½’æ·»åŠ çš„æ–‡ä»¶ç›®å½•ï¼Œè¯·ç”±æœ€å†…å±‚çš„å­ç›®å½•å¼€å§‹æ¸…é™¤(æ³¨æ„ï¼Œä¸è¦å¸¦ /r å‚æ•°ï¼Œå¦åˆ™ä¼šå¤±å» DelFileByLog çš„æ„ä¹‰)
   RMDir "$SMPROGRAMS\Samurai"
   RMDir "$INSTDIR\resources\app.asar.unpacked"
   RMDir "$INSTDIR\resources"
@@ -197,7 +197,7 @@ Section Uninstall
   SetAutoClose true
 SectionEnd
 
-#-- ¸ù¾İ NSIS ½Å±¾±à¼­¹æÔò£¬ËùÓĞ Function Çø¶Î±ØĞë·ÅÖÃÔÚ Section Çø¶ÎÖ®ºó±àĞ´£¬ÒÔ±ÜÃâ°²×°³ÌĞò³öÏÖÎ´¿ÉÔ¤ÖªµÄÎÊÌâ¡£--#
+#-- æ ¹æ® NSIS è„šæœ¬ç¼–è¾‘è§„åˆ™ï¼Œæ‰€æœ‰ Function åŒºæ®µå¿…é¡»æ”¾ç½®åœ¨ Section åŒºæ®µä¹‹åç¼–å†™ï¼Œä»¥é¿å…å®‰è£…ç¨‹åºå‡ºç°æœªå¯é¢„çŸ¥çš„é—®é¢˜ã€‚--#
 
 Function un.onInit
     MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "$(UninstInfo)" IDYES +2
@@ -224,7 +224,7 @@ Function un.onUninstSuccess
     ExecShell explore $0
 FunctionEnd
 
-; ÒÔÏÂÊÇĞ¶ÔØ³ÌĞòÍ¨¹ı°²×°ÈÕÖ¾Ğ¶ÔØÎÄ¼şµÄ×¨ÓÃº¯Êı£¬Çë²»ÒªËæÒâĞŞ¸Ä
+; ä»¥ä¸‹æ˜¯å¸è½½ç¨‹åºé€šè¿‡å®‰è£…æ—¥å¿—å¸è½½æ–‡ä»¶çš„ä¸“ç”¨å‡½æ•°ï¼Œè¯·ä¸è¦éšæ„ä¿®æ”¹
 Function un.DelFileByLog
   Exch $R0
   Push $R1

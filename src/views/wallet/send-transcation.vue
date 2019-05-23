@@ -383,8 +383,8 @@
                                 },3000))
                             }else{
                                 pwsErrorFlag=false
-                                this.$message.error(this.$t('form.wrongPsw'));
                             }
+                            this.$message.error(this.$t('form.wrongPsw'));
                             return;
                         }
                         let priKey = data;
