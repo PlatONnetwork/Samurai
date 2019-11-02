@@ -108,7 +108,7 @@
         "requestedExecutionLevel": "requireAdministrator"
     },
     "dependencies": {
-        "axios": "^0.16.1",
+        "axios": "^0.19.0",
         "bignumber": "^1.1.0",
         "bignumber.js": "^8.0.1",
         "console-utility": "git+ssh://http://luchenqun:fendoubuxi@192.168.9.66/Juzix-ethereum/console-utility.git#develop",
